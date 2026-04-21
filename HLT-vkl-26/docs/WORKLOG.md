@@ -29,6 +29,9 @@
   - sync: agent tra `raw_output` ngay trong `/execute`
   - async: agent tra `accepted/running`, sau do gui heartbeat va callback status ve backend
 - Them tai lieu `docs/AGENT_RUNTIME_CONTRACT.md` de dev agent rieng va debug de hon.
+- Them project agent mau tach rieng tai `agents/nmap-agent-demo` de co the copy sang may Kali/VM khac.
+- Agent mau ho tro `mock` mode va `real` mode, callback heartbeat/status/normalize nguoc ve backend.
+- Them mau `systemd` service va huong dan deploy rieng cho agent Nmap demo.
 
 ### Trang thai tam thoi
 
@@ -39,7 +42,7 @@
 ### Buoc tiep theo de lam tiep
 
 1. Them migration `003+` cho thay doi schema tiep theo.
-2. Lam mau 1 service agent that theo contract moi (`/execute`, heartbeat, completion callback).
+2. Thu nghiem `agents/nmap-agent-demo` tren may Kali/VM va noi voi backend that.
 3. Them export PDF.
 4. Can nhac Alembic neu sau nay can autogenerate/revision phuc tap hon.
 5. Them auth va phan quyen.

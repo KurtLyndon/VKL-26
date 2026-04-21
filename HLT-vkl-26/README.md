@@ -6,6 +6,7 @@ Khoi tao project quan ly kiem thu he thong mang noi bo theo yeu cau trong `Requi
 
 - `backend`: FastAPI + SQLAlchemy, doc schema theo ERD, ket noi MySQL.
 - `frontend`: Vue 3 + Vite, giao dien quan tri cac phan he chinh.
+- `agents/nmap-agent-demo`: agent Nmap demo chay rieng, de mang sang Kali/VM khac.
 
 ## Backend
 
@@ -71,6 +72,18 @@ npm run dev
 
 Giao dien mac dinh: `http://localhost:5173`
 
+## Agent Demo Rieng
+
+Da co mot agent Nmap demo tach rieng tai [agents/nmap-agent-demo/README.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/agents/nmap-agent-demo/README.md) de trien khai tren Kali hoac VM khac.
+
+Muc tieu cua project con nay:
+
+- nhan `POST /execute` tu backend
+- tra `accepted` ngay
+- callback heartbeat va completion ve backend
+- tu goi normalize ket qua `nmap` sau khi quet xong
+- ho tro `mock` mode de test nhanh va `real` mode de goi binary `nmap`
+
 ## Pham vi da khoi tao
 
 - CRUD API cho: `agent`, `task`, `operation`, `operation_task`, `target`, `target_attribute_definition`, `target_attribute_value`, `target_group`, `vulnerability`, `vulnerability_script`, `scan_result`, `scan_result_finding`, `report_template`.
@@ -131,7 +144,7 @@ python scripts\seed_data.py
 ## De xuat buoc tiep theo
 
 1. Them migration `003+` cho cac thay doi schema tiep theo.
-2. Dung 1 agent service that mau theo `docs/AGENT_RUNTIME_CONTRACT.md`.
+2. Deploy va test `agents/nmap-agent-demo` tren may Kali/VM.
 3. Them export PDF va bo loc dashboard.
 4. Mo rong auth cho runtime callback neu dua agent that vao moi truong that.
 5. Can nhac Alembic sau nay neu can autogenerate/revision phuc tap hon.
