@@ -27,6 +27,7 @@
 const navigation = [
   { to: "/", label: "Dashboard", caption: "Tong quan he thong" },
   { to: "/control", label: "Control", caption: "Launch va runtime execution" },
+  { to: "/result-exchange", label: "Exchange", caption: "Import export ket qua" },
   { to: "/agents", label: "Agents", caption: "Trang thai va version" },
   { to: "/tasks", label: "Tasks", caption: "Script va schema" },
   { to: "/operations", label: "Operations", caption: "Workflow va lich chay" },
@@ -37,5 +38,6 @@ const navigation = [
   { to: "/scan-findings", label: "Findings", caption: "Loi hong va bang chung" },
   { to: "/report-templates", label: "Reports", caption: "Mau va thong ke" },
   { to: "/generated-reports", label: "Generated", caption: "Bao cao da sinh ra" },
+  { to: "/operation-result-history", label: "History", caption: "Lich su ket qua" },
 ];
 </script>

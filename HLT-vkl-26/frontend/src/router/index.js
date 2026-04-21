@@ -1,11 +1,13 @@
 import { createRouter, createWebHistory } from "vue-router";
 import DashboardView from "../views/DashboardView.vue";
 import OperationControlView from "../views/OperationControlView.vue";
+import ResultExchangeView from "../views/ResultExchangeView.vue";
 import ResourceView from "../views/ResourceView.vue";
 
 const routes = [
   { path: "/", name: "dashboard", component: DashboardView, meta: { title: "Dashboard" } },
   { path: "/control", component: OperationControlView, meta: { title: "Operation Control" } },
+  { path: "/result-exchange", component: ResultExchangeView, meta: { title: "Result Exchange" } },
   {
     path: "/agents",
     component: ResourceView,
@@ -147,6 +149,18 @@ const routes = [
       fields: ["generated_report_id"],
       jsonFields: ["data_json"],
       longTextFields: [],
+    },
+  },
+  {
+    path: "/operation-result-history",
+    component: ResourceView,
+    meta: { title: "Result History" },
+    props: {
+      title: "Lich su import export",
+      resource: "operation-result-history",
+      fields: ["operation_id", "action_type", "file_name", "file_format", "status"],
+      jsonFields: [],
+      longTextFields: ["note", "file_path"],
     },
   },
 ];

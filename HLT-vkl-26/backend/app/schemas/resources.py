@@ -524,6 +524,53 @@ class WorkerRunResponse(BaseModel):
     run_started_at: datetime
 
 
+class OperationResultExchangeBase(BaseModel):
+    operation_id: int
+    action_type: str
+    file_name: str
+    file_path: str | None = None
+    file_format: str
+    status: str = "pending"
+    executed_at: datetime | None = None
+    note: str | None = None
+
+
+class OperationResultExchangeCreate(OperationResultExchangeBase):
+    pass
+
+
+class OperationResultExchangeUpdate(BaseModel):
+    file_name: str | None = None
+    file_path: str | None = None
+    file_format: str | None = None
+    status: str | None = None
+    executed_at: datetime | None = None
+    note: str | None = None
+
+
+class OperationResultExchangeRead(OperationResultExchangeBase, ORMModel):
+    id: int
+
+
+class OperationResultExportRequest(BaseModel):
+    file_format: str = "json"
+
+
+class OperationResultExportResponse(BaseModel):
+    history: OperationResultExchangeRead
+    exported_records: int
+
+
+class OperationResultImportRequest(BaseModel):
+    payload_json: dict
+
+
+class OperationResultImportResponse(BaseModel):
+    history: OperationResultExchangeRead
+    imported_scan_results: int
+    imported_findings: int
+
+
 class ParserNormalizeRequest(BaseModel):
     agent_type: str
     source_tool: str | None = None

@@ -62,6 +62,7 @@ Giao dien mac dinh: `http://localhost:5173`
 - Runtime API cho launch operation, cap nhat task execution status va tong hop runtime overview.
 - Scheduler runner cho `cron` va `interval`, co API chay tay va background loop qua env.
 - Worker runner xu ly `task_execution` theo thu tu, mock-run agent, parse ket qua va luu `scan_result`.
+- Import/export ket qua operation qua `JSON`, `CSV`, `XLSX`, va import lai du lieu scan bang `JSON`.
 - Dashboard tong quan cho frontend.
 - Kien truc tach rieng de sau nay docker hoa, them worker, scheduler, parser agent va export report.
 - Co SQL khoi tao schema va seed mau trong `backend/database`.
@@ -89,6 +90,6 @@ python scripts\seed_data.py
 
 1. Them Alembic migration thay cho `create_all`.
 2. Bo sung auth va phan quyen.
-3. Them import/export Excel, CSV, PDF va bo loc dashboard.
+3. Them export PDF va bo loc dashboard.
 4. Them worker/dispatch that toi agent thuc te.
 5. Hoan thien migration va auth.

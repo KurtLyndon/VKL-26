@@ -12,6 +12,7 @@ from app.models import (
     GeneratedReport,
     Operation,
     OperationExecution,
+    OperationResultImportExport,
     OperationTask,
     ReportTemplate,
     ReportSnapshot,
@@ -41,6 +42,13 @@ from app.schemas.resources import (
     OperationLaunchRequest,
     OperationLaunchResponse,
     OperationRead,
+    OperationResultExchangeCreate,
+    OperationResultExchangeRead,
+    OperationResultExchangeUpdate,
+    OperationResultExportRequest,
+    OperationResultExportResponse,
+    OperationResultImportRequest,
+    OperationResultImportResponse,
     OperationRuntimeOverviewItem,
     OperationTaskCreate,
     OperationTaskRead,
@@ -89,6 +97,7 @@ from app.schemas.resources import (
     WorkerRunResponse,
 )
 from app.services.execution import get_runtime_overview, launch_operation, update_task_execution_status
+from app.services.result_exchange import export_operation_results, import_operation_results
 from app.services.scan_results import normalize_and_store_scan_result
 from app.services.scheduler import run_scheduler_cycle
 from app.services.worker import run_worker_cycle
@@ -179,6 +188,14 @@ register_crud_routes(
     read_schema=OperationTaskRead,
     create_schema=OperationTaskCreate,
     update_schema=OperationTaskUpdate,
+)
+register_crud_routes(
+    router,
+    path="/operation-result-history",
+    model=OperationResultImportExport,
+    read_schema=OperationResultExchangeRead,
+    create_schema=OperationResultExchangeCreate,
+    update_schema=OperationResultExchangeUpdate,
 )
 register_crud_routes(
     router,
@@ -335,6 +352,22 @@ def run_scheduler_now(db: Session = Depends(get_db)):
 @router.post("/worker/run", response_model=WorkerRunResponse)
 def run_worker_now(db: Session = Depends(get_db)):
     return run_worker_cycle(db)
+
+
+@router.post("/operations/{operation_id}/results/export", response_model=OperationResultExportResponse)
+def export_results(operation_id: int, payload: OperationResultExportRequest, db: Session = Depends(get_db)):
+    history, exported_records = export_operation_results(db, operation_id, payload.file_format)
+    return OperationResultExportResponse(history=history, exported_records=exported_records)
+
+
+@router.post("/operations/{operation_id}/results/import", response_model=OperationResultImportResponse)
+def import_results(operation_id: int, payload: OperationResultImportRequest, db: Session = Depends(get_db)):
+    history, imported_scan_results, imported_findings = import_operation_results(db, operation_id, payload.payload_json)
+    return OperationResultImportResponse(
+        history=history,
+        imported_scan_results=imported_scan_results,
+        imported_findings=imported_findings,
+    )
 
 
 @router.get("/operation-executions/{execution_id}/tasks", response_model=list[TaskExecutionRead])

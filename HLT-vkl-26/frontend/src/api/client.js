@@ -58,4 +58,18 @@ export async function runWorkerNow() {
   return data;
 }
 
+export async function exportOperationResults(operationId, fileFormat) {
+  const { data } = await api.post(`/operations/${operationId}/results/export`, {
+    file_format: fileFormat,
+  });
+  return data;
+}
+
+export async function importOperationResults(operationId, payloadJson) {
+  const { data } = await api.post(`/operations/${operationId}/results/import`, {
+    payload_json: payloadJson,
+  });
+  return data;
+}
+
 export default api;
