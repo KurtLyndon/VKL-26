@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
 import DashboardView from "../views/DashboardView.vue";
+import OperationControlView from "../views/OperationControlView.vue";
 import ResourceView from "../views/ResourceView.vue";
 
 const routes = [
   { path: "/", name: "dashboard", component: DashboardView, meta: { title: "Dashboard" } },
+  { path: "/control", component: OperationControlView, meta: { title: "Operation Control" } },
   {
     path: "/agents",
     component: ResourceView,

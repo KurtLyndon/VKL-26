@@ -49,6 +49,7 @@ Giao dien mac dinh: `http://localhost:5173`
 
 - CRUD API cho: `agent`, `task`, `operation`, `operation_task`, `target`, `target_attribute_definition`, `target_attribute_value`, `target_group`, `vulnerability`, `vulnerability_script`, `scan_result`, `scan_result_finding`, `report_template`.
 - CRUD API mo rong cho: `operation_execution`, `task_execution`, `generated_report`, `report_snapshot`.
+- Runtime API cho launch operation, cap nhat task execution status va tong hop runtime overview.
 - Dashboard tong quan cho frontend.
 - Kien truc tach rieng de sau nay docker hoa, them worker, scheduler, parser agent va export report.
 - Co SQL khoi tao schema va seed mau trong `backend/database`.

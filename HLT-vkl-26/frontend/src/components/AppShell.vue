@@ -26,6 +26,7 @@
 <script setup>
 const navigation = [
   { to: "/", label: "Dashboard", caption: "Tong quan he thong" },
+  { to: "/control", label: "Control", caption: "Launch va runtime execution" },
   { to: "/agents", label: "Agents", caption: "Trang thai va version" },
   { to: "/tasks", label: "Tasks", caption: "Script va schema" },
   { to: "/operations", label: "Operations", caption: "Workflow va lich chay" },

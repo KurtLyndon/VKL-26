@@ -488,6 +488,25 @@ class OperationLaunchResponse(BaseModel):
     task_executions: list[TaskExecutionRead]
 
 
+class TaskExecutionStatusRequest(BaseModel):
+    status: str
+    output_data_json: dict | None = None
+    raw_log: str | None = None
+
+
+class OperationRuntimeOverviewItem(BaseModel):
+    operation_id: int
+    operation_code: str
+    operation_name: str
+    total_executions: int
+    latest_execution_id: int | None = None
+    latest_execution_status: str | None = None
+    queued_tasks: int = 0
+    running_tasks: int = 0
+    failed_tasks: int = 0
+    completed_tasks: int = 0
+
+
 class ParserNormalizeRequest(BaseModel):
     agent_type: str
     source_tool: str | None = None

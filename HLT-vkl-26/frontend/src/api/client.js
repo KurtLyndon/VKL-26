@@ -28,4 +28,24 @@ export async function getDashboardSummary() {
   return data;
 }
 
+export async function getOperationsRuntimeOverview() {
+  const { data } = await api.get("/operations/runtime/overview");
+  return data;
+}
+
+export async function launchOperation(operationId, payload) {
+  const { data } = await api.post(`/operations/${operationId}/launch`, payload);
+  return data;
+}
+
+export async function getExecutionTasks(executionId) {
+  const { data } = await api.get(`/operation-executions/${executionId}/tasks`);
+  return data;
+}
+
+export async function updateTaskExecutionStatus(taskExecutionId, payload) {
+  const { data } = await api.post(`/task-executions/${taskExecutionId}/status`, payload);
+  return data;
+}
+
 export default api;

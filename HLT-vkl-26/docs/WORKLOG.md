@@ -14,6 +14,7 @@
 - Them execution flow co ban: `operation_execution`, `task_execution`, launch operation.
 - Tach parser service theo tung agent trong `backend/app/services/agents/nmap` va `backend/app/services/agents/nuclei`.
 - Them API normalize scan result thanh `scan_result` + `scan_result_finding`.
+- Them runtime control: launch operation tu UI, cap nhat task execution status va runtime overview.
 
 ### Trang thai tam thoi
 
@@ -27,4 +28,4 @@
 2. Lam scheduler runner cho operation.
 3. Nang cap parser `nmap`, `nuclei` theo output thuc te va them `acunetix`.
 4. Them import/export CSV, Excel, JSON.
-5. Bo sung UI workflow chay operation va xem chi tiet execution.
+5. Bo sung UI drag-drop operation task va bo loc execution.

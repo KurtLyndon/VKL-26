@@ -1,11 +1,11 @@
 from datetime import datetime
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models import Agent, Operation, OperationExecution, OperationTask, TaskExecution
-from app.schemas.resources import OperationLaunchRequest
+from app.schemas.resources import OperationLaunchRequest, OperationRuntimeOverviewItem, TaskExecutionStatusRequest
 
 
 def _build_execution_code(operation_code: str) -> str:
@@ -74,3 +74,110 @@ def launch_operation(db: Session, operation_id: int, payload: OperationLaunchReq
         db.refresh(task_execution)
 
     return execution, task_executions
+
+
+def update_task_execution_status(
+    db: Session, task_execution_id: int, payload: TaskExecutionStatusRequest
+) -> tuple[TaskExecution, OperationExecution]:
+    task_execution = db.get(TaskExecution, task_execution_id)
+    if not task_execution:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task execution not found")
+
+    task_execution.status = payload.status
+    if payload.output_data_json is not None:
+        task_execution.output_data_json = payload.output_data_json
+    if payload.raw_log is not None:
+        task_execution.raw_log = payload.raw_log
+
+    now = datetime.utcnow()
+    if payload.status == "running" and task_execution.started_at is None:
+        task_execution.started_at = now
+    if payload.status in {"completed", "failed", "canceled"} and task_execution.finished_at is None:
+        if task_execution.started_at is None:
+            task_execution.started_at = now
+        task_execution.finished_at = now
+
+    operation_execution = db.get(OperationExecution, task_execution.operation_execution_id)
+    if not operation_execution:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent operation execution not found")
+
+    sibling_tasks = db.scalars(
+        select(TaskExecution).where(TaskExecution.operation_execution_id == operation_execution.id).order_by(TaskExecution.id.asc())
+    ).all()
+
+    queued_count = sum(1 for item in sibling_tasks if item.status == "queued")
+    running_count = sum(1 for item in sibling_tasks if item.status == "running")
+    failed_count = sum(1 for item in sibling_tasks if item.status == "failed")
+    completed_count = sum(1 for item in sibling_tasks if item.status == "completed")
+    canceled_count = sum(1 for item in sibling_tasks if item.status == "canceled")
+    total_count = len(sibling_tasks)
+
+    if running_count > 0:
+        operation_execution.status = "running"
+        if operation_execution.started_at is None:
+            operation_execution.started_at = now
+    elif failed_count > 0:
+        operation_execution.status = "failed"
+        operation_execution.finished_at = now
+    elif completed_count + canceled_count == total_count and total_count > 0:
+        operation_execution.status = "completed"
+        operation_execution.finished_at = now
+    else:
+        operation_execution.status = "queued"
+
+    operation_execution.summary_json = {
+        "task_count": total_count,
+        "queued_count": queued_count,
+        "running_count": running_count,
+        "failed_count": failed_count,
+        "completed_count": completed_count,
+        "canceled_count": canceled_count,
+    }
+
+    db.commit()
+    db.refresh(task_execution)
+    db.refresh(operation_execution)
+    return task_execution, operation_execution
+
+
+def get_runtime_overview(db: Session) -> list[OperationRuntimeOverviewItem]:
+    operations = db.scalars(select(Operation).order_by(Operation.id.asc())).all()
+    overview: list[OperationRuntimeOverviewItem] = []
+
+    for operation in operations:
+        executions = db.scalars(
+            select(OperationExecution)
+            .where(OperationExecution.operation_id == operation.id)
+            .order_by(OperationExecution.created_at.desc(), OperationExecution.id.desc())
+        ).all()
+        latest_execution = executions[0] if executions else None
+
+        queued_tasks = running_tasks = failed_tasks = completed_tasks = 0
+        if latest_execution:
+            status_rows = db.execute(
+                select(TaskExecution.status, func.count(TaskExecution.id))
+                .where(TaskExecution.operation_execution_id == latest_execution.id)
+                .group_by(TaskExecution.status)
+            ).all()
+            counts = {status_name: count for status_name, count in status_rows}
+            queued_tasks = counts.get("queued", 0)
+            running_tasks = counts.get("running", 0)
+            failed_tasks = counts.get("failed", 0)
+            completed_tasks = counts.get("completed", 0)
+
+        overview.append(
+            OperationRuntimeOverviewItem(
+                operation_id=operation.id,
+                operation_code=operation.code,
+                operation_name=operation.name,
+                total_executions=len(executions),
+                latest_execution_id=latest_execution.id if latest_execution else None,
+                latest_execution_status=latest_execution.status if latest_execution else None,
+                queued_tasks=queued_tasks,
+                running_tasks=running_tasks,
+                failed_tasks=failed_tasks,
+                completed_tasks=completed_tasks,
+            )
+        )
+
+    return overview

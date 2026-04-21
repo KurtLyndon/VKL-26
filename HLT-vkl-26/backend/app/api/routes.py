@@ -41,6 +41,7 @@ from app.schemas.resources import (
     OperationLaunchRequest,
     OperationLaunchResponse,
     OperationRead,
+    OperationRuntimeOverviewItem,
     OperationTaskCreate,
     OperationTaskRead,
     OperationTaskUpdate,
@@ -74,6 +75,7 @@ from app.schemas.resources import (
     TaskCreate,
     TaskExecutionCreate,
     TaskExecutionRead,
+    TaskExecutionStatusRequest,
     TaskExecutionUpdate,
     TaskRead,
     TaskUpdate,
@@ -85,7 +87,7 @@ from app.schemas.resources import (
     VulnerabilityUpdate,
 )
 from app.services.agents.registry import get_parser
-from app.services.execution import launch_operation
+from app.services.execution import get_runtime_overview, launch_operation, update_task_execution_status
 
 router = APIRouter()
 
@@ -316,6 +318,11 @@ def execute_operation(operation_id: int, payload: OperationLaunchRequest, db: Se
     return OperationLaunchResponse(execution=execution, task_executions=task_executions)
 
 
+@router.get("/operations/runtime/overview", response_model=list[OperationRuntimeOverviewItem])
+def operations_runtime_overview(db: Session = Depends(get_db)):
+    return get_runtime_overview(db)
+
+
 @router.get("/operation-executions/{execution_id}/tasks", response_model=list[TaskExecutionRead])
 def list_execution_tasks(execution_id: int, db: Session = Depends(get_db)):
     return db.scalars(
@@ -323,6 +330,14 @@ def list_execution_tasks(execution_id: int, db: Session = Depends(get_db)):
         .where(TaskExecution.operation_execution_id == execution_id)
         .order_by(TaskExecution.id.asc())
     ).all()
+
+
+@router.post("/task-executions/{task_execution_id}/status", response_model=TaskExecutionRead)
+def set_task_execution_status(
+    task_execution_id: int, payload: TaskExecutionStatusRequest, db: Session = Depends(get_db)
+):
+    task_execution, _operation_execution = update_task_execution_status(db, task_execution_id, payload)
+    return task_execution
 
 
 @router.post("/scan-results/normalize", response_model=ParserNormalizeResponse, status_code=status.HTTP_201_CREATED)
