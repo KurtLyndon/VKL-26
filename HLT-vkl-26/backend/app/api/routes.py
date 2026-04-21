@@ -28,7 +28,10 @@ from app.models import (
     VulnerabilityScript,
 )
 from app.schemas.resources import (
+    AgentExecuteContractDocument,
     AgentCreate,
+    AgentHeartbeatRequest,
+    AgentHeartbeatResponse,
     AgentRead,
     AgentUpdate,
     DashboardSummary,
@@ -81,6 +84,8 @@ from app.schemas.resources import (
     TargetGroupUpdate,
     TargetRead,
     TargetUpdate,
+    TaskExecutionHeartbeatRequest,
+    TaskExecutionHeartbeatResponse,
     TaskCreate,
     TaskExecutionCreate,
     TaskExecutionRead,
@@ -95,6 +100,11 @@ from app.schemas.resources import (
     VulnerabilityScriptUpdate,
     VulnerabilityUpdate,
     WorkerRunResponse,
+)
+from app.services.agent_runtime import (
+    get_execute_contract_document,
+    update_agent_heartbeat,
+    update_task_execution_heartbeat,
 )
 from app.services.execution import get_runtime_overview, launch_operation, update_task_execution_status
 from app.services.result_exchange import export_operation_results, import_operation_results
@@ -339,6 +349,21 @@ def execute_operation(operation_id: int, payload: OperationLaunchRequest, db: Se
     return OperationLaunchResponse(execution=execution, task_executions=task_executions)
 
 
+@router.get("/agents/runtime/execute-contract", response_model=AgentExecuteContractDocument)
+def get_agent_execute_contract():
+    return get_execute_contract_document()
+
+
+@router.post("/agents/heartbeat", response_model=AgentHeartbeatResponse)
+def record_agent_heartbeat(payload: AgentHeartbeatRequest, db: Session = Depends(get_db)):
+    agent, acknowledged_at = update_agent_heartbeat(db, payload)
+    return AgentHeartbeatResponse(
+        acknowledged_at=acknowledged_at,
+        agent=agent,
+        metadata_json=payload.metadata_json,
+    )
+
+
 @router.get("/operations/runtime/overview", response_model=list[OperationRuntimeOverviewItem])
 def operations_runtime_overview(db: Session = Depends(get_db)):
     return get_runtime_overview(db)
@@ -385,6 +410,18 @@ def set_task_execution_status(
 ):
     task_execution, _operation_execution = update_task_execution_status(db, task_execution_id, payload)
     return task_execution
+
+
+@router.post("/task-executions/{task_execution_id}/heartbeat", response_model=TaskExecutionHeartbeatResponse)
+def heartbeat_task_execution(
+    task_execution_id: int, payload: TaskExecutionHeartbeatRequest, db: Session = Depends(get_db)
+):
+    task_execution, operation_execution, acknowledged_at = update_task_execution_heartbeat(db, task_execution_id, payload)
+    return TaskExecutionHeartbeatResponse(
+        acknowledged_at=acknowledged_at,
+        operation_execution=operation_execution,
+        task_execution=task_execution,
+    )
 
 
 @router.post("/scan-results/normalize", response_model=ParserNormalizeResponse, status_code=status.HTTP_201_CREATED)

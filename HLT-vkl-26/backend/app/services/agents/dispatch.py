@@ -1,7 +1,8 @@
 import httpx
 
 from app.core.config import get_settings
-from app.models import Agent, TaskExecution
+from app.models import Agent, Target, TaskExecution
+from app.services.agent_runtime import build_execute_request, parse_execute_response
 from app.services.agents.runner_registry import get_runner
 
 settings = get_settings()
@@ -15,44 +16,39 @@ def _agent_endpoint(agent: Agent) -> str | None:
     return f"http://{host}:{port}/execute"
 
 
-def _dispatch_http(agent: Agent, task_execution: TaskExecution, target_value: str) -> tuple[str, dict]:
+def _dispatch_http(
+    agent: Agent, task_execution: TaskExecution, target_value: str, target: Target | None = None
+) -> tuple[str | None, dict]:
     endpoint = _agent_endpoint(agent)
     if not endpoint:
         raise ValueError("Agent endpoint is not configured.")
 
-    payload = {
-        "task_execution_id": task_execution.id,
-        "task_id": task_execution.task_id,
-        "task_code": task_execution.task.code,
-        "agent_type": task_execution.task.agent_type,
-        "script_name": task_execution.task.script_name,
-        "script_path": task_execution.task.script_path,
-        "input_data": task_execution.input_data_json or {},
-        "target": target_value,
-    }
+    payload = build_execute_request(agent, task_execution, target, target_value).model_dump(mode="json")
 
     with httpx.Client(timeout=settings.agent_request_timeout_seconds) as client:
         response = client.post(endpoint, json=payload)
         response.raise_for_status()
         data = response.json()
 
-    raw_output = data.get("raw_output")
-    if not raw_output:
-        raise ValueError("Agent response did not include raw_output.")
+    raw_output, output_data, response_meta = parse_execute_response(data)
 
     return raw_output, {
         "mode": "http-agent",
         "endpoint": endpoint,
-        "response_meta": data.get("meta", {}),
+        "contract_version": data.get("contract_version"),
+        **output_data,
+        "response_meta": response_meta,
     }
 
 
-def dispatch_task_to_agent(agent: Agent, task_execution: TaskExecution, target_value: str) -> tuple[str, dict]:
+def dispatch_task_to_agent(
+    agent: Agent, task_execution: TaskExecution, target_value: str, target: Target | None = None
+) -> tuple[str | None, dict]:
     mode = settings.agent_dispatch_mode.lower()
 
     if mode in {"auto", "http"}:
         try:
-            return _dispatch_http(agent, task_execution, target_value)
+            return _dispatch_http(agent, task_execution, target_value, target)
         except Exception:
             if mode == "http":
                 raise

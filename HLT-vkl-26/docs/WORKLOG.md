@@ -21,6 +21,14 @@
 - Them import/export ket qua operation qua `JSON`, `CSV`, `XLSX`, va UI quan ly lich su import/export.
 - Them UI `Operation Designer`, `Execution Monitor`, `Finding Explorer` de sap task va loc execution/finding.
 - Worker ho tro dispatch HTTP toi agent that theo `host/ip_address + port`, va fallback mock runner khi chua co agent service.
+- Them migration versioned local trong `backend/migrations/versions` va CLI `python scripts\migrate.py`.
+- Thay `Base.metadata.create_all(...)` bang migration check/apply co dieu khien boi `AUTO_APPLY_MIGRATIONS`.
+- Bo sung baseline stamping cho database cu da tao bang SQL snapshot hoac `create_all`, tranh xung dot seed mau.
+- Bo sung giao thuc runtime cho agent that: discovery contract, agent heartbeat, task heartbeat, va callback hoan tat task.
+- Worker/dispatch da ho tro ca 2 luong sync va async:
+  - sync: agent tra `raw_output` ngay trong `/execute`
+  - async: agent tra `accepted/running`, sau do gui heartbeat va callback status ve backend
+- Them tai lieu `docs/AGENT_RUNTIME_CONTRACT.md` de dev agent rieng va debug de hon.
 
 ### Trang thai tam thoi
 
@@ -30,8 +38,8 @@
 
 ### Buoc tiep theo de lam tiep
 
-1. Them migration versioned (Alembic hoac thu muc SQL migration co quy uoc version).
-2. Hoan thien giao thuc agent that, callback va heartbeat.
+1. Them migration `003+` cho thay doi schema tiep theo.
+2. Lam mau 1 service agent that theo contract moi (`/execute`, heartbeat, completion callback).
 3. Them export PDF.
-4. Hoan thien migration versioned.
+4. Can nhac Alembic neu sau nay can autogenerate/revision phuc tap hon.
 5. Them auth va phan quyen.

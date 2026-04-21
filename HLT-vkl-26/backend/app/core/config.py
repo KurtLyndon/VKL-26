@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     mysql_user: str = Field(default="root", alias="MYSQL_USER")
     mysql_password: str = Field(default="root", alias="MYSQL_PASSWORD")
     mysql_database: str = Field(default="hlt_vkl_26", alias="MYSQL_DATABASE")
+    auto_apply_migrations: bool = Field(default=False, alias="AUTO_APPLY_MIGRATIONS")
     cors_origins: str = Field(default="http://localhost:5173", alias="CORS_ORIGINS")
     scheduler_enabled: bool = Field(default=False, alias="SCHEDULER_ENABLED")
     scheduler_poll_seconds: int = Field(default=60, alias="SCHEDULER_POLL_SECONDS")

@@ -1,12 +1,12 @@
 from sqlalchemy import select
 
-from app.db.base import Base
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.models import Agent, Operation, OperationTask, ReportTemplate, Target, Task, Vulnerability, VulnerabilityScript
+from database.migrations import apply_migrations
 
 
 def seed() -> None:
-    Base.metadata.create_all(bind=engine)
+    apply_migrations()
 
     db = SessionLocal()
     try:

@@ -12,17 +12,17 @@ from app.services.execution import refresh_operation_execution_summary
 from app.services.scan_results import normalize_and_store_scan_result
 
 
-def _resolve_target(db: Session, task_execution: TaskExecution) -> tuple[int | None, str]:
+def _resolve_target(db: Session, task_execution: TaskExecution) -> tuple[Target | None, str]:
     input_data = task_execution.input_data_json or {}
     target_id = input_data.get("target_id")
     if target_id:
         target = db.get(Target, int(target_id))
         if target:
-            return target.id, target.domain or target.ip_range or target.name
+            return target, target.domain or target.ip_range or target.name
 
     target = db.scalar(select(Target).order_by(Target.id.asc()).limit(1))
     if target:
-        return target.id, target.domain or target.ip_range or target.name
+        return target, target.domain or target.ip_range or target.name
     return None, "127.0.0.1"
 
 
@@ -76,18 +76,25 @@ def process_task_execution(db: Session, task_execution: TaskExecution) -> str:
     task_execution.status = "running"
     task_execution.started_at = datetime.utcnow()
 
-    target_id, target_value = _resolve_target(db, task_execution)
+    target, target_value = _resolve_target(db, task_execution)
 
     try:
-        raw_output, execution_meta = dispatch_task_to_agent(task_execution.agent, task_execution, target_value)
+        raw_output, execution_meta = dispatch_task_to_agent(task_execution.agent, task_execution, target_value, target)
         task_execution.output_data_json = {"target": target_value, **execution_meta}
-        task_execution.raw_log = (
-            f"Executed task via {execution_meta.get('mode')} for {task_execution.task.agent_type}."
-        )
+        dispatch_status = execution_meta.get("dispatch_status")
+        if dispatch_status in {"accepted", "running", "queued"}:
+            task_execution.raw_log = execution_meta.get("response_meta", {}).get(
+                "message", f"Agent accepted task via {execution_meta.get('mode')}."
+            )
+            task_execution.status = "running"
+            task_execution.finished_at = None
+            return "running"
+
+        task_execution.raw_log = f"Executed task via {execution_meta.get('mode')} for {task_execution.task.agent_type}."
         task_execution.status = "completed"
         task_execution.finished_at = datetime.utcnow()
 
-        if target_id is not None:
+        if target is not None and raw_output is not None:
             normalize_and_store_scan_result(
                 db,
                 agent_type=task_execution.task.agent_type,
@@ -95,7 +102,7 @@ def process_task_execution(db: Session, task_execution: TaskExecution) -> str:
                 raw_output=raw_output,
                 operation_execution_id=task_execution.operation_execution_id,
                 task_execution_id=task_execution.id,
-                target_id=target_id,
+                target_id=target.id,
                 detected_at=datetime.utcnow(),
             )
         return "completed"
@@ -126,7 +133,7 @@ def run_worker_cycle(db: Session) -> WorkerRunResponse:
         processed_execution_ids.append(task_execution.operation_execution_id)
         if result == "completed":
             completed_tasks += 1
-        else:
+        elif result == "failed":
             failed_tasks += 1
             canceled_tasks += _cancel_blocked_followups(db, task_execution)
         refresh_operation_execution_summary(db, task_execution.operation_execution_id)
