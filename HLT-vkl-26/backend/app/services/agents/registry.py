@@ -1,10 +1,12 @@
 from fastapi import HTTPException, status
 
 from app.services.agents.base import AgentParser
+from app.services.agents.acunetix.parser import AcunetixParser
 from app.services.agents.nmap.parser import NmapParser
 from app.services.agents.nuclei.parser import NucleiParser
 
 PARSER_REGISTRY: dict[str, AgentParser] = {
+    "acunetix": AcunetixParser(),
     "nmap": NmapParser(),
     "nuclei": NucleiParser(),
 }

@@ -64,6 +64,7 @@ Giao dien mac dinh: `http://localhost:5173`
 - Co SQL khoi tao schema va seed mau trong `backend/database`.
 - Co nhat ky tien do trong `docs/WORKLOG.md` de lan sau tiep tuc.
 - Code parser tung agent duoc tach rieng trong `backend/app/services/agents`.
+- Parser hien co cho `nmap` (XML + fallback text), `nuclei` (JSONL + fallback text), `acunetix` (JSON + fallback text).
 
 ## Khoi tao database nhanh
 
@@ -85,6 +86,6 @@ python scripts\seed_data.py
 
 1. Them Alembic migration thay cho `create_all`.
 2. Bo sung auth va phan quyen.
-3. Nang cap parser service cho `nmap`, `nuclei`, `acunetix`.
-4. Them import/export Excel, CSV, PDF va bo loc dashboard.
-5. Hoan thien scheduler worker va migration.
+3. Them import/export Excel, CSV, PDF va bo loc dashboard.
+4. Hoan thien scheduler worker va migration.
+5. Them worker/dispatch that toi agent thuc te.

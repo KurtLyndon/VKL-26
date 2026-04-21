@@ -16,6 +16,7 @@
 - Them API normalize scan result thanh `scan_result` + `scan_result_finding`.
 - Them runtime control: launch operation tu UI, cap nhat task execution status va runtime overview.
 - Them scheduler runner cho operation voi `cron`/`interval`, co API run-now va background loop qua env.
+- Nang parser `nmap` doc XML, `nuclei` doc JSONL, va them khung parser rieng cho `acunetix`.
 
 ### Trang thai tam thoi
 
@@ -26,7 +27,7 @@
 ### Buoc tiep theo de lam tiep
 
 1. Them migration versioned (Alembic hoac thu muc SQL migration co quy uoc version).
-2. Nang cap parser `nmap`, `nuclei` theo output thuc te va them `acunetix`.
-3. Them import/export CSV, Excel, JSON.
-4. Bo sung UI drag-drop operation task va bo loc execution.
-5. Hoan thien auth va worker agent.
+2. Them import/export CSV, Excel, JSON.
+3. Bo sung UI drag-drop operation task va bo loc execution.
+4. Hoan thien auth va worker agent.
+5. Them migration versioned.
