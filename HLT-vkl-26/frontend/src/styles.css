@@ -212,6 +212,32 @@ textarea {
   background: rgba(39, 198, 169, 0.08);
 }
 
+.task-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.task-card {
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.task-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
 .resource-form {
   display: grid;
   gap: 14px;

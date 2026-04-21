@@ -43,6 +43,11 @@ export async function getExecutionTasks(executionId) {
   return data;
 }
 
+export async function getOperationTasks(operationId) {
+  const { data } = await api.get(`/operations/${operationId}/tasks`);
+  return data;
+}
+
 export async function updateTaskExecutionStatus(taskExecutionId, payload) {
   const { data } = await api.post(`/task-executions/${taskExecutionId}/status`, payload);
   return data;

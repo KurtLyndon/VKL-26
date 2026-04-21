@@ -27,6 +27,9 @@
 const navigation = [
   { to: "/", label: "Dashboard", caption: "Tong quan he thong" },
   { to: "/control", label: "Control", caption: "Launch va runtime execution" },
+  { to: "/operation-designer", label: "Designer", caption: "Sap xep workflow task" },
+  { to: "/execution-monitor", label: "Monitor", caption: "Bo loc execution" },
+  { to: "/finding-explorer", label: "Explorer", caption: "Bo loc finding" },
   { to: "/result-exchange", label: "Exchange", caption: "Import export ket qua" },
   { to: "/agents", label: "Agents", caption: "Trang thai va version" },
   { to: "/tasks", label: "Tasks", caption: "Script va schema" },

@@ -19,6 +19,7 @@
 - Nang parser `nmap` doc XML, `nuclei` doc JSONL, va them khung parser rieng cho `acunetix`.
 - Them worker runner mock cho `nmap`, `nuclei`, `acunetix`; xu ly task theo thu tu va tu sinh scan result/finding.
 - Them import/export ket qua operation qua `JSON`, `CSV`, `XLSX`, va UI quan ly lich su import/export.
+- Them UI `Operation Designer`, `Execution Monitor`, `Finding Explorer` de sap task va loc execution/finding.
 
 ### Trang thai tam thoi
 
@@ -29,7 +30,7 @@
 ### Buoc tiep theo de lam tiep
 
 1. Them migration versioned (Alembic hoac thu muc SQL migration co quy uoc version).
-2. Bo sung UI drag-drop operation task va bo loc execution.
-3. Thay mock worker bang dispatch toi agent thuc te.
-4. Them export PDF.
-5. Hoan thien migration versioned va auth.
+2. Thay mock worker bang dispatch toi agent thuc te.
+3. Them export PDF.
+4. Hoan thien migration versioned.
+5. Them auth va phan quyen.

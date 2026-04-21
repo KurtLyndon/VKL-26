@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import DashboardView from "../views/DashboardView.vue";
+import ExecutionMonitorView from "../views/ExecutionMonitorView.vue";
+import FindingExplorerView from "../views/FindingExplorerView.vue";
+import OperationDesignerView from "../views/OperationDesignerView.vue";
 import OperationControlView from "../views/OperationControlView.vue";
 import ResultExchangeView from "../views/ResultExchangeView.vue";
 import ResourceView from "../views/ResourceView.vue";
@@ -7,6 +10,9 @@ import ResourceView from "../views/ResourceView.vue";
 const routes = [
   { path: "/", name: "dashboard", component: DashboardView, meta: { title: "Dashboard" } },
   { path: "/control", component: OperationControlView, meta: { title: "Operation Control" } },
+  { path: "/operation-designer", component: OperationDesignerView, meta: { title: "Operation Designer" } },
+  { path: "/execution-monitor", component: ExecutionMonitorView, meta: { title: "Execution Monitor" } },
+  { path: "/finding-explorer", component: FindingExplorerView, meta: { title: "Finding Explorer" } },
   { path: "/result-exchange", component: ResultExchangeView, meta: { title: "Result Exchange" } },
   {
     path: "/agents",
