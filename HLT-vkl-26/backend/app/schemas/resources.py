@@ -507,6 +507,13 @@ class OperationRuntimeOverviewItem(BaseModel):
     completed_tasks: int = 0
 
 
+class SchedulerRunResponse(BaseModel):
+    checked_operations: int
+    launched_operations: int
+    launched_execution_ids: list[int]
+    run_started_at: datetime
+
+
 class ParserNormalizeRequest(BaseModel):
     agent_type: str
     source_tool: str | None = None

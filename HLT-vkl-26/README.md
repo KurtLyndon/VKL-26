@@ -27,6 +27,14 @@ uvicorn app.main:app --reload
 
 API mac dinh: `http://localhost:8000`
 
+Neu muon bat scheduler loop nen:
+
+```powershell
+$env:SCHEDULER_ENABLED="true"
+$env:SCHEDULER_POLL_SECONDS="60"
+uvicorn app.main:app --reload
+```
+
 ## Frontend
 
 1. Tao file `.env` tu [frontend/.env.example](D:/Projects/VKL-26/HLT/HLT-vkl-26/frontend/.env.example)
@@ -50,6 +58,7 @@ Giao dien mac dinh: `http://localhost:5173`
 - CRUD API cho: `agent`, `task`, `operation`, `operation_task`, `target`, `target_attribute_definition`, `target_attribute_value`, `target_group`, `vulnerability`, `vulnerability_script`, `scan_result`, `scan_result_finding`, `report_template`.
 - CRUD API mo rong cho: `operation_execution`, `task_execution`, `generated_report`, `report_snapshot`.
 - Runtime API cho launch operation, cap nhat task execution status va tong hop runtime overview.
+- Scheduler runner cho `cron` va `interval`, co API chay tay va background loop qua env.
 - Dashboard tong quan cho frontend.
 - Kien truc tach rieng de sau nay docker hoa, them worker, scheduler, parser agent va export report.
 - Co SQL khoi tao schema va seed mau trong `backend/database`.
@@ -76,6 +85,6 @@ python scripts\seed_data.py
 
 1. Them Alembic migration thay cho `create_all`.
 2. Bo sung auth va phan quyen.
-3. Lam scheduler runner cho `operation_execution` va `task_execution`.
-4. Nang cap parser service cho `nmap`, `nuclei`, `acunetix`.
-5. Them import/export Excel, CSV, PDF va bo loc dashboard.
+3. Nang cap parser service cho `nmap`, `nuclei`, `acunetix`.
+4. Them import/export Excel, CSV, PDF va bo loc dashboard.
+5. Hoan thien scheduler worker va migration.

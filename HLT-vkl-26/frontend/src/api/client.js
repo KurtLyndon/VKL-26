@@ -48,4 +48,9 @@ export async function updateTaskExecutionStatus(taskExecutionId, payload) {
   return data;
 }
 
+export async function runSchedulerNow() {
+  const { data } = await api.post("/scheduler/run");
+  return data;
+}
+
 export default api;

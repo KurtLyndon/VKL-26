@@ -54,6 +54,7 @@ from app.schemas.resources import (
     ReportTemplateCreate,
     ReportTemplateRead,
     ReportTemplateUpdate,
+    SchedulerRunResponse,
     ScanResultCreate,
     ScanResultFindingCreate,
     ScanResultFindingRead,
@@ -88,6 +89,7 @@ from app.schemas.resources import (
 )
 from app.services.agents.registry import get_parser
 from app.services.execution import get_runtime_overview, launch_operation, update_task_execution_status
+from app.services.scheduler import run_scheduler_cycle
 
 router = APIRouter()
 
@@ -321,6 +323,11 @@ def execute_operation(operation_id: int, payload: OperationLaunchRequest, db: Se
 @router.get("/operations/runtime/overview", response_model=list[OperationRuntimeOverviewItem])
 def operations_runtime_overview(db: Session = Depends(get_db)):
     return get_runtime_overview(db)
+
+
+@router.post("/scheduler/run", response_model=SchedulerRunResponse)
+def run_scheduler_now(db: Session = Depends(get_db)):
+    return run_scheduler_cycle(db)
 
 
 @router.get("/operation-executions/{execution_id}/tasks", response_model=list[TaskExecutionRead])

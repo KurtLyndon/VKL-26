@@ -13,6 +13,23 @@
   <section class="panel-grid">
     <article class="panel">
       <div class="panel-head">
+        <h3>Scheduler Runner</h3>
+        <span class="badge">cron + interval</span>
+      </div>
+
+      <p class="page-copy">
+        Chay mot vong scheduler de tu dong launch cac operation den han. Background loop co the bat qua file env.
+      </p>
+
+      <div class="form-actions">
+        <button class="primary-button" type="button" @click="runScheduler">Run Scheduler Now</button>
+      </div>
+
+      <p v-if="schedulerSummary" class="inline-note">{{ schedulerSummary }}</p>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
         <h3>Runtime Overview</h3>
         <span class="badge">{{ runtimeItems.length }} operations</span>
       </div>
@@ -143,6 +160,7 @@ import {
   getList,
   getOperationsRuntimeOverview,
   launchOperation,
+  runSchedulerNow,
   updateTaskExecutionStatus,
 } from "../api/client";
 
@@ -152,6 +170,7 @@ const executionTasks = ref([]);
 const selectedOperationId = ref(null);
 const selectedExecution = ref(null);
 const message = ref("");
+const schedulerSummary = ref("");
 
 const launchForm = reactive({
   trigger_type: "manual",
@@ -212,6 +231,16 @@ async function submitLaunch() {
     await selectExecution(response.execution);
   } catch (error) {
     message.value = error?.message || "Unable to launch operation.";
+  }
+}
+
+async function runScheduler() {
+  try {
+    const result = await runSchedulerNow();
+    schedulerSummary.value = `Scheduler checked ${result.checked_operations} operation(s) and launched ${result.launched_operations} execution(s).`;
+    await loadRuntime();
+  } catch (error) {
+    schedulerSummary.value = error?.message || "Unable to run scheduler.";
   }
 }
 

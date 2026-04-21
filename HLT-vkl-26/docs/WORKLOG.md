@@ -15,6 +15,7 @@
 - Tach parser service theo tung agent trong `backend/app/services/agents/nmap` va `backend/app/services/agents/nuclei`.
 - Them API normalize scan result thanh `scan_result` + `scan_result_finding`.
 - Them runtime control: launch operation tu UI, cap nhat task execution status va runtime overview.
+- Them scheduler runner cho operation voi `cron`/`interval`, co API run-now va background loop qua env.
 
 ### Trang thai tam thoi
 
@@ -25,7 +26,7 @@
 ### Buoc tiep theo de lam tiep
 
 1. Them migration versioned (Alembic hoac thu muc SQL migration co quy uoc version).
-2. Lam scheduler runner cho operation.
-3. Nang cap parser `nmap`, `nuclei` theo output thuc te va them `acunetix`.
-4. Them import/export CSV, Excel, JSON.
-5. Bo sung UI drag-drop operation task va bo loc execution.
+2. Nang cap parser `nmap`, `nuclei` theo output thuc te va them `acunetix`.
+3. Them import/export CSV, Excel, JSON.
+4. Bo sung UI drag-drop operation task va bo loc execution.
+5. Hoan thien auth va worker agent.

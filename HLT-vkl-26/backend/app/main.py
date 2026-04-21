@@ -5,9 +5,11 @@ from app.api.routes import router as api_router
 from app.core.config import get_settings
 from app.db.base import Base
 from app.db.session import engine
+from app.services.scheduler import SchedulerLoop
 from app import models  # noqa: F401
 
 settings = get_settings()
+scheduler_loop = SchedulerLoop(settings.scheduler_poll_seconds)
 
 app = FastAPI(title=settings.app_name)
 
@@ -23,6 +25,13 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    if settings.scheduler_enabled:
+        scheduler_loop.start()
+
+
+@app.on_event("shutdown")
+def on_shutdown():
+    scheduler_loop.stop()
 
 
 @app.get("/health")
