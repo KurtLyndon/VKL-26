@@ -128,6 +128,64 @@ class OperationTaskRead(OperationTaskBase, ORMModel):
     created_at: datetime
 
 
+class OperationExecutionBase(BaseModel):
+    operation_id: int
+    execution_code: str
+    trigger_type: str = "manual"
+    status: str = "pending"
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    summary_json: dict | None = None
+
+
+class OperationExecutionCreate(OperationExecutionBase):
+    pass
+
+
+class OperationExecutionUpdate(BaseModel):
+    trigger_type: str | None = None
+    status: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    summary_json: dict | None = None
+
+
+class OperationExecutionRead(OperationExecutionBase, ORMModel):
+    id: int
+    created_at: datetime
+
+
+class TaskExecutionBase(BaseModel):
+    operation_execution_id: int
+    operation_task_id: int
+    task_id: int
+    agent_id: int
+    status: str = "pending"
+    input_data_json: dict | None = None
+    output_data_json: dict | None = None
+    raw_log: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+
+class TaskExecutionCreate(TaskExecutionBase):
+    pass
+
+
+class TaskExecutionUpdate(BaseModel):
+    agent_id: int | None = None
+    status: str | None = None
+    input_data_json: dict | None = None
+    output_data_json: dict | None = None
+    raw_log: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+
+class TaskExecutionRead(TaskExecutionBase, ORMModel):
+    id: int
+
+
 class TargetBase(BaseModel):
     code: str
     name: str
@@ -374,12 +432,86 @@ class ReportTemplateRead(ReportTemplateBase, ORMModel):
     updated_at: datetime
 
 
+class GeneratedReportBase(BaseModel):
+    report_template_id: int
+    operation_execution_id: int | None = None
+    file_name: str
+    file_path: str | None = None
+    generated_at: datetime | None = None
+    generated_by: str | None = None
+    summary_json: dict | None = None
+
+
+class GeneratedReportCreate(GeneratedReportBase):
+    pass
+
+
+class GeneratedReportUpdate(BaseModel):
+    file_name: str | None = None
+    file_path: str | None = None
+    generated_at: datetime | None = None
+    generated_by: str | None = None
+    summary_json: dict | None = None
+
+
+class GeneratedReportRead(GeneratedReportBase, ORMModel):
+    id: int
+
+
+class ReportSnapshotBase(BaseModel):
+    generated_report_id: int
+    snapshot_date: datetime | None = None
+    data_json: dict | None = None
+
+
+class ReportSnapshotCreate(ReportSnapshotBase):
+    pass
+
+
+class ReportSnapshotUpdate(BaseModel):
+    snapshot_date: datetime | None = None
+    data_json: dict | None = None
+
+
+class ReportSnapshotRead(ReportSnapshotBase, ORMModel):
+    id: int
+    created_at: datetime
+
+
+class OperationLaunchRequest(BaseModel):
+    trigger_type: str = "manual"
+    shared_input: dict | None = None
+
+
+class OperationLaunchResponse(BaseModel):
+    execution: OperationExecutionRead
+    task_executions: list[TaskExecutionRead]
+
+
+class ParserNormalizeRequest(BaseModel):
+    agent_type: str
+    source_tool: str | None = None
+    raw_output: str
+    operation_execution_id: int
+    task_execution_id: int
+    target_id: int
+    detected_at: datetime | None = None
+
+
+class ParserNormalizeResponse(BaseModel):
+    scan_result: ScanResultRead
+    findings: list[ScanResultFindingRead]
+
+
 class DashboardSummary(BaseModel):
     agents: int
     tasks: int
     operations: int
+    operation_executions: int
+    task_executions: int
     targets: int
     vulnerabilities: int
     scan_results: int
     open_findings: int
     report_templates: int
+    generated_reports: int

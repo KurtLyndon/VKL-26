@@ -106,6 +106,8 @@ class OperationTask(Base):
     continue_on_error: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    task: Mapped["Task"] = relationship()
+
 
 class OperationExecution(Base):
     __tablename__ = "operation_execution"
@@ -119,6 +121,8 @@ class OperationExecution(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     summary_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    operation: Mapped["Operation"] = relationship()
 
 
 class TaskExecution(Base):
@@ -135,6 +139,9 @@ class TaskExecution(Base):
     raw_log: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    agent: Mapped["Agent"] = relationship()
+    task: Mapped["Task"] = relationship()
 
 
 class Target(Base, TimestampMixin):

@@ -48,10 +48,12 @@ Giao dien mac dinh: `http://localhost:5173`
 ## Pham vi da khoi tao
 
 - CRUD API cho: `agent`, `task`, `operation`, `operation_task`, `target`, `target_attribute_definition`, `target_attribute_value`, `target_group`, `vulnerability`, `vulnerability_script`, `scan_result`, `scan_result_finding`, `report_template`.
+- CRUD API mo rong cho: `operation_execution`, `task_execution`, `generated_report`, `report_snapshot`.
 - Dashboard tong quan cho frontend.
 - Kien truc tach rieng de sau nay docker hoa, them worker, scheduler, parser agent va export report.
 - Co SQL khoi tao schema va seed mau trong `backend/database`.
 - Co nhat ky tien do trong `docs/WORKLOG.md` de lan sau tiep tuc.
+- Code parser tung agent duoc tach rieng trong `backend/app/services/agents`.
 
 ## Khoi tao database nhanh
 
@@ -74,5 +76,5 @@ python scripts\seed_data.py
 1. Them Alembic migration thay cho `create_all`.
 2. Bo sung auth va phan quyen.
 3. Lam scheduler runner cho `operation_execution` va `task_execution`.
-4. Them parser service cho `nmap`, `nuclei`, `acunetix`.
+4. Nang cap parser service cho `nmap`, `nuclei`, `acunetix`.
 5. Them import/export Excel, CSV, PDF va bo loc dashboard.

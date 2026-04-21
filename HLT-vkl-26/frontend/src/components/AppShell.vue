@@ -29,10 +29,12 @@ const navigation = [
   { to: "/agents", label: "Agents", caption: "Trang thai va version" },
   { to: "/tasks", label: "Tasks", caption: "Script va schema" },
   { to: "/operations", label: "Operations", caption: "Workflow va lich chay" },
+  { to: "/operation-executions", label: "Executions", caption: "Tien trinh operation va task" },
   { to: "/targets", label: "Targets", caption: "Tai san va nhom doi tuong" },
   { to: "/vulnerabilities", label: "CVE", caption: "Threat, proposal, PoC" },
   { to: "/scan-results", label: "Scan Results", caption: "Du lieu chuan hoa" },
   { to: "/scan-findings", label: "Findings", caption: "Loi hong va bang chung" },
   { to: "/report-templates", label: "Reports", caption: "Mau va thong ke" },
+  { to: "/generated-reports", label: "Generated", caption: "Bao cao da sinh ra" },
 ];
 </script>

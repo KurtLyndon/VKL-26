@@ -9,9 +9,12 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.models import (
     Agent,
+    GeneratedReport,
     Operation,
+    OperationExecution,
     OperationTask,
     ReportTemplate,
+    ReportSnapshot,
     ScanResult,
     ScanResultFinding,
     Target,
@@ -19,6 +22,7 @@ from app.models import (
     TargetAttributeValue,
     TargetGroup,
     Task,
+    TaskExecution,
     Vulnerability,
     VulnerabilityScript,
 )
@@ -27,12 +31,25 @@ from app.schemas.resources import (
     AgentRead,
     AgentUpdate,
     DashboardSummary,
+    GeneratedReportCreate,
+    GeneratedReportRead,
+    GeneratedReportUpdate,
     OperationCreate,
+    OperationExecutionCreate,
+    OperationExecutionRead,
+    OperationExecutionUpdate,
+    OperationLaunchRequest,
+    OperationLaunchResponse,
     OperationRead,
     OperationTaskCreate,
     OperationTaskRead,
     OperationTaskUpdate,
     OperationUpdate,
+    ParserNormalizeRequest,
+    ParserNormalizeResponse,
+    ReportSnapshotCreate,
+    ReportSnapshotRead,
+    ReportSnapshotUpdate,
     ReportTemplateCreate,
     ReportTemplateRead,
     ReportTemplateUpdate,
@@ -55,6 +72,9 @@ from app.schemas.resources import (
     TargetRead,
     TargetUpdate,
     TaskCreate,
+    TaskExecutionCreate,
+    TaskExecutionRead,
+    TaskExecutionUpdate,
     TaskRead,
     TaskUpdate,
     VulnerabilityCreate,
@@ -64,6 +84,8 @@ from app.schemas.resources import (
     VulnerabilityScriptUpdate,
     VulnerabilityUpdate,
 )
+from app.services.agents.registry import get_parser
+from app.services.execution import launch_operation
 
 router = APIRouter()
 
@@ -154,6 +176,22 @@ register_crud_routes(
 )
 register_crud_routes(
     router,
+    path="/operation-executions",
+    model=OperationExecution,
+    read_schema=OperationExecutionRead,
+    create_schema=OperationExecutionCreate,
+    update_schema=OperationExecutionUpdate,
+)
+register_crud_routes(
+    router,
+    path="/task-executions",
+    model=TaskExecution,
+    read_schema=TaskExecutionRead,
+    create_schema=TaskExecutionCreate,
+    update_schema=TaskExecutionUpdate,
+)
+register_crud_routes(
+    router,
     path="/targets",
     model=Target,
     read_schema=TargetRead,
@@ -218,6 +256,22 @@ register_crud_routes(
 )
 register_crud_routes(
     router,
+    path="/generated-reports",
+    model=GeneratedReport,
+    read_schema=GeneratedReportRead,
+    create_schema=GeneratedReportCreate,
+    update_schema=GeneratedReportUpdate,
+)
+register_crud_routes(
+    router,
+    path="/report-snapshots",
+    model=ReportSnapshot,
+    read_schema=ReportSnapshotRead,
+    create_schema=ReportSnapshotCreate,
+    update_schema=ReportSnapshotUpdate,
+)
+register_crud_routes(
+    router,
     path="/report-templates",
     model=ReportTemplate,
     read_schema=ReportTemplateRead,
@@ -235,6 +289,8 @@ def dashboard_summary(db: Session = Depends(get_db)):
         agents=count_rows(Agent),
         tasks=count_rows(Task),
         operations=count_rows(Operation),
+        operation_executions=count_rows(OperationExecution),
+        task_executions=count_rows(TaskExecution),
         targets=count_rows(Target),
         vulnerabilities=count_rows(Vulnerability),
         scan_results=count_rows(ScanResult),
@@ -243,6 +299,7 @@ def dashboard_summary(db: Session = Depends(get_db)):
         )
         or 0,
         report_templates=count_rows(ReportTemplate),
+        generated_reports=count_rows(GeneratedReport),
     )
 
 
@@ -251,3 +308,51 @@ def list_operation_tasks(operation_id: int, db: Session = Depends(get_db)):
     return db.scalars(
         select(OperationTask).where(OperationTask.operation_id == operation_id).order_by(OperationTask.order_index.asc())
     ).all()
+
+
+@router.post("/operations/{operation_id}/launch", response_model=OperationLaunchResponse)
+def execute_operation(operation_id: int, payload: OperationLaunchRequest, db: Session = Depends(get_db)):
+    execution, task_executions = launch_operation(db, operation_id, payload)
+    return OperationLaunchResponse(execution=execution, task_executions=task_executions)
+
+
+@router.get("/operation-executions/{execution_id}/tasks", response_model=list[TaskExecutionRead])
+def list_execution_tasks(execution_id: int, db: Session = Depends(get_db)):
+    return db.scalars(
+        select(TaskExecution)
+        .where(TaskExecution.operation_execution_id == execution_id)
+        .order_by(TaskExecution.id.asc())
+    ).all()
+
+
+@router.post("/scan-results/normalize", response_model=ParserNormalizeResponse, status_code=status.HTTP_201_CREATED)
+def normalize_scan_result(payload: ParserNormalizeRequest, db: Session = Depends(get_db)):
+    parser = get_parser(payload.agent_type)
+    normalized_output = parser.normalize(payload.raw_output)
+
+    scan_result = ScanResult(
+        operation_execution_id=payload.operation_execution_id,
+        task_execution_id=payload.task_execution_id,
+        target_id=payload.target_id,
+        agent_type=payload.agent_type,
+        source_tool=payload.source_tool or payload.agent_type,
+        raw_output=payload.raw_output,
+        normalized_output_json=normalized_output,
+        detected_at=payload.detected_at,
+        parse_status="success",
+    )
+    db.add(scan_result)
+    db.flush()
+
+    findings: list[ScanResultFinding] = []
+    for finding in parser.extract_findings(payload.raw_output):
+        finding_record = ScanResultFinding(scan_result_id=scan_result.id, **finding)
+        db.add(finding_record)
+        findings.append(finding_record)
+
+    db.commit()
+    db.refresh(scan_result)
+    for finding in findings:
+        db.refresh(finding)
+
+    return ParserNormalizeResponse(scan_result=scan_result, findings=findings)

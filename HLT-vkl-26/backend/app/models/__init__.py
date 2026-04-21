@@ -38,6 +38,7 @@ __all__ = [
     "OperationTask",
     "ReportSnapshot",
     "ReportTemplate",
+    "GeneratedReport",
     "ScanResult",
     "ScanResultFinding",
     "Target",

@@ -13,11 +13,14 @@
     <StatCard label="Agents" :value="summary.agents" />
     <StatCard label="Tasks" :value="summary.tasks" />
     <StatCard label="Operations" :value="summary.operations" />
+    <StatCard label="Operation Executions" :value="summary.operation_executions" />
+    <StatCard label="Task Executions" :value="summary.task_executions" />
     <StatCard label="Targets" :value="summary.targets" />
     <StatCard label="Vulnerabilities" :value="summary.vulnerabilities" />
     <StatCard label="Scan Results" :value="summary.scan_results" />
     <StatCard label="Open Findings" :value="summary.open_findings" />
     <StatCard label="Report Templates" :value="summary.report_templates" />
+    <StatCard label="Generated Reports" :value="summary.generated_reports" />
   </section>
 
   <section class="panel-grid">
@@ -27,7 +30,7 @@
         <li>Quan ly agent, task, operation va lich chay</li>
         <li>Quan ly target, thuoc tinh dong va grouping</li>
         <li>Quan ly CVE, script PoC va ket qua scan chuan hoa</li>
-        <li>Template bao cao va dashboard summary</li>
+        <li>Execution flow, parser registry va template bao cao</li>
       </ul>
     </article>
 
@@ -35,7 +38,7 @@
       <h3>Huong phat trien tiep</h3>
       <ul class="feature-list">
         <li>Parser rieng cho nmap, nuclei, acunetix</li>
-        <li>Realtime heartbeat agent va theo doi execution</li>
+        <li>Realtime heartbeat agent, dispatch va theo doi execution</li>
         <li>Import/export Excel, CSV, PDF, JSON</li>
         <li>Drag and drop operation task + scheduler runner</li>
       </ul>
@@ -52,11 +55,14 @@ const summary = reactive({
   agents: 0,
   tasks: 0,
   operations: 0,
+  operation_executions: 0,
+  task_executions: 0,
   targets: 0,
   vulnerabilities: 0,
   scan_results: 0,
   open_findings: 0,
   report_templates: 0,
+  generated_reports: 0,
 });
 
 onMounted(async () => {

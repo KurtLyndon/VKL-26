@@ -11,6 +11,9 @@
 - Dung frontend `Vue 3 + Vite` voi dashboard va cac man quan tri resource.
 - Them `backend/database/001_init_schema.sql` de khoi tao schema MySQL.
 - Them `backend/database/002_seed_sample_data.sql` va `backend/scripts/seed_data.py` de tao du lieu mau.
+- Them execution flow co ban: `operation_execution`, `task_execution`, launch operation.
+- Tach parser service theo tung agent trong `backend/app/services/agents/nmap` va `backend/app/services/agents/nuclei`.
+- Them API normalize scan result thanh `scan_result` + `scan_result_finding`.
 
 ### Trang thai tam thoi
 
@@ -21,7 +24,7 @@
 ### Buoc tiep theo de lam tiep
 
 1. Them migration versioned (Alembic hoac thu muc SQL migration co quy uoc version).
-2. Them bang va API cho `operation_execution`, `task_execution`, `generated_report`, `report_snapshot`.
-3. Lam service parser chuan hoa output cho `nmap` va `nuclei`.
-4. Lam scheduler runner cho operation.
-5. Them import/export CSV, Excel, JSON.
+2. Lam scheduler runner cho operation.
+3. Nang cap parser `nmap`, `nuclei` theo output thuc te va them `acunetix`.
+4. Them import/export CSV, Excel, JSON.
+5. Bo sung UI workflow chay operation va xem chi tiet execution.
