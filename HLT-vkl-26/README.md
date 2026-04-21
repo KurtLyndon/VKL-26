@@ -32,6 +32,8 @@ Neu muon bat scheduler loop nen:
 ```powershell
 $env:SCHEDULER_ENABLED="true"
 $env:SCHEDULER_POLL_SECONDS="60"
+$env:WORKER_ENABLED="true"
+$env:WORKER_POLL_SECONDS="20"
 uvicorn app.main:app --reload
 ```
 
@@ -59,6 +61,7 @@ Giao dien mac dinh: `http://localhost:5173`
 - CRUD API mo rong cho: `operation_execution`, `task_execution`, `generated_report`, `report_snapshot`.
 - Runtime API cho launch operation, cap nhat task execution status va tong hop runtime overview.
 - Scheduler runner cho `cron` va `interval`, co API chay tay va background loop qua env.
+- Worker runner xu ly `task_execution` theo thu tu, mock-run agent, parse ket qua va luu `scan_result`.
 - Dashboard tong quan cho frontend.
 - Kien truc tach rieng de sau nay docker hoa, them worker, scheduler, parser agent va export report.
 - Co SQL khoi tao schema va seed mau trong `backend/database`.
@@ -87,5 +90,5 @@ python scripts\seed_data.py
 1. Them Alembic migration thay cho `create_all`.
 2. Bo sung auth va phan quyen.
 3. Them import/export Excel, CSV, PDF va bo loc dashboard.
-4. Hoan thien scheduler worker va migration.
-5. Them worker/dispatch that toi agent thuc te.
+4. Them worker/dispatch that toi agent thuc te.
+5. Hoan thien migration va auth.

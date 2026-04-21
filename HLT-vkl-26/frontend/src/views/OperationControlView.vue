@@ -30,6 +30,23 @@
 
     <article class="panel">
       <div class="panel-head">
+        <h3>Worker Runner</h3>
+        <span class="badge">sequential mock-run</span>
+      </div>
+
+      <p class="page-copy">
+        Xu ly task execution dang queued theo dung thu tu, tu parse ket qua va cap nhat execution summary.
+      </p>
+
+      <div class="form-actions">
+        <button class="primary-button" type="button" @click="runWorker">Run Worker Now</button>
+      </div>
+
+      <p v-if="workerSummary" class="inline-note">{{ workerSummary }}</p>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
         <h3>Runtime Overview</h3>
         <span class="badge">{{ runtimeItems.length }} operations</span>
       </div>
@@ -161,6 +178,7 @@ import {
   getOperationsRuntimeOverview,
   launchOperation,
   runSchedulerNow,
+  runWorkerNow,
   updateTaskExecutionStatus,
 } from "../api/client";
 
@@ -171,6 +189,7 @@ const selectedOperationId = ref(null);
 const selectedExecution = ref(null);
 const message = ref("");
 const schedulerSummary = ref("");
+const workerSummary = ref("");
 
 const launchForm = reactive({
   trigger_type: "manual",
@@ -241,6 +260,19 @@ async function runScheduler() {
     await loadRuntime();
   } catch (error) {
     schedulerSummary.value = error?.message || "Unable to run scheduler.";
+  }
+}
+
+async function runWorker() {
+  try {
+    const result = await runWorkerNow();
+    workerSummary.value = `Worker checked ${result.checked_executions} execution(s), processed ${result.processed_tasks} task(s), completed ${result.completed_tasks}, failed ${result.failed_tasks}.`;
+    await loadRuntime();
+    if (selectedExecution.value) {
+      await selectExecution(selectedExecution.value);
+    }
+  } catch (error) {
+    workerSummary.value = error?.message || "Unable to run worker.";
   }
 }
 

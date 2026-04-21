@@ -53,4 +53,9 @@ export async function runSchedulerNow() {
   return data;
 }
 
+export async function runWorkerNow() {
+  const { data } = await api.post("/worker/run");
+  return data;
+}
+
 export default api;

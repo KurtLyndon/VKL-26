@@ -86,10 +86,12 @@ from app.schemas.resources import (
     VulnerabilityScriptRead,
     VulnerabilityScriptUpdate,
     VulnerabilityUpdate,
+    WorkerRunResponse,
 )
-from app.services.agents.registry import get_parser
 from app.services.execution import get_runtime_overview, launch_operation, update_task_execution_status
+from app.services.scan_results import normalize_and_store_scan_result
 from app.services.scheduler import run_scheduler_cycle
+from app.services.worker import run_worker_cycle
 
 router = APIRouter()
 
@@ -330,6 +332,11 @@ def run_scheduler_now(db: Session = Depends(get_db)):
     return run_scheduler_cycle(db)
 
 
+@router.post("/worker/run", response_model=WorkerRunResponse)
+def run_worker_now(db: Session = Depends(get_db)):
+    return run_worker_cycle(db)
+
+
 @router.get("/operation-executions/{execution_id}/tasks", response_model=list[TaskExecutionRead])
 def list_execution_tasks(execution_id: int, db: Session = Depends(get_db)):
     return db.scalars(
@@ -349,29 +356,16 @@ def set_task_execution_status(
 
 @router.post("/scan-results/normalize", response_model=ParserNormalizeResponse, status_code=status.HTTP_201_CREATED)
 def normalize_scan_result(payload: ParserNormalizeRequest, db: Session = Depends(get_db)):
-    parser = get_parser(payload.agent_type)
-    normalized_output = parser.normalize(payload.raw_output)
-
-    scan_result = ScanResult(
+    scan_result, findings = normalize_and_store_scan_result(
+        db,
+        agent_type=payload.agent_type,
+        source_tool=payload.source_tool,
+        raw_output=payload.raw_output,
         operation_execution_id=payload.operation_execution_id,
         task_execution_id=payload.task_execution_id,
         target_id=payload.target_id,
-        agent_type=payload.agent_type,
-        source_tool=payload.source_tool or payload.agent_type,
-        raw_output=payload.raw_output,
-        normalized_output_json=normalized_output,
         detected_at=payload.detected_at,
-        parse_status="success",
     )
-    db.add(scan_result)
-    db.flush()
-
-    findings: list[ScanResultFinding] = []
-    for finding in parser.extract_findings(payload.raw_output):
-        finding_record = ScanResultFinding(scan_result_id=scan_result.id, **finding)
-        db.add(finding_record)
-        findings.append(finding_record)
-
     db.commit()
     db.refresh(scan_result)
     for finding in findings:

@@ -1,0 +1,169 @@
+import threading
+from datetime import datetime
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.db.session import SessionLocal
+from app.models import OperationExecution, OperationTask, Target, TaskExecution
+from app.schemas.resources import WorkerRunResponse
+from app.services.agents.runner_registry import get_runner
+from app.services.execution import refresh_operation_execution_summary
+from app.services.scan_results import normalize_and_store_scan_result
+
+
+def _resolve_target(db: Session, task_execution: TaskExecution) -> tuple[int | None, str]:
+    input_data = task_execution.input_data_json or {}
+    target_id = input_data.get("target_id")
+    if target_id:
+        target = db.get(Target, int(target_id))
+        if target:
+            return target.id, target.domain or target.ip_range or target.name
+
+    target = db.scalar(select(Target).order_by(Target.id.asc()).limit(1))
+    if target:
+        return target.id, target.domain or target.ip_range or target.name
+    return None, "127.0.0.1"
+
+
+def _previous_gate_allows_run(db: Session, task_execution: TaskExecution) -> bool:
+    current_operation_task = db.get(OperationTask, task_execution.operation_task_id)
+    if not current_operation_task:
+        return False
+
+    previous_tasks = db.scalars(
+        select(TaskExecution)
+        .join(OperationTask, TaskExecution.operation_task_id == OperationTask.id)
+        .where(TaskExecution.operation_execution_id == task_execution.operation_execution_id)
+        .where(OperationTask.order_index < current_operation_task.order_index)
+        .order_by(OperationTask.order_index.asc(), TaskExecution.id.asc())
+    ).all()
+
+    for previous in previous_tasks:
+        previous_operation_task = db.get(OperationTask, previous.operation_task_id)
+        if previous.status == "completed":
+            continue
+        if previous.status == "failed" and previous_operation_task and previous_operation_task.continue_on_error:
+            continue
+        return False
+
+    return True
+
+
+def _cancel_blocked_followups(db: Session, failed_task_execution: TaskExecution) -> int:
+    failed_operation_task = db.get(OperationTask, failed_task_execution.operation_task_id)
+    if not failed_operation_task or failed_operation_task.continue_on_error:
+        return 0
+
+    queued_followups = db.scalars(
+        select(TaskExecution)
+        .join(OperationTask, TaskExecution.operation_task_id == OperationTask.id)
+        .where(TaskExecution.operation_execution_id == failed_task_execution.operation_execution_id)
+        .where(TaskExecution.status == "queued")
+        .where(OperationTask.order_index > failed_operation_task.order_index)
+    ).all()
+
+    for task_execution in queued_followups:
+        task_execution.status = "canceled"
+        task_execution.started_at = datetime.utcnow()
+        task_execution.finished_at = datetime.utcnow()
+        task_execution.raw_log = "Canceled because previous task failed and continue_on_error is false."
+
+    return len(queued_followups)
+
+
+def process_task_execution(db: Session, task_execution: TaskExecution) -> str:
+    task_execution.status = "running"
+    task_execution.started_at = datetime.utcnow()
+
+    target_id, target_value = _resolve_target(db, task_execution)
+    runner = get_runner(task_execution.task.agent_type)
+
+    try:
+        raw_output = runner.run(task_execution, target_value)
+        task_execution.output_data_json = {"target": target_value, "mode": "mock-runner"}
+        task_execution.raw_log = f"Executed by mock runner for {task_execution.task.agent_type}."
+        task_execution.status = "completed"
+        task_execution.finished_at = datetime.utcnow()
+
+        if target_id is not None:
+            normalize_and_store_scan_result(
+                db,
+                agent_type=task_execution.task.agent_type,
+                source_tool=task_execution.task.agent_type,
+                raw_output=raw_output,
+                operation_execution_id=task_execution.operation_execution_id,
+                task_execution_id=task_execution.id,
+                target_id=target_id,
+                detected_at=datetime.utcnow(),
+            )
+        return "completed"
+    except Exception as exc:  # noqa: BLE001
+        task_execution.status = "failed"
+        task_execution.raw_log = f"Worker failed: {exc}"
+        task_execution.finished_at = datetime.utcnow()
+        return "failed"
+
+
+def run_worker_cycle(db: Session) -> WorkerRunResponse:
+    started_at = datetime.utcnow()
+    queued_tasks = db.scalars(
+        select(TaskExecution)
+        .where(TaskExecution.status == "queued")
+        .order_by(TaskExecution.operation_execution_id.asc(), TaskExecution.id.asc())
+    ).all()
+
+    processed_execution_ids: list[int] = []
+    processed_tasks = completed_tasks = failed_tasks = canceled_tasks = 0
+    checked_execution_ids = {task.operation_execution_id for task in queued_tasks}
+
+    for task_execution in queued_tasks:
+        if not _previous_gate_allows_run(db, task_execution):
+            continue
+        result = process_task_execution(db, task_execution)
+        processed_tasks += 1
+        processed_execution_ids.append(task_execution.operation_execution_id)
+        if result == "completed":
+            completed_tasks += 1
+        else:
+            failed_tasks += 1
+            canceled_tasks += _cancel_blocked_followups(db, task_execution)
+        refresh_operation_execution_summary(db, task_execution.operation_execution_id)
+
+    db.commit()
+    return WorkerRunResponse(
+        checked_executions=len(checked_execution_ids),
+        processed_tasks=processed_tasks,
+        completed_tasks=completed_tasks,
+        failed_tasks=failed_tasks,
+        canceled_tasks=canceled_tasks,
+        processed_execution_ids=sorted(set(processed_execution_ids)),
+        run_started_at=started_at,
+    )
+
+
+class WorkerLoop:
+    def __init__(self, poll_seconds: int) -> None:
+        self.poll_seconds = max(5, poll_seconds)
+        self._stop_event = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    def start(self) -> None:
+        if self._thread and self._thread.is_alive():
+            return
+        self._thread = threading.Thread(target=self._run, name="hlt-worker-loop", daemon=True)
+        self._thread.start()
+
+    def stop(self) -> None:
+        self._stop_event.set()
+        if self._thread and self._thread.is_alive():
+            self._thread.join(timeout=2)
+
+    def _run(self) -> None:
+        while not self._stop_event.is_set():
+            db = SessionLocal()
+            try:
+                run_worker_cycle(db)
+            finally:
+                db.close()
+            self._stop_event.wait(self.poll_seconds)

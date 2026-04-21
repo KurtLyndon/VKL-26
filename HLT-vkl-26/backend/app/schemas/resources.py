@@ -514,6 +514,16 @@ class SchedulerRunResponse(BaseModel):
     run_started_at: datetime
 
 
+class WorkerRunResponse(BaseModel):
+    checked_executions: int
+    processed_tasks: int
+    completed_tasks: int
+    failed_tasks: int
+    canceled_tasks: int
+    processed_execution_ids: list[int]
+    run_started_at: datetime
+
+
 class ParserNormalizeRequest(BaseModel):
     agent_type: str
     source_tool: str | None = None

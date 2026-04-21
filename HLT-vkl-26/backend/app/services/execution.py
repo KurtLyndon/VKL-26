@@ -101,6 +101,22 @@ def update_task_execution_status(
     if not operation_execution:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent operation execution not found")
 
+    refresh_operation_execution_summary(db, operation_execution.id, now)
+
+    db.commit()
+    db.refresh(task_execution)
+    db.refresh(operation_execution)
+    return task_execution, operation_execution
+
+
+def refresh_operation_execution_summary(
+    db: Session, operation_execution_id: int, now: datetime | None = None
+) -> OperationExecution:
+    current_time = now or datetime.utcnow()
+    operation_execution = db.get(OperationExecution, operation_execution_id)
+    if not operation_execution:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Parent operation execution not found")
+
     sibling_tasks = db.scalars(
         select(TaskExecution).where(TaskExecution.operation_execution_id == operation_execution.id).order_by(TaskExecution.id.asc())
     ).all()
@@ -115,13 +131,13 @@ def update_task_execution_status(
     if running_count > 0:
         operation_execution.status = "running"
         if operation_execution.started_at is None:
-            operation_execution.started_at = now
+            operation_execution.started_at = current_time
     elif failed_count > 0:
         operation_execution.status = "failed"
-        operation_execution.finished_at = now
+        operation_execution.finished_at = current_time
     elif completed_count + canceled_count == total_count and total_count > 0:
         operation_execution.status = "completed"
-        operation_execution.finished_at = now
+        operation_execution.finished_at = current_time
     else:
         operation_execution.status = "queued"
 
@@ -133,11 +149,7 @@ def update_task_execution_status(
         "completed_count": completed_count,
         "canceled_count": canceled_count,
     }
-
-    db.commit()
-    db.refresh(task_execution)
-    db.refresh(operation_execution)
-    return task_execution, operation_execution
+    return operation_execution
 
 
 def get_runtime_overview(db: Session) -> list[OperationRuntimeOverviewItem]:

@@ -17,6 +17,7 @@
 - Them runtime control: launch operation tu UI, cap nhat task execution status va runtime overview.
 - Them scheduler runner cho operation voi `cron`/`interval`, co API run-now va background loop qua env.
 - Nang parser `nmap` doc XML, `nuclei` doc JSONL, va them khung parser rieng cho `acunetix`.
+- Them worker runner mock cho `nmap`, `nuclei`, `acunetix`; xu ly task theo thu tu va tu sinh scan result/finding.
 
 ### Trang thai tam thoi
 
@@ -29,5 +30,5 @@
 1. Them migration versioned (Alembic hoac thu muc SQL migration co quy uoc version).
 2. Them import/export CSV, Excel, JSON.
 3. Bo sung UI drag-drop operation task va bo loc execution.
-4. Hoan thien auth va worker agent.
-5. Them migration versioned.
+4. Thay mock worker bang dispatch toi agent thuc te.
+5. Hoan thien migration versioned va auth.

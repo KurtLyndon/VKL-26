@@ -3,7 +3,7 @@
 ## Muc tieu uu tien
 
 - Nang cap scheduler va trang thai runtime cho execution.
-- Hoan thien dispatch/runner toi agent thuc te.
+- Thay mock runner bang dispatch/runner toi agent thuc te.
 - Chuan bi migration bai ban thay vi chi `create_all`.
 
 ## Cach tiep tuc nhanh

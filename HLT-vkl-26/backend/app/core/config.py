@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     cors_origins: str = Field(default="http://localhost:5173", alias="CORS_ORIGINS")
     scheduler_enabled: bool = Field(default=False, alias="SCHEDULER_ENABLED")
     scheduler_poll_seconds: int = Field(default=60, alias="SCHEDULER_POLL_SECONDS")
+    worker_enabled: bool = Field(default=False, alias="WORKER_ENABLED")
+    worker_poll_seconds: int = Field(default=20, alias="WORKER_POLL_SECONDS")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
