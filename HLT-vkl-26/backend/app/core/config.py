@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     scheduler_poll_seconds: int = Field(default=60, alias="SCHEDULER_POLL_SECONDS")
     worker_enabled: bool = Field(default=False, alias="WORKER_ENABLED")
     worker_poll_seconds: int = Field(default=20, alias="WORKER_POLL_SECONDS")
+    agent_dispatch_mode: str = Field(default="auto", alias="AGENT_DISPATCH_MODE")
+    agent_request_timeout_seconds: int = Field(default=20, alias="AGENT_REQUEST_TIMEOUT_SECONDS")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

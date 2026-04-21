@@ -20,6 +20,7 @@
 - Them worker runner mock cho `nmap`, `nuclei`, `acunetix`; xu ly task theo thu tu va tu sinh scan result/finding.
 - Them import/export ket qua operation qua `JSON`, `CSV`, `XLSX`, va UI quan ly lich su import/export.
 - Them UI `Operation Designer`, `Execution Monitor`, `Finding Explorer` de sap task va loc execution/finding.
+- Worker ho tro dispatch HTTP toi agent that theo `host/ip_address + port`, va fallback mock runner khi chua co agent service.
 
 ### Trang thai tam thoi
 
@@ -30,7 +31,7 @@
 ### Buoc tiep theo de lam tiep
 
 1. Them migration versioned (Alembic hoac thu muc SQL migration co quy uoc version).
-2. Thay mock worker bang dispatch toi agent thuc te.
+2. Hoan thien giao thuc agent that, callback va heartbeat.
 3. Them export PDF.
 4. Hoan thien migration versioned.
 5. Them auth va phan quyen.

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.models import OperationExecution, OperationTask, Target, TaskExecution
 from app.schemas.resources import WorkerRunResponse
-from app.services.agents.runner_registry import get_runner
+from app.services.agents.dispatch import dispatch_task_to_agent
 from app.services.execution import refresh_operation_execution_summary
 from app.services.scan_results import normalize_and_store_scan_result
 
@@ -77,12 +77,13 @@ def process_task_execution(db: Session, task_execution: TaskExecution) -> str:
     task_execution.started_at = datetime.utcnow()
 
     target_id, target_value = _resolve_target(db, task_execution)
-    runner = get_runner(task_execution.task.agent_type)
 
     try:
-        raw_output = runner.run(task_execution, target_value)
-        task_execution.output_data_json = {"target": target_value, "mode": "mock-runner"}
-        task_execution.raw_log = f"Executed by mock runner for {task_execution.task.agent_type}."
+        raw_output, execution_meta = dispatch_task_to_agent(task_execution.agent, task_execution, target_value)
+        task_execution.output_data_json = {"target": target_value, **execution_meta}
+        task_execution.raw_log = (
+            f"Executed task via {execution_meta.get('mode')} for {task_execution.task.agent_type}."
+        )
         task_execution.status = "completed"
         task_execution.finished_at = datetime.utcnow()
 
