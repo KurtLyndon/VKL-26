@@ -1,19 +1,19 @@
 # Migrations
 
-## Muc tieu
+## Mục tiêu
 
-- Co version cho schema va sample seed local.
-- Khong can internet hoac scaffold tool ben ngoai.
-- Chuyen duoc database cu sang luong versioned ma khong chen trung du lieu.
+- Có version cho schema và sample seed local.
+- Không cần internet hoặc scaffold tool bên ngoài.
+- Chuyển được database cũ sang luồng versioned mà không chèn trùng dữ liệu.
 
-## Cau truc
+## Cấu trúc
 
-- `backend/migrations/versions`: migration SQL canon.
-- `backend/database/migrations.py`: migration engine va baseline stamping.
+- `backend/migrations/versions`: migration SQL chuẩn.
+- `backend/database/migrations.py`: migration engine và baseline stamping.
 - `backend/scripts/migrate.py`: CLI local.
-- `schema_migrations`: bang luu version da apply.
+- `schema_migrations`: bảng lưu version đã apply.
 
-## Cach dung
+## Cách dùng
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
@@ -21,37 +21,37 @@ python scripts\migrate.py status
 python scripts\migrate.py upgrade
 ```
 
-## Baseline cho database cu
+## Baseline cho database cũ
 
-Neu database da duoc khoi tao bang `backend/database/*.sql` hoac `Base.metadata.create_all(...)`, runner se:
+Nếu database đã được khởi tạo bằng `backend/database/*.sql` hoặc `Base.metadata.create_all(...)`, runner sẽ:
 
-1. Tao bang `schema_migrations` neu chua co.
-2. Kiem tra schema hien tai da co day du cac bang cot loi chua.
-3. Stamp `001` neu schema baseline da ton tai.
-4. Stamp `002` neu sample seed baseline da ton tai.
+1. Tạo bảng `schema_migrations` nếu chưa có.
+2. Kiểm tra schema hiện tại đã có đầy đủ các bảng cốt lõi chưa.
+3. Stamp `001` nếu schema baseline đã tồn tại.
+4. Stamp `002` nếu sample seed baseline đã tồn tại.
 
-Nho do team co the chuyen sang migration versioned ma khong bi apply lai seed.
+Nhờ đó team có thể chuyển sang migration versioned mà không bị apply lại seed.
 
-## Them migration moi
+## Thêm migration mới
 
-1. Tao file moi trong `backend/migrations/versions`.
-2. Dung ten tang dan, vi du `003__add_scan_indexes.sql`.
-3. Viet SQL cho chuyen doi moi.
-4. Chay `python scripts\migrate.py upgrade`.
-5. Cap nhat README/docs neu doi quy trinh local setup.
+1. Tạo file mới trong `backend/migrations/versions`.
+2. Dùng tên tăng dần, ví dụ `003__add_scan_indexes.sql`.
+3. Viết SQL cho chuyển đổi mới.
+4. Chạy `python scripts\migrate.py upgrade`.
+5. Cập nhật README/docs nếu đổi quy trình local setup.
 
-## Auto apply luc startup
+## Auto Apply Lúc Startup
 
-Mac dinh app se fail som neu schema chua dung version. Neu muon local startup tu apply migration pending:
+Mặc định app sẽ fail sớm nếu schema chưa đúng version. Nếu muốn local startup tự apply migration pending:
 
 ```powershell
 $env:AUTO_APPLY_MIGRATIONS="true"
 uvicorn app.main:app --reload
 ```
 
-## Snapshot SQL cu
+## Snapshot SQL Cũ
 
 - `backend/database/001_init_schema.sql`
 - `backend/database/002_seed_sample_data.sql`
 
-Hai file nay duoc giu lai de tham khao hoac bootstrap thu cong. Nguon su that de phat trien schema tu bay gio la thu muc migration versioned.
+Hai file này được giữ lại để tham khảo hoặc bootstrap thủ công. Nguồn sự thật để phát triển schema từ bây giờ là thư mục migration versioned.

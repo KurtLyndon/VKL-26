@@ -1,80 +1,80 @@
 # Agent Runtime Contract
 
-This document describes the minimal runtime contract now supported by the backend for external agents.
+Tài liệu này mô tả contract runtime tối thiểu mà backend hiện hỗ trợ cho external agent.
 
-## Execute dispatch
+## Execute Dispatch
 
-- Backend dispatches `POST /execute` on the external agent.
-- Request body matches `AgentExecuteRequest`.
-- Response body matches `AgentExecuteResponse`.
+- Backend gọi `POST /execute` trên external agent.
+- Request body bám theo `AgentExecuteRequest`.
+- Response body bám theo `AgentExecuteResponse`.
 
-### Request fields
+### Các trường trong request
 
-- `contract_version`: current contract version string.
-- `dispatched_at`: UTC timestamp when backend sent the request.
-- `task_execution_id`: backend task execution id.
-- `operation_execution_id`: backend operation execution id.
-- `agent`: backend metadata for the selected agent record.
-- `task`: task metadata including `code`, `script_name`, `script_path`, and version.
-- `target`: resolved target metadata plus a normalized `value`.
-- `input_data`: merged shared input and operation-task overrides.
-- `callback_paths`: backend callback paths for heartbeat, completion, and optional scan normalization.
+- `contract_version`: phiên bản contract hiện tại.
+- `dispatched_at`: thời điểm UTC khi backend gửi request.
+- `task_execution_id`: ID task execution của backend.
+- `operation_execution_id`: ID operation execution của backend.
+- `agent`: metadata của agent record được chọn bên backend.
+- `task`: metadata của task, gồm `code`, `script_name`, `script_path`, và version.
+- `target`: metadata của target đã resolve, kèm trường `value` đã chuẩn hóa.
+- `input_data`: dữ liệu input đã merge từ shared input và operation-task override.
+- `callback_paths`: các callback path về backend cho heartbeat, completion, và normalize scan result nếu cần.
 
-### Response modes
+### Các mode response
 
-- Synchronous completion:
-  - Return `status="completed"` and include `raw_output`.
-  - Backend will mark the task complete and normalize findings immediately.
-- Asynchronous acceptance:
-  - Return `status="accepted"` or `status="running"`.
-  - Backend keeps the task in `running` state and expects follow-up callbacks.
+- Hoàn tất đồng bộ:
+  - Trả `status="completed"` và có `raw_output`.
+  - Backend sẽ đánh dấu task hoàn tất và normalize finding ngay.
+- Chấp nhận bất đồng bộ:
+  - Trả `status="accepted"` hoặc `status="running"`.
+  - Backend giữ task ở trạng thái `running` và chờ các callback tiếp theo.
 
-## Heartbeat callbacks
+## Heartbeat Callbacks
 
 ### `POST /api/v1/agents/heartbeat`
 
-Use this to refresh agent liveness.
+Dùng endpoint này để refresh trạng thái sống của agent.
 
-- Required: `agent_id` or `agent_code`
-- Typical payload:
+- Bắt buộc có: `agent_id` hoặc `agent_code`
+- Payload thường dùng:
   - `status="online"`
   - `version`, `host`, `ip_address`, `port`
   - `seen_at`
 
-This updates `agent.status` and `agent.last_seen_at`.
+Endpoint này sẽ cập nhật `agent.status` và `agent.last_seen_at`.
 
 ### `POST /api/v1/task-executions/{task_execution_id}/heartbeat`
 
-Use this while a dispatched task is still in progress.
+Dùng endpoint này khi task đã được dispatch nhưng vẫn đang chạy.
 
-- Optional agent guard: `agent_id` or `agent_code`
-- Supported status values: `queued`, `running`
-- Optional progress fields:
+- Có thể kèm agent guard: `agent_id` hoặc `agent_code`
+- Status hỗ trợ: `queued`, `running`
+- Trường tiến độ tùy chọn:
   - `progress_percent`
   - `raw_log`
   - `output_data_json`
 
-This refreshes both the agent heartbeat and the task execution runtime state.
+Endpoint này sẽ refresh cả trạng thái sống của agent lẫn runtime state của task execution.
 
-## Completion callback
+## Completion Callback
 
 ### `POST /api/v1/task-executions/{task_execution_id}/status`
 
-Use the existing task status API to finish the task.
+Dùng task status API hiện có để kết thúc task.
 
-- `status`: `running`, `completed`, `failed`, or `canceled`
-- `output_data_json`: optional final structured output
-- `raw_log`: optional final log/error text
+- `status`: `running`, `completed`, `failed`, hoặc `canceled`
+- `output_data_json`: output có cấu trúc ở thời điểm cuối
+- `raw_log`: log hoặc lỗi ở thời điểm cuối
 
-If the task completes successfully and the external agent did not already return inline `raw_output`, the agent can optionally call scan normalization next.
+Nếu task hoàn tất thành công và external agent chưa trả `raw_output` inline từ đầu, agent có thể gọi normalize scan result ở bước tiếp theo.
 
-## Optional normalization callback
+## Optional Normalize Callback
 
 ### `POST /api/v1/scan-results/normalize`
 
-Use this when the agent wants the backend parser to normalize raw scan output after asynchronous completion.
+Dùng endpoint này khi agent muốn backend parser chuẩn hóa raw scan output sau khi hoàn tất bất đồng bộ.
 
-Required fields:
+Các trường bắt buộc:
 
 - `agent_type`
 - `raw_output`
@@ -82,6 +82,6 @@ Required fields:
 - `task_execution_id`
 - `target_id`
 
-## Discovery endpoint
+## Discovery Endpoint
 
-Backend exposes `GET /api/v1/agents/runtime/execute-contract` to return the current contract version plus example request and response payloads.
+Backend expose `GET /api/v1/agents/runtime/execute-contract` để trả về phiên bản contract hiện tại cùng ví dụ request/response payload.

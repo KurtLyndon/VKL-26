@@ -1,25 +1,25 @@
 # HLT-vkl-26
 
-Khoi tao project quan ly kiem thu he thong mang noi bo theo yeu cau trong `Requirement.txt`, `Features Description.txt` va `ERD.txt`.
+Khởi tạo project quản lý kiểm thử hệ thống mạng nội bộ theo yêu cầu trong `Requirement.txt`, `Features Description.txt` và `ERD.txt`.
 
-## Cau truc
+## Cấu trúc
 
-- `backend`: FastAPI + SQLAlchemy, doc schema theo ERD, ket noi MySQL.
-- `frontend`: Vue 3 + Vite, giao dien quan tri cac phan he chinh.
-- `agents/nmap-agent-demo`: agent Nmap demo chay rieng, de mang sang Kali/VM khac.
+- `backend`: FastAPI + SQLAlchemy, bám schema theo ERD, kết nối MySQL.
+- `frontend`: Vue 3 + Vite, giao diện quản trị các phân hệ chính.
+- `agents/nmap-agent-demo`: agent Nmap demo chạy riêng, để mang sang Kali/VM khác.
 
 ## Backend
 
-Runtime khuyen nghi cho backend: `Python 3.12`.
+Runtime khuyến nghị cho backend: `Python 3.12`.
 
-Ly do:
+Lý do:
 
-- on dinh hon cho `FastAPI + SQLAlchemy + PyMySQL`
-- hop voi huong docker hoa sau nay, vi de dong bo voi image nhu `python:3.12-slim`
-- tranh cac van de tuong thich som voi `Python 3.14`
+- ổn định hơn cho `FastAPI + SQLAlchemy + PyMySQL`
+- hợp với hướng Docker hóa sau này, vì dễ đồng bộ với image như `python:3.12-slim`
+- tránh các vấn đề tương thích sớm với `Python 3.14`
 
-1. Tao file `.env` tu [backend/.env.example](D:/Projects/VKL-26/HLT/HLT-vkl-26/backend/.env.example)
-2. Cai thu vien:
+1. Tạo file `.env` từ [backend/.env.example](D:/Projects/VKL-26/HLT/HLT-vkl-26/backend/.env.example)
+2. Cài thư viện:
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
@@ -29,7 +29,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-3. Chay migration versioned:
+3. Chạy migration versioned:
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
@@ -37,15 +37,15 @@ python -m scripts.migrate upgrade
 python -m scripts.seed_data
 ```
 
-4. Chay API:
+4. Chạy API:
 
 ```powershell
 uvicorn app.main:app --reload
 ```
 
-API mac dinh: `http://localhost:8000`
+API mặc định: `http://localhost:8000`
 
-Neu muon bat scheduler loop nen:
+Nếu muốn bật scheduler loop nền:
 
 ```powershell
 $env:SCHEDULER_ENABLED="true"
@@ -57,7 +57,7 @@ $env:AGENT_REQUEST_TIMEOUT_SECONDS="20"
 uvicorn app.main:app --reload
 ```
 
-Neu muon app local tu apply migration pending luc startup:
+Nếu muốn app local tự apply migration pending lúc startup:
 
 ```powershell
 $env:AUTO_APPLY_MIGRATIONS="true"
@@ -66,73 +66,73 @@ uvicorn app.main:app --reload
 
 ## Frontend
 
-1. Tao file `.env` tu [frontend/.env.example](D:/Projects/VKL-26/HLT/HLT-vkl-26/frontend/.env.example)
-2. Cai thu vien:
+1. Tạo file `.env` từ [frontend/.env.example](D:/Projects/VKL-26/HLT/HLT-vkl-26/frontend/.env.example)
+2. Cài thư viện:
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\frontend
 npm install
 ```
 
-3. Chay giao dien:
+3. Chạy giao diện:
 
 ```powershell
 npm run dev
 ```
 
-Giao dien mac dinh: `http://localhost:5173`
+Giao diện mặc định: `http://localhost:5173`
 
-Dang nhap mac dinh cho ban dev/mock:
+Đăng nhập mặc định cho bản dev/mock:
 
 - username: `admin`
 - password: `Admin@123`
 
-## Agent Demo Rieng
+## Agent Demo Riêng
 
-Da co mot agent Nmap demo tach rieng tai [agents/nmap-agent-demo/README.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/agents/nmap-agent-demo/README.md) de trien khai tren Kali hoac VM khac.
+Đã có một agent Nmap demo tách riêng tại [agents/nmap-agent-demo/README.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/agents/nmap-agent-demo/README.md) để triển khai trên Kali hoặc VM khác.
 
-Muc tieu cua project con nay:
+Mục tiêu của project con này:
 
-- nhan `POST /execute` tu backend
-- tra `accepted` ngay
-- callback heartbeat va completion ve backend
-- tu goi normalize ket qua `nmap` sau khi quet xong
-- ho tro `mock` mode de test nhanh va `real` mode de goi binary `nmap`
+- nhận `POST /execute` từ backend
+- trả `accepted` ngay
+- callback heartbeat và completion về backend
+- tự gọi normalize kết quả `nmap` sau khi quét xong
+- hỗ trợ `mock` mode để test nhanh và `real` mode để gọi binary `nmap`
 
-## Pham vi da khoi tao
+## Phạm vi đã khởi tạo
 
 - CRUD API cho: `agent`, `task`, `operation`, `operation_task`, `target`, `target_attribute_definition`, `target_attribute_value`, `target_group`, `vulnerability`, `vulnerability_script`, `scan_result`, `scan_result_finding`, `report_template`.
-- CRUD API mo rong cho: `operation_execution`, `task_execution`, `generated_report`, `report_snapshot`.
-- Runtime API cho launch operation, cap nhat task execution status va tong hop runtime overview.
-- Runtime API bo sung heartbeat cho agent/task execution va endpoint discovery contract `GET /api/v1/agents/runtime/execute-contract`.
-- Auth co ban theo nhom tai khoan (RBAC): login, nhom tai khoan, tai khoan va bat/tat quyen theo nhom.
-- Scheduler runner cho `cron` va `interval`, co API chay tay va background loop qua env.
-- Worker runner xu ly `task_execution` theo thu tu, mock-run agent, parse ket qua va luu `scan_result`.
-- Co endpoint `POST /api/v1/demo/mock-flow` de chay nhanh end-to-end mock flow.
-- Import/export ket qua operation qua `JSON`, `CSV`, `XLSX`, va import lai du lieu scan bang `JSON`.
-- Frontend co man `Operation Designer`, `Execution Monitor`, `Finding Explorer` de thao tac workflow va loc ket qua de demo.
-- Worker co the dispatch HTTP toi agent that theo contract `execute`, ho tro ca che do sync va async heartbeat/status callback, hoac fallback ve mock runner.
-- Dashboard tong quan cho frontend.
-- Kien truc tach rieng de sau nay docker hoa, them worker, scheduler, parser agent va export report.
-- Co migration SQL versioned trong `backend/migrations/versions`.
-- Co runner migration local trong `backend/scripts/migrate.py`.
-- Co snapshot SQL cu trong `backend/database` de tham khao va bootstrap thu cong.
-- Co nhat ky tien do trong `docs/WORKLOG.md` de lan sau tiep tuc.
-- Code parser tung agent duoc tach rieng trong `backend/app/services/agents`.
-- Parser hien co cho `nmap` (XML + fallback text), `nuclei` (JSONL + fallback text), `acunetix` (JSON + fallback text).
-- Tai lieu contract agent that: [docs/AGENT_RUNTIME_CONTRACT.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/docs/AGENT_RUNTIME_CONTRACT.md)
+- CRUD API mở rộng cho: `operation_execution`, `task_execution`, `generated_report`, `report_snapshot`.
+- Runtime API cho launch operation, cập nhật task execution status và tổng hợp runtime overview.
+- Runtime API bổ sung heartbeat cho agent/task execution và endpoint discovery contract `GET /api/v1/agents/runtime/execute-contract`.
+- Auth cơ bản theo nhóm tài khoản (RBAC): login, nhóm tài khoản, tài khoản và bật/tắt quyền theo nhóm.
+- Scheduler runner cho `cron` và `interval`, có API chạy tay và background loop qua env.
+- Worker runner xử lý `task_execution` theo thứ tự, mock-run agent, parse kết quả và lưu `scan_result`.
+- Có endpoint `POST /api/v1/demo/mock-flow` để chạy nhanh end-to-end mock flow.
+- Import/export kết quả operation qua `JSON`, `CSV`, `XLSX`, và import lại dữ liệu scan bằng `JSON`.
+- Frontend có màn `Operation Designer`, `Execution Monitor`, `Finding Explorer` để thao tác workflow và lọc kết quả demo.
+- Worker có thể dispatch HTTP tới agent thật theo contract `execute`, hỗ trợ cả chế độ sync và async heartbeat/status callback, hoặc fallback về mock runner.
+- Dashboard tổng quan cho frontend.
+- Kiến trúc tách riêng để sau này Docker hóa, thêm worker, scheduler, parser agent và export report.
+- Có migration SQL versioned trong `backend/migrations/versions`.
+- Có runner migration local trong `backend/scripts/migrate.py`.
+- Có snapshot SQL cũ trong `backend/database` để tham khảo và bootstrap thủ công.
+- Có nhật ký tiến độ trong `docs/WORKLOG.md` để lần sau tiếp tục.
+- Code parser từng agent được tách riêng trong `backend/app/services/agents`.
+- Parser hiện có cho `nmap` (XML + fallback text), `nuclei` (JSONL + fallback text), `acunetix` (JSON + fallback text).
+- Tài liệu contract agent thật: [docs/AGENT_RUNTIME_CONTRACT.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/docs/AGENT_RUNTIME_CONTRACT.md)
 
-## Migration versioned
+## Migration Versioned
 
-Quy uoc hien tai:
+Quy ước hiện tại:
 
-- File migration nam trong `backend/migrations/versions`.
-- Ten file theo mau `<version>__<ten>.sql`.
-- Runner luu version da apply trong bang `schema_migrations`.
-- Runner tu tao database neu chua ton tai.
-- Runner tu stamp baseline `001/002` neu phat hien local DB da duoc tao tu SQL cu hoac `create_all`, tranh apply lai seed mau.
+- File migration nằm trong `backend/migrations/versions`.
+- Tên file theo mẫu `<version>__<ten>.sql`.
+- Runner lưu version đã apply trong bảng `schema_migrations`.
+- Runner tự tạo database nếu chưa tồn tại.
+- Runner tự stamp baseline `001/002` nếu phát hiện local DB đã được tạo từ SQL cũ hoặc `create_all`, tránh apply lại seed mẫu.
 
-Lenh hay dung:
+Lệnh hay dùng:
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
@@ -140,28 +140,28 @@ python -m scripts.migrate status
 python -m scripts.migrate upgrade
 ```
 
-Tai lieu chi tiet: [docs/MIGRATIONS.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/docs/MIGRATIONS.md)
+Tài liệu chi tiết: [docs/MIGRATIONS.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/docs/MIGRATIONS.md)
 
-## Khoi tao database nhanh
+## Khởi tạo Database Nhanh
 
-Luong uu tien la migration runner. Neu can bootstrap thu cong hoac doi chieu schema, van co the chay snapshot SQL:
+Luồng ưu tiên là migration runner. Nếu cần bootstrap thủ công hoặc đối chiếu schema, vẫn có thể chạy snapshot SQL:
 
 ```powershell
 mysql -u root -p < backend\database\001_init_schema.sql
 mysql -u root -p < backend\database\002_seed_sample_data.sql
 ```
 
-Script Python seed hien goi migration runner truoc, sau do chi chen du lieu neu database chua co sample data:
+Script Python seed hiện gọi migration runner trước, sau đó chỉ chèn dữ liệu nếu database chưa có sample data:
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
 python -m scripts.seed_data
 ```
 
-## De xuat buoc tiep theo
+## Đề xuất bước tiếp theo
 
-1. Test end-to-end mock flow va ra soat nhe UI/encoding trong browser.
-2. Deploy va test `agents/nmap-agent-demo` tren may Kali/VM khi may du tai nguyen.
-3. Them export PDF va bo loc dashboard nang cao hon.
-4. Mo rong auth cho runtime callback neu dua agent that vao moi truong that.
-5. Them migration `004+` khi schema doi tiep.
+1. Test end-to-end mock flow và rà soát nhẹ UI/encoding trong browser.
+2. Deploy và test `agents/nmap-agent-demo` trên máy Kali/VM khi máy đủ tài nguyên.
+3. Thêm export PDF và bộ lọc dashboard nâng cao hơn.
+4. Mở rộng auth cho runtime callback nếu đưa agent thật vào môi trường thật.
+5. Thêm migration `004+` khi schema đổi tiếp.

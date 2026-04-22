@@ -1,17 +1,17 @@
 # Next Session
 
-## Muc tieu uu tien
+## Mục tiêu ưu tiên
 
-- Test browser thuc te cho login, RBAC va mock demo flow.
-- Deploy `agents/nmap-agent-demo` len Kali/VM khi may du tai nguyen.
-- Them export PDF.
+- Test browser thực tế cho login, RBAC và mock demo flow.
+- Deploy `agents/nmap-agent-demo` lên Kali/VM khi máy đủ tài nguyên.
+- Thêm export PDF.
 
-## Cach tiep tuc nhanh
+## Cách tiếp tục nhanh
 
-1. Mo project `D:\Projects\VKL-26\HLT\HLT-vkl-26`.
-2. Doc `docs/WORKLOG.md`.
-3. Neu co MySQL local, vao `backend` roi chay `python scripts\migrate.py status` va `python scripts\migrate.py upgrade`.
-4. Neu muon app local tu apply migration luc startup, bat `AUTO_APPLY_MIGRATIONS=true`.
-5. Dang nhap bang `admin` / `Admin@123`.
-6. Thu nut `Run Mock Demo` trong `Operation Control`.
-7. Sau do uu tien export PDF, ra soat UI va agent that.
+1. Mở project `D:\Projects\VKL-26\HLT\HLT-vkl-26`.
+2. Đọc `docs/WORKLOG.md`.
+3. Nếu có MySQL local, vào `backend` rồi chạy `python scripts\migrate.py status` và `python scripts\migrate.py upgrade`.
+4. Nếu muốn app local tự apply migration lúc startup, bật `AUTO_APPLY_MIGRATIONS=true`.
+5. Đăng nhập bằng `admin` / `Admin@123`.
+6. Thử nút `Run Mock Demo` trong `Operation Control`.
+7. Sau đó ưu tiên export PDF, rà soát UI và agent thật.
