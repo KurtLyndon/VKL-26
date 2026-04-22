@@ -1,6 +1,6 @@
 # HLT-vkl-26
 
-Khởi tạo project quản lý kiểm thử hệ thống mạng nội bộ theo yêu cầu trong `Requirement.txt`, `Features Description.txt` và `ERD.txt`.
+Project quản lý kiểm thử hệ thống mạng nội bộ 
 
 ## Cấu trúc
 
