@@ -4,7 +4,7 @@
       <p class="eyebrow">System overview</p>
       <h2>Dashboard</h2>
       <p class="page-copy">
-        Theo doi nhanh so luong thanh phan trong he thong dieu phoi scan, ket qua va bao cao.
+        Theo dõi nhanh số lượng thành phần trong hệ thống điều phối scan, kết quả và báo cáo.
       </p>
     </div>
   </section>
@@ -25,20 +25,20 @@
 
   <section class="panel-grid">
     <article class="panel">
-      <h3>Phan he da co</h3>
+      <h3>Phân hệ đã có</h3>
       <ul class="feature-list">
-        <li>Quan ly agent, task, operation va lich chay</li>
-        <li>Quan ly target, thuoc tinh dong va grouping</li>
-        <li>Quan ly CVE, script PoC va ket qua scan chuan hoa</li>
-        <li>Execution flow, parser registry va template bao cao</li>
+        <li>Quản lý agent, task, operation và lịch chạy</li>
+        <li>Quản lý target, thuộc tính động và grouping</li>
+        <li>Quản lý CVE, script PoC và kết quả scan chuẩn hóa</li>
+        <li>Execution flow, parser registry và template báo cáo</li>
       </ul>
     </article>
 
     <article class="panel">
-      <h3>Huong phat trien tiep</h3>
+      <h3>Hướng phát triển tiếp</h3>
       <ul class="feature-list">
-        <li>Parser rieng cho nmap, nuclei, acunetix</li>
-        <li>Realtime heartbeat agent, dispatch va theo doi execution</li>
+        <li>Parser riêng cho nmap, nuclei, acunetix</li>
+        <li>Realtime heartbeat agent, dispatch và theo dõi execution</li>
         <li>Import/export Excel, CSV, PDF, JSON</li>
         <li>Drag and drop operation task + scheduler runner</li>
       </ul>

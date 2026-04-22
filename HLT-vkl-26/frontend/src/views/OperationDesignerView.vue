@@ -4,7 +4,7 @@
       <p class="eyebrow">Workflow builder</p>
       <h2>Operation Task Designer</h2>
       <p class="page-copy">
-        Sap xep task trong operation, them task moi, chinh `continue_on_error` va `input_override_json`.
+        Sắp xếp task trong operation, thêm task mới, chỉnh `continue_on_error` và `input_override_json`.
       </p>
     </div>
     <button class="ghost-button" @click="loadData">Refresh</button>
@@ -42,7 +42,7 @@
         <label class="field-block">
           <span>task_id</span>
           <select v-model="operationTaskForm.task_id">
-            <option value="">Chon task</option>
+            <option value="">Chọn task</option>
             <option v-for="task in tasks" :key="task.id" :value="String(task.id)">
               {{ task.code }} - {{ task.name }}
             </option>
@@ -103,7 +103,7 @@
         </article>
       </div>
 
-      <p v-else class="inline-note">Chon mot operation de quan ly thu tu task.</p>
+      <p v-else class="inline-note">Chọn một operation để quản lý thứ tự task.</p>
     </article>
   </section>
 </template>
@@ -170,7 +170,7 @@ async function submitOperationTask() {
     continue_on_error: operationTaskForm.continue_on_error === "true",
     input_override_json: parseJsonSafe(operationTaskForm.input_override_json),
   });
-  message.value = "Task added to operation.";
+  message.value = "Đã thêm task vào operation.";
   operationTaskForm.task_id = "";
   operationTaskForm.continue_on_error = "false";
   operationTaskForm.input_override_json = "{}";
@@ -198,7 +198,7 @@ async function saveOperationTask(item) {
     continue_on_error: item.continue_on_error,
     order_index: item.order_index,
   });
-  message.value = `Saved task order #${item.order_index}.`;
+  message.value = `Đã lưu task order #${item.order_index}.`;
   await loadOperationTasks();
 }
 

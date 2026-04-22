@@ -4,7 +4,7 @@
       <p class="eyebrow">Resource manager</p>
       <h2>{{ title }}</h2>
       <p class="page-copy">
-        CRUD co ban cho giai doan khoi tao du an. Nhap cac truong dang JSON bang object hop le.
+        CRUD cơ bản cho giai đoạn khởi tạo dự án. Nhập các trường dạng JSON bằng object hợp lệ.
       </p>
     </div>
     <button class="ghost-button" @click="loadItems">Refresh</button>
@@ -13,14 +13,14 @@
   <section class="panel-grid">
     <article class="panel panel-form">
       <div class="panel-head">
-        <h3>{{ form.id ? "Cap nhat ban ghi" : "Tao moi ban ghi" }}</h3>
+        <h3>{{ form.id ? "Cập nhật bản ghi" : "Tạo mới bản ghi" }}</h3>
       </div>
 
       <form class="resource-form" @submit.prevent="submitForm">
         <label v-for="field in allFormFields" :key="field" class="field-block">
           <span>{{ field }}</span>
           <select v-if="isBooleanField(field)" v-model="form[field]">
-            <option value="">Chon gia tri</option>
+            <option value="">Chọn giá trị</option>
             <option value="true">true</option>
             <option value="false">false</option>
           </select>
@@ -34,15 +34,15 @@
         </label>
 
         <div class="form-actions">
-          <button class="primary-button" type="submit">{{ form.id ? "Luu thay doi" : "Tao moi" }}</button>
-          <button v-if="form.id" class="ghost-button" type="button" @click="resetForm">Bo chon</button>
+          <button class="primary-button" type="submit">{{ form.id ? "Lưu thay đổi" : "Tạo mới" }}</button>
+          <button v-if="form.id" class="ghost-button" type="button" @click="resetForm">Bỏ chọn</button>
         </div>
       </form>
     </article>
 
     <article class="panel panel-table">
       <div class="panel-head">
-        <h3>Danh sach</h3>
+        <h3>Danh sách</h3>
         <span class="badge">{{ items.length }} records</span>
       </div>
 

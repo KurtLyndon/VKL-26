@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">Finding explorer</p>
       <h2>Finding Filters</h2>
-      <p class="page-copy">Loc finding theo severity, status, service va text tim kiem de xem ket qua nhanh hon.</p>
+      <p class="page-copy">Lọc finding theo severity, status, service và text tìm kiếm để xem kết quả nhanh hơn.</p>
     </div>
     <button class="ghost-button" @click="loadData">Refresh</button>
   </section>

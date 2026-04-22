@@ -10,21 +10,31 @@ Khoi tao project quan ly kiem thu he thong mang noi bo theo yeu cau trong `Requi
 
 ## Backend
 
+Runtime khuyen nghi cho backend: `Python 3.12`.
+
+Ly do:
+
+- on dinh hon cho `FastAPI + SQLAlchemy + PyMySQL`
+- hop voi huong docker hoa sau nay, vi de dong bo voi image nhu `python:3.12-slim`
+- tranh cac van de tuong thich som voi `Python 3.14`
+
 1. Tao file `.env` tu [backend/.env.example](D:/Projects/VKL-26/HLT/HLT-vkl-26/backend/.env.example)
 2. Cai thu vien:
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
-python -m venv .venv
+py -3.12 -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 3. Chay migration versioned:
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
-python scripts\migrate.py upgrade
+python -m scripts.migrate upgrade
+python -m scripts.seed_data
 ```
 
 4. Chay API:
@@ -119,8 +129,8 @@ Lenh hay dung:
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
-python scripts\migrate.py status
-python scripts\migrate.py upgrade
+python -m scripts.migrate status
+python -m scripts.migrate upgrade
 ```
 
 Tai lieu chi tiet: [docs/MIGRATIONS.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/docs/MIGRATIONS.md)
@@ -138,7 +148,7 @@ Script Python seed hien goi migration runner truoc, sau do chi chen du lieu neu 
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
-python scripts\seed_data.py
+python -m scripts.seed_data
 ```
 
 ## De xuat buoc tiep theo

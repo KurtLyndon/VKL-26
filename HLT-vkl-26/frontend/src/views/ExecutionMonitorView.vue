@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">Runtime filter</p>
       <h2>Execution Monitor</h2>
-      <p class="page-copy">Loc nhanh execution theo operation, trigger type va status de theo doi luong chay.</p>
+      <p class="page-copy">Lọc nhanh execution theo operation, trigger type và status để theo dõi luồng chạy.</p>
     </div>
     <button class="ghost-button" @click="loadData">Refresh</button>
   </section>

@@ -4,7 +4,7 @@
       <p class="eyebrow">Result exchange</p>
       <h2>Import / Export Results</h2>
       <p class="page-copy">
-        Export ket qua operation ra `JSON`, `CSV`, `XLSX` va import lai du lieu scan tu `JSON`.
+        Export kết quả operation ra `JSON`, `CSV`, `XLSX` và import lại dữ liệu scan từ `JSON`.
       </p>
     </div>
     <button class="ghost-button" @click="loadData">Refresh</button>
@@ -21,7 +21,7 @@
         <label class="field-block">
           <span>operation_id</span>
           <select v-model="selectedOperationId">
-            <option value="">Chon operation</option>
+            <option value="">Chọn operation</option>
             <option v-for="operation in operations" :key="operation.id" :value="String(operation.id)">
               {{ operation.code }} - {{ operation.name }}
             </option>
@@ -55,7 +55,7 @@
         <label class="field-block">
           <span>operation_id</span>
           <select v-model="selectedOperationId">
-            <option value="">Chon operation</option>
+            <option value="">Chọn operation</option>
             <option v-for="operation in operations" :key="operation.id" :value="String(operation.id)">
               {{ operation.code }} - {{ operation.name }}
             </option>
@@ -145,14 +145,14 @@ async function loadData() {
 
 async function submitExport() {
   const result = await exportOperationResults(Number(selectedOperationId.value), exportFormat.value);
-  exportMessage.value = `Exported ${result.exported_records} record(s) to ${result.history.file_name}.`;
+  exportMessage.value = `Đã export ${result.exported_records} record sang ${result.history.file_name}.`;
   await loadData();
 }
 
 async function submitImport() {
   const payload = JSON.parse(importPayload.value || "{}");
   const result = await importOperationResults(Number(selectedOperationId.value), payload);
-  importMessage.value = `Imported ${result.imported_scan_results} scan result(s) and ${result.imported_findings} finding(s).`;
+  importMessage.value = `Đã import ${result.imported_scan_results} scan result và ${result.imported_findings} finding.`;
   await loadData();
 }
 

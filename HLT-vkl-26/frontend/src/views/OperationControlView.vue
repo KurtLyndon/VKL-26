@@ -4,7 +4,7 @@
       <p class="eyebrow">Execution runtime</p>
       <h2>Operation Control</h2>
       <p class="page-copy">
-        Launch operation, xem execution gan nhat va cap nhat trang thai task execution trong luc dev scheduler.
+        Launch operation, xem execution gần nhất và cập nhật trạng thái task execution trong lúc dev scheduler.
       </p>
     </div>
     <button class="ghost-button" @click="loadRuntime">Refresh</button>
@@ -18,7 +18,7 @@
       </div>
 
       <p class="page-copy">
-        Chay mot vong scheduler de tu dong launch cac operation den han. Background loop co the bat qua file env.
+        Chạy một vòng scheduler để tự động launch các operation đến hạn. Background loop có thể bật qua file env.
       </p>
 
       <div class="form-actions">
@@ -35,7 +35,7 @@
       </div>
 
       <p class="page-copy">
-        Xu ly task execution dang queued theo dung thu tu, tu parse ket qua va cap nhat execution summary.
+        Xử lý task execution đang queued theo đúng thứ tự, tự parse kết quả và cập nhật execution summary.
       </p>
 
       <div class="form-actions">
@@ -165,7 +165,7 @@
         </table>
       </div>
 
-      <p v-else class="inline-note">Chon mot execution de xem va cap nhat task runtime.</p>
+      <p v-else class="inline-note">Chọn một execution để xem và cập nhật task runtime.</p>
     </article>
   </section>
 </template>
@@ -210,7 +210,7 @@ function parseSharedInput() {
   try {
     return JSON.parse(launchForm.shared_input || "{}");
   } catch {
-    throw new Error("shared_input must be valid JSON.");
+    throw new Error("shared_input phải là JSON hợp lệ.");
   }
 }
 
@@ -245,34 +245,34 @@ async function submitLaunch() {
       trigger_type: launchForm.trigger_type,
       shared_input: parseSharedInput(),
     });
-    message.value = `Launched execution ${response.execution.execution_code} with ${response.task_executions.length} task(s).`;
+    message.value = `Đã launch execution ${response.execution.execution_code} với ${response.task_executions.length} task.`;
     await loadRuntime();
     await selectExecution(response.execution);
   } catch (error) {
-    message.value = error?.message || "Unable to launch operation.";
+    message.value = error?.message || "Không thể launch operation.";
   }
 }
 
 async function runScheduler() {
   try {
     const result = await runSchedulerNow();
-    schedulerSummary.value = `Scheduler checked ${result.checked_operations} operation(s) and launched ${result.launched_operations} execution(s).`;
+    schedulerSummary.value = `Scheduler đã kiểm tra ${result.checked_operations} operation và launch ${result.launched_operations} execution.`;
     await loadRuntime();
   } catch (error) {
-    schedulerSummary.value = error?.message || "Unable to run scheduler.";
+    schedulerSummary.value = error?.message || "Không thể chạy scheduler.";
   }
 }
 
 async function runWorker() {
   try {
     const result = await runWorkerNow();
-    workerSummary.value = `Worker checked ${result.checked_executions} execution(s), processed ${result.processed_tasks} task(s), completed ${result.completed_tasks}, failed ${result.failed_tasks}.`;
+    workerSummary.value = `Worker đã kiểm tra ${result.checked_executions} execution, xử lý ${result.processed_tasks} task, hoàn tất ${result.completed_tasks}, thất bại ${result.failed_tasks}.`;
     await loadRuntime();
     if (selectedExecution.value) {
       await selectExecution(selectedExecution.value);
     }
   } catch (error) {
-    workerSummary.value = error?.message || "Unable to run worker.";
+    workerSummary.value = error?.message || "Không thể chạy worker.";
   }
 }
 
@@ -280,14 +280,14 @@ async function setStatus(taskExecutionId, status) {
   try {
     await updateTaskExecutionStatus(taskExecutionId, {
       status,
-      raw_log: `Status updated to ${status} from UI control panel.`,
+      raw_log: `Status được cập nhật thành ${status} từ UI control panel.`,
     });
     if (selectedExecution.value) {
       await selectExecution(selectedExecution.value);
     }
     await loadRuntime();
   } catch (error) {
-    message.value = error?.message || "Unable to update task execution status.";
+    message.value = error?.message || "Không thể cập nhật trạng thái task execution.";
   }
 }
 

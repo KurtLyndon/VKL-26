@@ -19,7 +19,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Agents" },
     props: {
-      title: "Quan ly Agent",
+      title: "Quản lý Agent",
       resource: "agents",
       fields: ["code", "name", "agent_type", "ip_address", "port", "version", "status"],
       jsonFields: [],
@@ -30,7 +30,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Tasks" },
     props: {
-      title: "Quan ly Task",
+      title: "Quản lý Task",
       resource: "tasks",
       fields: ["code", "name", "agent_type", "script_name", "script_path", "version", "is_active"],
       jsonFields: ["input_schema_json", "output_schema_json"],
@@ -42,7 +42,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Operations" },
     props: {
-      title: "Quan ly Operation",
+      title: "Quản lý Operation",
       resource: "operations",
       fields: ["code", "name", "schedule_type", "is_active"],
       jsonFields: ["schedule_config_json"],
@@ -54,7 +54,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Executions" },
     props: {
-      title: "Quan ly Operation Execution",
+      title: "Quản lý Operation Execution",
       resource: "operation-executions",
       fields: ["operation_id", "execution_code", "trigger_type", "status"],
       jsonFields: ["summary_json"],
@@ -66,7 +66,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Task Executions" },
     props: {
-      title: "Quan ly Task Execution",
+      title: "Quản lý Task Execution",
       resource: "task-executions",
       fields: ["operation_execution_id", "operation_task_id", "task_id", "agent_id", "status"],
       jsonFields: ["input_data_json", "output_data_json"],
@@ -78,7 +78,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Targets" },
     props: {
-      title: "Quan ly Target",
+      title: "Quản lý Target",
       resource: "targets",
       fields: ["code", "name", "target_type", "ip_range", "domain"],
       jsonFields: [],
@@ -90,7 +90,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "CVE" },
     props: {
-      title: "Quan ly CVE",
+      title: "Quản lý CVE",
       resource: "vulnerabilities",
       fields: ["code", "title", "level", "poc_file_name"],
       jsonFields: [],
@@ -102,7 +102,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Scan Results" },
     props: {
-      title: "Ket qua chuan hoa",
+      title: "Kết quả chuẩn hóa",
       resource: "scan-results",
       fields: ["operation_execution_id", "task_execution_id", "target_id", "agent_type", "source_tool", "parse_status"],
       jsonFields: ["normalized_output_json"],
@@ -114,7 +114,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Findings" },
     props: {
-      title: "Quan ly Finding",
+      title: "Quản lý Finding",
       resource: "scan-findings",
       fields: ["scan_result_id", "finding_code", "title", "severity", "port", "service_name", "status"],
       jsonFields: [],
@@ -126,7 +126,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Reports" },
     props: {
-      title: "Mau bao cao",
+      title: "Mẫu báo cáo",
       resource: "report-templates",
       fields: ["code", "name", "report_type"],
       jsonFields: ["filter_config_json", "layout_config_json"],
@@ -138,7 +138,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Generated Reports" },
     props: {
-      title: "Bao cao da sinh",
+      title: "Báo cáo đã sinh",
       resource: "generated-reports",
       fields: ["report_template_id", "operation_execution_id", "file_name", "file_path", "generated_by"],
       jsonFields: ["summary_json"],
@@ -150,7 +150,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Report Snapshots" },
     props: {
-      title: "Snapshot bao cao",
+      title: "Snapshot báo cáo",
       resource: "report-snapshots",
       fields: ["generated_report_id"],
       jsonFields: ["data_json"],
@@ -162,7 +162,7 @@ const routes = [
     component: ResourceView,
     meta: { title: "Result History" },
     props: {
-      title: "Lich su import export",
+      title: "Lịch sử import export",
       resource: "operation-result-history",
       fields: ["operation_id", "action_type", "file_name", "file_format", "status"],
       jsonFields: [],
