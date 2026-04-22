@@ -32,6 +32,9 @@
 - Them project agent mau tach rieng tai `agents/nmap-agent-demo` de co the copy sang may Kali/VM khac.
 - Agent mau ho tro `mock` mode va `real` mode, callback heartbeat/status/normalize nguoc ve backend.
 - Them mau `systemd` service va huong dan deploy rieng cho agent Nmap demo.
+- Bo sung auth RBAC co ban theo nhom tai khoan: login, token, nhom tai khoan, tai khoan va phan quyen theo nhom.
+- Frontend da co man dang nhap, man quan ly quyen theo nhom, va menu cap 1/cap 2 loc theo permission.
+- Bo sung `mock demo flow` de launch operation + worker tu dong trong 1 buoc cho demo noi bo.
 
 ### Trang thai tam thoi
 
@@ -44,5 +47,5 @@
 1. Them migration `003+` cho thay doi schema tiep theo.
 2. Thu nghiem `agents/nmap-agent-demo` tren may Kali/VM va noi voi backend that.
 3. Them export PDF.
-4. Can nhac Alembic neu sau nay can autogenerate/revision phuc tap hon.
-5. Them auth va phan quyen.
+4. Ra soat lai UI/encoding trong browser va build frontend.
+5. Can nhac Alembic neu sau nay can autogenerate/revision phuc tap hon.

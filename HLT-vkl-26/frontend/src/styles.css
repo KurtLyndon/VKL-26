@@ -85,6 +85,25 @@ textarea {
   margin-top: 26px;
 }
 
+.nav-section-list {
+  display: grid;
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.nav-section {
+  display: grid;
+  gap: 10px;
+}
+
+.nav-section-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
 .nav-link {
   padding: 14px 16px;
   border: 1px solid transparent;
@@ -105,6 +124,20 @@ textarea {
   border-color: rgba(39, 198, 169, 0.35);
   background: rgba(39, 198, 169, 0.1);
   transform: translateX(4px);
+}
+
+.user-card {
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  display: grid;
+  gap: 8px;
+}
+
+.user-card small {
+  color: var(--muted);
 }
 
 .main-panel {
@@ -402,6 +435,34 @@ textarea {
 
 .table-wrap {
   overflow: auto;
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: min(460px, 100%);
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+  padding: 32px;
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: 38px;
+}
+
+.switch-line {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .data-table {

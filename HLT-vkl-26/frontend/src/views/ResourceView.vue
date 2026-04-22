@@ -112,6 +112,7 @@ function isBooleanField(field) {
 }
 
 function inputType(field) {
+  if (field.includes("password")) return "password";
   if (field.includes("level") || field.includes("port") || field.includes("_id")) return "number";
   return "text";
 }

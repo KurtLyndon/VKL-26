@@ -8,12 +8,15 @@ from sqlalchemy.orm import Session
 from app.db.base import Base
 from app.db.session import get_db
 from app.models import (
+    AccountGroup,
+    AccountGroupPermission,
     Agent,
     GeneratedReport,
     Operation,
     OperationExecution,
     OperationResultImportExport,
     OperationTask,
+    AppPermission,
     ReportTemplate,
     ReportSnapshot,
     ScanResult,
@@ -24,20 +27,32 @@ from app.models import (
     TargetGroup,
     Task,
     TaskExecution,
+    UserAccount,
     Vulnerability,
     VulnerabilityScript,
 )
 from app.schemas.resources import (
+    AccountGroupCreate,
+    AccountGroupRead,
+    AccountGroupUpdate,
     AgentExecuteContractDocument,
     AgentCreate,
     AgentHeartbeatRequest,
     AgentHeartbeatResponse,
     AgentRead,
     AgentUpdate,
+    AppPermissionCreate,
+    AppPermissionRead,
+    AppPermissionUpdate,
+    CurrentUserResponse,
     DashboardSummary,
+    DemoMockFlowRequest,
+    DemoMockFlowResponse,
     GeneratedReportCreate,
     GeneratedReportRead,
     GeneratedReportUpdate,
+    GroupPermissionItem,
+    GroupPermissionUpdateRequest,
     OperationCreate,
     OperationExecutionCreate,
     OperationExecutionRead,
@@ -93,6 +108,11 @@ from app.schemas.resources import (
     TaskExecutionUpdate,
     TaskRead,
     TaskUpdate,
+    LoginRequest,
+    LoginResponse,
+    UserAccountCreate,
+    UserAccountRead,
+    UserAccountUpdate,
     VulnerabilityCreate,
     VulnerabilityRead,
     VulnerabilityScriptCreate,
@@ -100,6 +120,14 @@ from app.schemas.resources import (
     VulnerabilityScriptUpdate,
     VulnerabilityUpdate,
     WorkerRunResponse,
+)
+from app.services.auth import (
+    authenticate_user,
+    create_access_token,
+    get_current_user_with_permissions,
+    get_user_permissions,
+    hash_password,
+    require_permissions,
 )
 from app.services.agent_runtime import (
     get_execute_contract_document,
@@ -127,20 +155,33 @@ def register_crud_routes(
     read_schema: type[BaseModel],
     create_schema: type[BaseModel],
     update_schema: type[BaseModel],
+    list_permission: str | None = None,
+    write_permission: str | None = None,
 ) -> None:
     @api.get(path, response_model=list[read_schema])
-    def list_items(db: Session = Depends(get_db)):
+    def list_items(
+        db: Session = Depends(get_db),
+        _current_user=Depends(require_permissions(*( [list_permission] if list_permission else [] ))),
+    ):
         return db.scalars(select(model).order_by(model.id.desc())).all()
 
     @api.get(f"{path}/{{item_id}}", response_model=read_schema)
-    def get_item(item_id: int, db: Session = Depends(get_db)):
+    def get_item(
+        item_id: int,
+        db: Session = Depends(get_db),
+        _current_user=Depends(require_permissions(*( [list_permission] if list_permission else [] ))),
+    ):
         item = db.get(model, item_id)
         if not item:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
         return item
 
     @api.post(path, response_model=read_schema, status_code=status.HTTP_201_CREATED)
-    def create_item(payload: create_schema, db: Session = Depends(get_db)):
+    def create_item(
+        payload: create_schema,
+        db: Session = Depends(get_db),
+        _current_user=Depends(require_permissions(*( [write_permission] if write_permission else [] ))),
+    ):
         item = model(**_payload_dict(payload))
         db.add(item)
         db.commit()
@@ -148,7 +189,12 @@ def register_crud_routes(
         return item
 
     @api.put(f"{path}/{{item_id}}", response_model=read_schema)
-    def update_item(item_id: int, payload: update_schema, db: Session = Depends(get_db)):
+    def update_item(
+        item_id: int,
+        payload: update_schema,
+        db: Session = Depends(get_db),
+        _current_user=Depends(require_permissions(*( [write_permission] if write_permission else [] ))),
+    ):
         item = db.get(model, item_id)
         if not item:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
@@ -159,7 +205,11 @@ def register_crud_routes(
         return item
 
     @api.delete(f"{path}/{{item_id}}", status_code=status.HTTP_204_NO_CONTENT)
-    def delete_item(item_id: int, db: Session = Depends(get_db)):
+    def delete_item(
+        item_id: int,
+        db: Session = Depends(get_db),
+        _current_user=Depends(require_permissions(*( [write_permission] if write_permission else [] ))),
+    ):
         item = db.get(model, item_id)
         if not item:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
@@ -174,6 +224,28 @@ register_crud_routes(
     read_schema=AgentRead,
     create_schema=AgentCreate,
     update_schema=AgentUpdate,
+    list_permission="agents.manage",
+    write_permission="agents.manage",
+)
+register_crud_routes(
+    router,
+    path="/account-groups",
+    model=AccountGroup,
+    read_schema=AccountGroupRead,
+    create_schema=AccountGroupCreate,
+    update_schema=AccountGroupUpdate,
+    list_permission="auth.manage",
+    write_permission="auth.manage",
+)
+register_crud_routes(
+    router,
+    path="/app-permissions",
+    model=AppPermission,
+    read_schema=AppPermissionRead,
+    create_schema=AppPermissionCreate,
+    update_schema=AppPermissionUpdate,
+    list_permission="auth.manage",
+    write_permission="auth.manage",
 )
 register_crud_routes(
     router,
@@ -182,6 +254,8 @@ register_crud_routes(
     read_schema=TaskRead,
     create_schema=TaskCreate,
     update_schema=TaskUpdate,
+    list_permission="tasks.manage",
+    write_permission="tasks.manage",
 )
 register_crud_routes(
     router,
@@ -190,6 +264,8 @@ register_crud_routes(
     read_schema=OperationRead,
     create_schema=OperationCreate,
     update_schema=OperationUpdate,
+    list_permission="operations.manage",
+    write_permission="operations.manage",
 )
 register_crud_routes(
     router,
@@ -198,6 +274,8 @@ register_crud_routes(
     read_schema=OperationTaskRead,
     create_schema=OperationTaskCreate,
     update_schema=OperationTaskUpdate,
+    list_permission="operations.manage",
+    write_permission="operations.manage",
 )
 register_crud_routes(
     router,
@@ -206,6 +284,8 @@ register_crud_routes(
     read_schema=OperationResultExchangeRead,
     create_schema=OperationResultExchangeCreate,
     update_schema=OperationResultExchangeUpdate,
+    list_permission="reports.manage",
+    write_permission="reports.manage",
 )
 register_crud_routes(
     router,
@@ -214,6 +294,8 @@ register_crud_routes(
     read_schema=OperationExecutionRead,
     create_schema=OperationExecutionCreate,
     update_schema=OperationExecutionUpdate,
+    list_permission="runtime.control",
+    write_permission="runtime.control",
 )
 register_crud_routes(
     router,
@@ -222,6 +304,8 @@ register_crud_routes(
     read_schema=TaskExecutionRead,
     create_schema=TaskExecutionCreate,
     update_schema=TaskExecutionUpdate,
+    list_permission="runtime.control",
+    write_permission="runtime.control",
 )
 register_crud_routes(
     router,
@@ -230,6 +314,8 @@ register_crud_routes(
     read_schema=TargetRead,
     create_schema=TargetCreate,
     update_schema=TargetUpdate,
+    list_permission="targets.manage",
+    write_permission="targets.manage",
 )
 register_crud_routes(
     router,
@@ -238,6 +324,8 @@ register_crud_routes(
     read_schema=TargetAttributeDefinitionRead,
     create_schema=TargetAttributeDefinitionCreate,
     update_schema=TargetAttributeDefinitionUpdate,
+    list_permission="targets.manage",
+    write_permission="targets.manage",
 )
 register_crud_routes(
     router,
@@ -246,6 +334,8 @@ register_crud_routes(
     read_schema=TargetAttributeValueRead,
     create_schema=TargetAttributeValueCreate,
     update_schema=TargetAttributeValueUpdate,
+    list_permission="targets.manage",
+    write_permission="targets.manage",
 )
 register_crud_routes(
     router,
@@ -254,6 +344,8 @@ register_crud_routes(
     read_schema=TargetGroupRead,
     create_schema=TargetGroupCreate,
     update_schema=TargetGroupUpdate,
+    list_permission="targets.manage",
+    write_permission="targets.manage",
 )
 register_crud_routes(
     router,
@@ -262,6 +354,8 @@ register_crud_routes(
     read_schema=VulnerabilityRead,
     create_schema=VulnerabilityCreate,
     update_schema=VulnerabilityUpdate,
+    list_permission="vulnerabilities.manage",
+    write_permission="vulnerabilities.manage",
 )
 register_crud_routes(
     router,
@@ -270,6 +364,8 @@ register_crud_routes(
     read_schema=VulnerabilityScriptRead,
     create_schema=VulnerabilityScriptCreate,
     update_schema=VulnerabilityScriptUpdate,
+    list_permission="vulnerabilities.manage",
+    write_permission="vulnerabilities.manage",
 )
 register_crud_routes(
     router,
@@ -278,6 +374,8 @@ register_crud_routes(
     read_schema=ScanResultRead,
     create_schema=ScanResultCreate,
     update_schema=ScanResultUpdate,
+    list_permission="scan_results.view",
+    write_permission="runtime.control",
 )
 register_crud_routes(
     router,
@@ -286,6 +384,8 @@ register_crud_routes(
     read_schema=ScanResultFindingRead,
     create_schema=ScanResultFindingCreate,
     update_schema=ScanResultFindingUpdate,
+    list_permission="scan_results.view",
+    write_permission="scan_results.view",
 )
 register_crud_routes(
     router,
@@ -294,6 +394,8 @@ register_crud_routes(
     read_schema=GeneratedReportRead,
     create_schema=GeneratedReportCreate,
     update_schema=GeneratedReportUpdate,
+    list_permission="reports.manage",
+    write_permission="reports.manage",
 )
 register_crud_routes(
     router,
@@ -302,6 +404,8 @@ register_crud_routes(
     read_schema=ReportSnapshotRead,
     create_schema=ReportSnapshotCreate,
     update_schema=ReportSnapshotUpdate,
+    list_permission="reports.manage",
+    write_permission="reports.manage",
 )
 register_crud_routes(
     router,
@@ -310,11 +414,154 @@ register_crud_routes(
     read_schema=ReportTemplateRead,
     create_schema=ReportTemplateCreate,
     update_schema=ReportTemplateUpdate,
+    list_permission="reports.manage",
+    write_permission="reports.manage",
 )
 
 
+@router.post("/auth/login", response_model=LoginResponse)
+def login(payload: LoginRequest, db: Session = Depends(get_db)):
+    user, permissions, expires_at = authenticate_user(db, payload.username, payload.password)
+    access_token = create_access_token(user, permissions, expires_at)
+    return LoginResponse(access_token=access_token, expires_at=expires_at, user=user, permissions=permissions)
+
+
+@router.get("/auth/me", response_model=CurrentUserResponse)
+def auth_me(current=Depends(get_current_user_with_permissions)):
+    user, permissions = current
+    return CurrentUserResponse(user=user, permissions=permissions)
+
+
+@router.get("/account-groups/{group_id}/permissions", response_model=list[GroupPermissionItem])
+def list_group_permissions(
+    group_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("auth.manage")),
+):
+    group = db.get(AccountGroup, group_id)
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+
+    enabled_rows = db.scalars(
+        select(AccountGroupPermission).where(AccountGroupPermission.group_id == group_id)
+    ).all()
+    enabled_map = {row.permission_id: row.is_enabled for row in enabled_rows}
+    permissions = db.scalars(select(AppPermission).order_by(AppPermission.module_name.asc(), AppPermission.code.asc())).all()
+    return [
+        GroupPermissionItem(
+            permission_id=permission.id,
+            permission_code=permission.code,
+            permission_name=permission.name,
+            module_name=permission.module_name,
+            is_enabled=enabled_map.get(permission.id, False),
+        )
+        for permission in permissions
+    ]
+
+
+@router.put("/account-groups/{group_id}/permissions", response_model=list[GroupPermissionItem])
+def update_group_permissions(
+    group_id: int,
+    payload: GroupPermissionUpdateRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("auth.manage")),
+):
+    group = db.get(AccountGroup, group_id)
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+
+    existing = db.scalars(select(AccountGroupPermission).where(AccountGroupPermission.group_id == group_id)).all()
+    existing_map = {item.permission_id: item for item in existing}
+    for item in payload.items:
+        row = existing_map.get(item.permission_id)
+        if row:
+            row.is_enabled = item.is_enabled
+        else:
+            db.add(
+                AccountGroupPermission(group_id=group_id, permission_id=item.permission_id, is_enabled=item.is_enabled)
+            )
+    db.commit()
+    return list_group_permissions(group_id, db)
+
+
+@router.get("/user-accounts", response_model=list[UserAccountRead])
+def list_user_accounts(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("auth.manage")),
+):
+    return db.scalars(select(UserAccount).order_by(UserAccount.id.desc())).all()
+
+
+@router.get("/user-accounts/{item_id}", response_model=UserAccountRead)
+def get_user_account(
+    item_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("auth.manage")),
+):
+    item = db.get(UserAccount, item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    return item
+
+
+@router.post("/user-accounts", response_model=UserAccountRead, status_code=status.HTTP_201_CREATED)
+def create_user_account(
+    payload: UserAccountCreate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("auth.manage")),
+):
+    item = UserAccount(
+        username=payload.username,
+        full_name=payload.full_name,
+        email=payload.email,
+        group_id=payload.group_id,
+        is_active=payload.is_active,
+        password_hash=hash_password(payload.password),
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.put("/user-accounts/{item_id}", response_model=UserAccountRead)
+def update_user_account(
+    item_id: int,
+    payload: UserAccountUpdate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("auth.manage")),
+):
+    item = db.get(UserAccount, item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    for field, value in _payload_dict(payload).items():
+        if field == "password":
+            item.password_hash = hash_password(value)
+            continue
+        setattr(item, field, value)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/user-accounts/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user_account(
+    item_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("auth.manage")),
+):
+    item = db.get(UserAccount, item_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    db.delete(item)
+    db.commit()
+
+
 @router.get("/dashboard/summary", response_model=DashboardSummary)
-def dashboard_summary(db: Session = Depends(get_db)):
+def dashboard_summary(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("dashboard.view")),
+):
     def count_rows(model: type[Base]) -> int:
         return db.scalar(select(func.count()).select_from(model)) or 0
 
@@ -337,14 +584,23 @@ def dashboard_summary(db: Session = Depends(get_db)):
 
 
 @router.get("/operations/{operation_id}/tasks", response_model=list[OperationTaskRead])
-def list_operation_tasks(operation_id: int, db: Session = Depends(get_db)):
+def list_operation_tasks(
+    operation_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("operations.manage")),
+):
     return db.scalars(
         select(OperationTask).where(OperationTask.operation_id == operation_id).order_by(OperationTask.order_index.asc())
     ).all()
 
 
 @router.post("/operations/{operation_id}/launch", response_model=OperationLaunchResponse)
-def execute_operation(operation_id: int, payload: OperationLaunchRequest, db: Session = Depends(get_db)):
+def execute_operation(
+    operation_id: int,
+    payload: OperationLaunchRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("runtime.control")),
+):
     execution, task_executions = launch_operation(db, operation_id, payload)
     return OperationLaunchResponse(execution=execution, task_executions=task_executions)
 
@@ -365,28 +621,83 @@ def record_agent_heartbeat(payload: AgentHeartbeatRequest, db: Session = Depends
 
 
 @router.get("/operations/runtime/overview", response_model=list[OperationRuntimeOverviewItem])
-def operations_runtime_overview(db: Session = Depends(get_db)):
+def operations_runtime_overview(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("runtime.control")),
+):
     return get_runtime_overview(db)
 
 
 @router.post("/scheduler/run", response_model=SchedulerRunResponse)
-def run_scheduler_now(db: Session = Depends(get_db)):
+def run_scheduler_now(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("runtime.control")),
+):
     return run_scheduler_cycle(db)
 
 
 @router.post("/worker/run", response_model=WorkerRunResponse)
-def run_worker_now(db: Session = Depends(get_db)):
+def run_worker_now(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("runtime.control")),
+):
     return run_worker_cycle(db)
 
 
+@router.post("/demo/mock-flow", response_model=DemoMockFlowResponse)
+def run_mock_demo_flow(
+    payload: DemoMockFlowRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("runtime.control")),
+):
+    operation = db.get(Operation, payload.operation_id) if payload.operation_id else db.scalar(select(Operation).limit(1))
+    if not operation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No operation found")
+    target = db.get(Target, payload.target_id) if payload.target_id else db.scalar(select(Target).limit(1))
+    if not target:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No target found")
+
+    execution, task_executions = launch_operation(
+        db,
+        operation.id,
+        OperationLaunchRequest(trigger_type="manual", shared_input={"target_id": target.id}),
+    )
+    worker_summary = run_worker_cycle(db)
+    findings_created = db.scalar(
+        select(func.count())
+        .select_from(ScanResultFinding)
+        .join(ScanResult, ScanResultFinding.scan_result_id == ScanResult.id)
+        .where(ScanResult.operation_execution_id == execution.id)
+    ) or 0
+    db.refresh(execution)
+    return DemoMockFlowResponse(
+        operation_id=operation.id,
+        operation_execution_id=execution.id,
+        task_execution_ids=[item.id for item in task_executions],
+        findings_created=findings_created,
+        execution_status=execution.status,
+        worker_summary=worker_summary,
+    )
+
+
 @router.post("/operations/{operation_id}/results/export", response_model=OperationResultExportResponse)
-def export_results(operation_id: int, payload: OperationResultExportRequest, db: Session = Depends(get_db)):
+def export_results(
+    operation_id: int,
+    payload: OperationResultExportRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("reports.manage")),
+):
     history, exported_records = export_operation_results(db, operation_id, payload.file_format)
     return OperationResultExportResponse(history=history, exported_records=exported_records)
 
 
 @router.post("/operations/{operation_id}/results/import", response_model=OperationResultImportResponse)
-def import_results(operation_id: int, payload: OperationResultImportRequest, db: Session = Depends(get_db)):
+def import_results(
+    operation_id: int,
+    payload: OperationResultImportRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("reports.manage")),
+):
     history, imported_scan_results, imported_findings = import_operation_results(db, operation_id, payload.payload_json)
     return OperationResultImportResponse(
         history=history,
@@ -396,7 +707,11 @@ def import_results(operation_id: int, payload: OperationResultImportRequest, db:
 
 
 @router.get("/operation-executions/{execution_id}/tasks", response_model=list[TaskExecutionRead])
-def list_execution_tasks(execution_id: int, db: Session = Depends(get_db)):
+def list_execution_tasks(
+    execution_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("runtime.control")),
+):
     return db.scalars(
         select(TaskExecution)
         .where(TaskExecution.operation_execution_id == execution_id)
@@ -406,7 +721,10 @@ def list_execution_tasks(execution_id: int, db: Session = Depends(get_db)):
 
 @router.post("/task-executions/{task_execution_id}/status", response_model=TaskExecutionRead)
 def set_task_execution_status(
-    task_execution_id: int, payload: TaskExecutionStatusRequest, db: Session = Depends(get_db)
+    task_execution_id: int,
+    payload: TaskExecutionStatusRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("runtime.control")),
 ):
     task_execution, _operation_execution = update_task_execution_status(db, task_execution_id, payload)
     return task_execution

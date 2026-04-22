@@ -1,8 +1,38 @@
 import axios from "axios";
+import { useAuthStore } from "../stores/auth";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1",
 });
+
+api.interceptors.request.use((config) => {
+  const auth = useAuthStore();
+  if (auth.state.token) {
+    config.headers.Authorization = `Bearer ${auth.state.token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      const auth = useAuthStore();
+      auth.clearSession();
+    }
+    return Promise.reject(error);
+  }
+);
+
+export async function login(payload) {
+  const { data } = await api.post("/auth/login", payload);
+  return data;
+}
+
+export async function getCurrentUser() {
+  const { data } = await api.get("/auth/me");
+  return data;
+}
 
 export async function getList(resource) {
   const { data } = await api.get(`/${resource}`);
@@ -35,6 +65,11 @@ export async function getOperationsRuntimeOverview() {
 
 export async function launchOperation(operationId, payload) {
   const { data } = await api.post(`/operations/${operationId}/launch`, payload);
+  return data;
+}
+
+export async function runMockDemoFlow(payload) {
+  const { data } = await api.post("/demo/mock-flow", payload);
   return data;
 }
 
@@ -74,6 +109,16 @@ export async function importOperationResults(operationId, payloadJson) {
   const { data } = await api.post(`/operations/${operationId}/results/import`, {
     payload_json: payloadJson,
   });
+  return data;
+}
+
+export async function getGroupPermissions(groupId) {
+  const { data } = await api.get(`/account-groups/${groupId}/permissions`);
+  return data;
+}
+
+export async function updateGroupPermissions(groupId, items) {
+  const { data } = await api.put(`/account-groups/${groupId}/permissions`, { items });
   return data;
 }
 

@@ -27,6 +27,54 @@ class Agent(Base, TimestampMixin):
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
+class AccountGroup(Base, TimestampMixin):
+    __tablename__ = "account_group"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class AppPermission(Base):
+    __tablename__ = "app_permission"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(100), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(255))
+    module_name: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class AccountGroupPermission(Base, TimestampMixin):
+    __tablename__ = "account_group_permission"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("account_group.id"), index=True)
+    permission_id: Mapped[int] = mapped_column(ForeignKey("app_permission.id"), index=True)
+    is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    group: Mapped["AccountGroup"] = relationship()
+    permission: Mapped["AppPermission"] = relationship()
+
+
+class UserAccount(Base, TimestampMixin):
+    __tablename__ = "user_account"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    full_name: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    group_id: Mapped[int | None] = mapped_column(ForeignKey("account_group.id"), nullable=True, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    group: Mapped["AccountGroup | None"] = relationship()
+
+
 class AgentCapability(Base):
     __tablename__ = "agent_capability"
 

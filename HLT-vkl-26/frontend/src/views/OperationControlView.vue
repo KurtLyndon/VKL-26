@@ -47,6 +47,23 @@
 
     <article class="panel">
       <div class="panel-head">
+        <h3>Mock Demo Flow</h3>
+        <span class="badge">launch + worker</span>
+      </div>
+
+      <p class="page-copy">
+        Chạy nhanh toàn bộ luồng mock: tạo operation execution, xử lý worker và sinh finding để demo nội bộ.
+      </p>
+
+      <div class="form-actions">
+        <button class="primary-button" type="button" @click="runMockFlow" :disabled="!selectedOperationId">Run Mock Demo</button>
+      </div>
+
+      <p v-if="mockSummary" class="inline-note">{{ mockSummary }}</p>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
         <h3>Runtime Overview</h3>
         <span class="badge">{{ runtimeItems.length }} operations</span>
       </div>
@@ -177,6 +194,7 @@ import {
   getList,
   getOperationsRuntimeOverview,
   launchOperation,
+  runMockDemoFlow,
   runSchedulerNow,
   runWorkerNow,
   updateTaskExecutionStatus,
@@ -190,6 +208,7 @@ const selectedExecution = ref(null);
 const message = ref("");
 const schedulerSummary = ref("");
 const workerSummary = ref("");
+const mockSummary = ref("");
 
 const launchForm = reactive({
   trigger_type: "manual",
@@ -273,6 +292,22 @@ async function runWorker() {
     }
   } catch (error) {
     workerSummary.value = error?.message || "Không thể chạy worker.";
+  }
+}
+
+async function runMockFlow() {
+  try {
+    const result = await runMockDemoFlow({
+      operation_id: selectedOperationId.value,
+    });
+    mockSummary.value = `Mock flow đã tạo execution #${result.operation_execution_id}, sinh ${result.findings_created} finding và trạng thái cuối là ${result.execution_status}.`;
+    await loadRuntime();
+    const execution = executions.value.find((item) => item.id === result.operation_execution_id);
+    if (execution) {
+      await selectExecution(execution);
+    }
+  } catch (error) {
+    mockSummary.value = error?.response?.data?.detail || error?.message || "Không thể chạy mock flow.";
   }
 }
 

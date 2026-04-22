@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     worker_poll_seconds: int = Field(default=20, alias="WORKER_POLL_SECONDS")
     agent_dispatch_mode: str = Field(default="auto", alias="AGENT_DISPATCH_MODE")
     agent_request_timeout_seconds: int = Field(default=20, alias="AGENT_REQUEST_TIMEOUT_SECONDS")
+    auth_secret_key: str = Field(default="hlt-vkl-26-dev-secret", alias="AUTH_SECRET_KEY")
+    auth_token_ttl_hours: int = Field(default=12, alias="AUTH_TOKEN_TTL_HOURS")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

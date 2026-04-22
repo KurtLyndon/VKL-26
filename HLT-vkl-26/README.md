@@ -82,6 +82,11 @@ npm run dev
 
 Giao dien mac dinh: `http://localhost:5173`
 
+Dang nhap mac dinh cho ban dev/mock:
+
+- username: `admin`
+- password: `Admin@123`
+
 ## Agent Demo Rieng
 
 Da co mot agent Nmap demo tach rieng tai [agents/nmap-agent-demo/README.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/agents/nmap-agent-demo/README.md) de trien khai tren Kali hoac VM khac.
@@ -100,8 +105,10 @@ Muc tieu cua project con nay:
 - CRUD API mo rong cho: `operation_execution`, `task_execution`, `generated_report`, `report_snapshot`.
 - Runtime API cho launch operation, cap nhat task execution status va tong hop runtime overview.
 - Runtime API bo sung heartbeat cho agent/task execution va endpoint discovery contract `GET /api/v1/agents/runtime/execute-contract`.
+- Auth co ban theo nhom tai khoan (RBAC): login, nhom tai khoan, tai khoan va bat/tat quyen theo nhom.
 - Scheduler runner cho `cron` va `interval`, co API chay tay va background loop qua env.
 - Worker runner xu ly `task_execution` theo thu tu, mock-run agent, parse ket qua va luu `scan_result`.
+- Co endpoint `POST /api/v1/demo/mock-flow` de chay nhanh end-to-end mock flow.
 - Import/export ket qua operation qua `JSON`, `CSV`, `XLSX`, va import lai du lieu scan bang `JSON`.
 - Frontend co man `Operation Designer`, `Execution Monitor`, `Finding Explorer` de thao tac workflow va loc ket qua de demo.
 - Worker co the dispatch HTTP toi agent that theo contract `execute`, ho tro ca che do sync va async heartbeat/status callback, hoac fallback ve mock runner.
@@ -153,8 +160,8 @@ python -m scripts.seed_data
 
 ## De xuat buoc tiep theo
 
-1. Them migration `003+` cho cac thay doi schema tiep theo.
-2. Deploy va test `agents/nmap-agent-demo` tren may Kali/VM.
-3. Them export PDF va bo loc dashboard.
+1. Test end-to-end mock flow va ra soat nhe UI/encoding trong browser.
+2. Deploy va test `agents/nmap-agent-demo` tren may Kali/VM khi may du tai nguyen.
+3. Them export PDF va bo loc dashboard nang cao hon.
 4. Mo rong auth cho runtime callback neu dua agent that vao moi truong that.
-5. Can nhac Alembic sau nay neu can autogenerate/revision phuc tap hon.
+5. Them migration `004+` khi schema doi tiep.

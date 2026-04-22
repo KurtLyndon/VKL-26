@@ -7,6 +7,130 @@ class ORMModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class AccountGroupBase(BaseModel):
+    code: str
+    name: str
+    description: str | None = None
+    is_active: bool = True
+
+
+class AccountGroupCreate(AccountGroupBase):
+    pass
+
+
+class AccountGroupUpdate(BaseModel):
+    code: str | None = None
+    name: str | None = None
+    description: str | None = None
+    is_active: bool | None = None
+
+
+class AccountGroupRead(AccountGroupBase, ORMModel):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class AppPermissionBase(BaseModel):
+    code: str
+    name: str
+    module_name: str
+    description: str | None = None
+
+
+class AppPermissionCreate(AppPermissionBase):
+    pass
+
+
+class AppPermissionUpdate(BaseModel):
+    code: str | None = None
+    name: str | None = None
+    module_name: str | None = None
+    description: str | None = None
+
+
+class AppPermissionRead(AppPermissionBase, ORMModel):
+    id: int
+    created_at: datetime
+
+
+class UserAccountBase(BaseModel):
+    username: str
+    full_name: str
+    email: str | None = None
+    group_id: int | None = None
+    is_active: bool = True
+
+
+class UserAccountCreate(UserAccountBase):
+    password: str = Field(min_length=6)
+
+
+class UserAccountUpdate(BaseModel):
+    username: str | None = None
+    full_name: str | None = None
+    email: str | None = None
+    password: str | None = Field(default=None, min_length=6)
+    group_id: int | None = None
+    is_active: bool | None = None
+
+
+class UserAccountRead(UserAccountBase, ORMModel):
+    id: int
+    last_login_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_at: datetime
+    user: UserAccountRead
+    permissions: list[str]
+
+
+class CurrentUserResponse(BaseModel):
+    user: UserAccountRead
+    permissions: list[str]
+
+
+class GroupPermissionItem(BaseModel):
+    permission_id: int
+    permission_code: str
+    permission_name: str
+    module_name: str
+    is_enabled: bool = False
+
+
+class GroupPermissionUpdateItem(BaseModel):
+    permission_id: int
+    is_enabled: bool
+
+
+class GroupPermissionUpdateRequest(BaseModel):
+    items: list[GroupPermissionUpdateItem]
+
+
+class DemoMockFlowRequest(BaseModel):
+    operation_id: int | None = None
+    target_id: int | None = None
+
+
+class DemoMockFlowResponse(BaseModel):
+    operation_id: int
+    operation_execution_id: int
+    task_execution_ids: list[int]
+    findings_created: int
+    execution_status: str
+    worker_summary: "WorkerRunResponse"
+
+
 class AgentBase(BaseModel):
     code: str
     name: str
@@ -706,3 +830,6 @@ class DashboardSummary(BaseModel):
     open_findings: int
     report_templates: int
     generated_reports: int
+
+
+DemoMockFlowResponse.model_rebuild()
