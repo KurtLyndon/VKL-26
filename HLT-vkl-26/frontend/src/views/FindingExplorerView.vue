@@ -3,23 +3,42 @@
     <div>
       <p class="eyebrow">Finding explorer</p>
       <h2>Finding Filters</h2>
-      <p class="page-copy">Lọc finding theo severity, status, service và text tìm kiếm để xem kết quả nhanh hơn.</p>
+      <p class="page-copy">Lọc finding theo severity, status, service và từ khóa để xem kết quả nhanh hơn.</p>
     </div>
     <button class="ghost-button" @click="loadData">Refresh</button>
+  </section>
+
+  <section class="stat-grid compact-grid">
+    <article class="mini-stat">
+      <span>Tổng finding</span>
+      <strong>{{ findings.length }}</strong>
+    </article>
+    <article class="mini-stat">
+      <span>Critical / High</span>
+      <strong>{{ highRiskCount }}</strong>
+    </article>
+    <article class="mini-stat">
+      <span>Open</span>
+      <strong>{{ openCount }}</strong>
+    </article>
+    <article class="mini-stat">
+      <span>Dịch vụ phổ biến</span>
+      <strong>{{ topService }}</strong>
+    </article>
   </section>
 
   <section class="panel-grid">
     <article class="panel">
       <div class="panel-head">
-        <h3>Filters</h3>
-        <span class="badge">{{ filteredFindings.length }} matches</span>
+        <h3>Bộ lọc</h3>
+        <span class="badge">{{ filteredFindings.length }} kết quả</span>
       </div>
 
       <div class="filter-grid">
         <label class="field-block">
           <span>severity</span>
           <select v-model="filters.severity">
-            <option value="">All</option>
+            <option value="">Tất cả</option>
             <option value="critical">critical</option>
             <option value="high">high</option>
             <option value="medium">medium</option>
@@ -31,7 +50,7 @@
         <label class="field-block">
           <span>status</span>
           <select v-model="filters.status">
-            <option value="">All</option>
+            <option value="">Tất cả</option>
             <option value="open">open</option>
             <option value="closed">closed</option>
           </select>
@@ -44,7 +63,7 @@
 
         <label class="field-block">
           <span>search</span>
-          <input v-model="filters.search" type="text" placeholder="finding code or title" />
+          <input v-model="filters.search" type="text" placeholder="finding code hoặc title" />
         </label>
       </div>
     </article>
@@ -57,12 +76,12 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>finding_code</th>
-              <th>title</th>
-              <th>severity</th>
-              <th>service</th>
-              <th>port</th>
-              <th>status</th>
+              <th>Mã finding</th>
+              <th>Tiêu đề</th>
+              <th>Severity</th>
+              <th>Service</th>
+              <th>Port</th>
+              <th>Trạng thái</th>
             </tr>
           </thead>
           <tbody>
@@ -70,10 +89,10 @@
               <td>{{ item.id }}</td>
               <td>{{ item.finding_code }}</td>
               <td>{{ item.title }}</td>
-              <td>{{ item.severity }}</td>
+              <td><StatusPill :value="item.severity" /></td>
               <td>{{ item.service_name || "-" }}</td>
               <td>{{ item.port || "-" }}</td>
-              <td>{{ item.status }}</td>
+              <td><StatusPill :value="item.status" /></td>
             </tr>
           </tbody>
         </table>
@@ -85,6 +104,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { getList } from "../api/client";
+import StatusPill from "../components/StatusPill.vue";
 
 const findings = ref([]);
 const filters = reactive({
@@ -108,6 +128,22 @@ const filteredFindings = computed(() =>
     return true;
   })
 );
+
+const highRiskCount = computed(
+  () => findings.value.filter((item) => ["critical", "high"].includes((item.severity || "").toLowerCase())).length
+);
+
+const openCount = computed(() => findings.value.filter((item) => item.status === "open").length);
+
+const topService = computed(() => {
+  const counts = new Map();
+  for (const item of findings.value) {
+    const key = item.service_name || "-";
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  const top = [...counts.entries()].sort((left, right) => right[1] - left[1])[0];
+  return top ? top[0] : "-";
+});
 
 async function loadData() {
   findings.value = await getList("scan-findings");

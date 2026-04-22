@@ -147,6 +147,12 @@ textarea {
   padding: 24px;
 }
 
+.panel-accent {
+  background:
+    linear-gradient(135deg, rgba(39, 198, 169, 0.12), rgba(246, 183, 60, 0.08)),
+    var(--bg-card);
+}
+
 .panel-head {
   display: flex;
   justify-content: space-between;
@@ -180,6 +186,53 @@ textarea {
   padding-left: 18px;
   line-height: 1.8;
   color: var(--muted);
+}
+
+.compact-grid {
+  margin-bottom: 24px;
+}
+
+.mini-stat {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 20px;
+  padding: 16px 18px;
+  display: grid;
+  gap: 8px;
+  box-shadow: var(--shadow);
+}
+
+.mini-stat span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.mini-stat strong {
+  font-size: 28px;
+}
+
+.insight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.insight-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  display: grid;
+  gap: 8px;
+}
+
+.insight-card span,
+.insight-card small {
+  color: var(--muted);
+}
+
+.insight-card strong {
+  font-size: 24px;
 }
 
 .runtime-list {
@@ -302,6 +355,49 @@ textarea {
 .ghost-button:hover,
 .table-button:hover {
   transform: translateY(-1px);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 86px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.status-pill--success {
+  background: rgba(39, 198, 169, 0.14);
+  color: #8df0da;
+  border-color: rgba(39, 198, 169, 0.28);
+}
+
+.status-pill--info {
+  background: rgba(95, 159, 255, 0.14);
+  color: #c3dbff;
+  border-color: rgba(95, 159, 255, 0.22);
+}
+
+.status-pill--warning {
+  background: rgba(246, 183, 60, 0.14);
+  color: #ffe0a0;
+  border-color: rgba(246, 183, 60, 0.26);
+}
+
+.status-pill--danger {
+  background: rgba(255, 107, 107, 0.14);
+  color: #ffd4d4;
+  border-color: rgba(255, 107, 107, 0.26);
+}
+
+.status-pill--neutral {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  border-color: var(--line);
 }
 
 .table-wrap {

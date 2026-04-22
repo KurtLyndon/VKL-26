@@ -8,18 +8,41 @@
     <button class="ghost-button" @click="loadData">Refresh</button>
   </section>
 
+  <section class="stat-grid compact-grid">
+    <article class="mini-stat">
+      <span>Tổng execution</span>
+      <strong>{{ executions.length }}</strong>
+    </article>
+    <article class="mini-stat">
+      <span>Queued</span>
+      <strong>{{ statusCount("queued") }}</strong>
+    </article>
+    <article class="mini-stat">
+      <span>Running</span>
+      <strong>{{ statusCount("running") }}</strong>
+    </article>
+    <article class="mini-stat">
+      <span>Completed</span>
+      <strong>{{ statusCount("completed") }}</strong>
+    </article>
+    <article class="mini-stat">
+      <span>Failed</span>
+      <strong>{{ statusCount("failed") }}</strong>
+    </article>
+  </section>
+
   <section class="panel-grid">
     <article class="panel">
       <div class="panel-head">
-        <h3>Filters</h3>
-        <span class="badge">{{ filteredExecutions.length }} matches</span>
+        <h3>Bộ lọc</h3>
+        <span class="badge">{{ filteredExecutions.length }} kết quả</span>
       </div>
 
       <div class="filter-grid">
         <label class="field-block">
           <span>operation_id</span>
           <select v-model="filters.operationId">
-            <option value="">All</option>
+            <option value="">Tất cả</option>
             <option v-for="operation in operations" :key="operation.id" :value="String(operation.id)">
               {{ operation.code }}
             </option>
@@ -29,7 +52,7 @@
         <label class="field-block">
           <span>status</span>
           <select v-model="filters.status">
-            <option value="">All</option>
+            <option value="">Tất cả</option>
             <option value="queued">queued</option>
             <option value="running">running</option>
             <option value="completed">completed</option>
@@ -40,7 +63,7 @@
         <label class="field-block">
           <span>trigger_type</span>
           <select v-model="filters.triggerType">
-            <option value="">All</option>
+            <option value="">Tất cả</option>
             <option value="manual">manual</option>
             <option value="cron">cron</option>
             <option value="interval">interval</option>
@@ -57,11 +80,11 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>operation</th>
-              <th>execution_code</th>
-              <th>trigger_type</th>
-              <th>status</th>
-              <th>summary_json</th>
+              <th>Operation</th>
+              <th>Mã execution</th>
+              <th>Trigger</th>
+              <th>Trạng thái</th>
+              <th>Tóm tắt</th>
             </tr>
           </thead>
           <tbody>
@@ -69,9 +92,9 @@
               <td>{{ item.id }}</td>
               <td>{{ operationCode(item.operation_id) }}</td>
               <td>{{ item.execution_code }}</td>
-              <td>{{ item.trigger_type }}</td>
-              <td>{{ item.status }}</td>
-              <td>{{ JSON.stringify(item.summary_json || {}) }}</td>
+              <td><StatusPill :value="item.trigger_type" /></td>
+              <td><StatusPill :value="item.status" /></td>
+              <td>{{ summaryText(item.summary_json) }}</td>
             </tr>
           </tbody>
         </table>
@@ -83,6 +106,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { getList } from "../api/client";
+import StatusPill from "../components/StatusPill.vue";
 
 const executions = ref([]);
 const operations = ref([]);
@@ -103,6 +127,19 @@ const filteredExecutions = computed(() =>
 
 function operationCode(operationId) {
   return operations.value.find((item) => item.id === operationId)?.code || operationId;
+}
+
+function statusCount(status) {
+  return executions.value.filter((item) => item.status === status).length;
+}
+
+function summaryText(summaryJson) {
+  const summary = summaryJson || {};
+  const parts = [];
+  if (typeof summary.total_tasks === "number") parts.push(`${summary.total_tasks} task`);
+  if (typeof summary.completed_tasks === "number") parts.push(`${summary.completed_tasks} hoàn tất`);
+  if (typeof summary.failed_tasks === "number" && summary.failed_tasks > 0) parts.push(`${summary.failed_tasks} lỗi`);
+  return parts.length ? parts.join(" | ") : "-";
 }
 
 async function loadData() {
