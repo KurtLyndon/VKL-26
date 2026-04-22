@@ -35,6 +35,8 @@
 - Bo sung auth RBAC co ban theo nhom tai khoan: login, token, nhom tai khoan, tai khoan va phan quyen theo nhom.
 - Frontend da co man dang nhap, man quan ly quyen theo nhom, va menu cap 1/cap 2 loc theo permission.
 - Bo sung `mock demo flow` de launch operation + worker tu dong trong 1 buoc cho demo noi bo.
+- Tinh gon sidebar thanh menu accordion: chi mo 1 menu cap 1 tai mot thoi diem, menu cap 2 tu dong thu gon/expand tuong ung.
+- Khi chuyen menu va doi view, panel ben phai tu focus/scroll len dau de thao tac nhanh hon.
 
 ### Trang thai tam thoi
 

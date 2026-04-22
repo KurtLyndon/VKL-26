@@ -11,9 +11,19 @@
 
       <nav class="nav-section-list">
         <section v-for="section in visibleSections" :key="section.label" class="nav-section">
-          <p class="nav-section-title">{{ section.label }}</p>
-          <div class="nav-list">
-            <RouterLink v-for="item in section.items" :key="item.to" :to="item.to" class="nav-link">
+          <button class="nav-section-toggle" type="button" @click="toggleSection(section.label)">
+            <span>{{ section.label }}</span>
+            <small>{{ expandedSection === section.label ? "−" : "+" }}</small>
+          </button>
+
+          <div v-if="expandedSection === section.label" class="nav-list">
+            <RouterLink
+              v-for="item in section.items"
+              :key="item.to"
+              :to="item.to"
+              class="nav-link"
+              @click="emitNavigate"
+            >
               <span>{{ item.label }}</span>
               <small>{{ item.caption }}</small>
             </RouterLink>
@@ -35,12 +45,14 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 
+const emit = defineEmits(["navigate"]);
 const router = useRouter();
 const auth = useAuthStore();
+const expandedSection = ref("Điều phối");
 
 const sections = [
   {
@@ -95,6 +107,25 @@ const visibleSections = computed(() =>
     }))
     .filter((section) => section.items.length > 0)
 );
+
+watch(
+  visibleSections,
+  (items) => {
+    if (!items.length) return;
+    if (!items.some((section) => section.label === expandedSection.value)) {
+      expandedSection.value = items[0].label;
+    }
+  },
+  { immediate: true }
+);
+
+function toggleSection(label) {
+  expandedSection.value = expandedSection.value === label ? "" : label;
+}
+
+function emitNavigate() {
+  emit("navigate");
+}
 
 function logout() {
   auth.clearSession();
