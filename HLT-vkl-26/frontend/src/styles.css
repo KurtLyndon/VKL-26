@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --bg: #064509;
   --bg-soft: #053808;
   --bg-soft-2: #0b5a10;
@@ -24,6 +25,7 @@ body {
   margin: 0;
   font-family: "Space Grotesk", sans-serif;
   color: var(--text);
+  color-scheme: light;
   background:
     radial-gradient(circle at top left, rgba(255, 250, 240, 0.08), transparent 26%),
     radial-gradient(circle at top right, rgba(140, 166, 111, 0.16), transparent 24%),
@@ -75,6 +77,11 @@ select {
   font-size: 12px;
 }
 
+.page-header .eyebrow {
+  color: var(--danger);
+  font-weight: 700;
+}
+
 .sidebar h1,
 .page-header h2 {
   margin: 0;
@@ -122,11 +129,12 @@ select {
   gap: 12px;
   padding: 12px 14px;
   border-radius: 16px;
-  border: 1px solid rgba(255, 250, 240, 0.14);
-  background: rgba(255, 250, 240, 0.08);
+  border: 1px solid rgba(255, 250, 240, 0.24);
+  background: rgba(255, 250, 240, 0.12);
   color: var(--text-inverse);
   cursor: pointer;
   text-align: left;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
 }
 
 .nav-section-toggle span {
@@ -143,13 +151,27 @@ select {
 
 .nav-link {
   padding: 14px 16px;
-  border: 1px solid rgba(255, 250, 240, 0.08);
+  border: 1px solid rgba(255, 250, 240, 0.22);
   border-radius: 18px;
-  background: rgba(255, 250, 240, 0.06);
+  background:
+    linear-gradient(135deg, rgba(255, 250, 240, 0.16), rgba(223, 236, 207, 0.08)),
+    rgba(255, 250, 240, 0.08);
   transition: 180ms ease;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.14);
+}
+
+.nav-link-home {
+  border-color: rgba(255, 250, 240, 0.5);
+  background: #fffaf0;
+  color: #12371f;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
+}
+
+.nav-link-home small {
+  color: #4d603d;
 }
 
 .nav-link small {
@@ -157,25 +179,38 @@ select {
 }
 
 .nav-link:hover {
-  border-color: rgba(223, 236, 207, 0.4);
-  background: rgba(223, 236, 207, 0.16);
+  border-color: rgba(255, 250, 240, 0.62);
+  background:
+    linear-gradient(135deg, rgba(255, 250, 240, 0.26), rgba(223, 236, 207, 0.16)),
+    rgba(255, 250, 240, 0.12);
   color: #f6fff2;
   transform: translateX(4px);
+}
+
+.nav-link-home:hover {
+  background: #ffffff;
+  color: #0f321c;
 }
 
 .nav-link:hover small {
   color: #eef8e8;
 }
 
+.nav-link-home:hover small {
+  color: #4d603d;
+}
+
 .nav-link.router-link-active {
-  border-color: rgba(255, 250, 240, 0.48);
-  background: linear-gradient(135deg, rgba(255, 250, 240, 0.24), rgba(140, 166, 111, 0.18));
-  color: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(255, 250, 240, 0.1);
+  border-color: rgba(255, 250, 240, 0.72);
+  background: #fffaf0;
+  color: #12371f;
+  box-shadow:
+    inset 4px 0 0 var(--danger),
+    0 16px 34px rgba(0, 0, 0, 0.2);
 }
 
 .nav-link.router-link-active small {
-  color: #f7ffef;
+  color: #4d603d;
 }
 
 .user-card {

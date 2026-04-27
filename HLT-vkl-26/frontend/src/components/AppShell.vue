@@ -10,6 +10,16 @@
       </div>
 
       <nav class="nav-section-list">
+        <RouterLink
+          v-if="canViewDashboard"
+          to="/"
+          class="nav-link nav-link-home"
+          @click="emitNavigate"
+        >
+          <span>Dashboard</span>
+          <small>Tổng quan hệ thống</small>
+        </RouterLink>
+
         <section v-for="section in visibleSections" :key="section.label" class="nav-section">
           <button class="nav-section-toggle" type="button" @click="toggleSection(section.label)">
             <span>{{ section.label }}</span>
@@ -52,13 +62,13 @@ import { useAuthStore } from "../stores/auth";
 const emit = defineEmits(["navigate"]);
 const router = useRouter();
 const auth = useAuthStore();
+const canViewDashboard = computed(() => auth.hasPermission("dashboard.view"));
 const expandedSection = ref("Điều phối");
 
 const sections = [
   {
     label: "Điều phối",
     items: [
-      { to: "/", label: "Dashboard", caption: "Tổng quan hệ thống", permission: "dashboard.view" },
       { to: "/control", label: "Control", caption: "Launch và runtime execution", permission: "runtime.control" },
       { to: "/operation-designer", label: "Designer", caption: "Sắp xếp workflow task", permission: "operations.manage" },
       { to: "/execution-monitor", label: "Monitor", caption: "Theo dõi execution", permission: "runtime.control" },
