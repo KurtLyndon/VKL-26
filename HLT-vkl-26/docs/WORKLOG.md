@@ -55,6 +55,11 @@
   - tự chuẩn hóa các pattern lỗi như `[1 - 3]`, `[1_3]` về `[1-3]`
   - thêm hàm phân giải để mở rộng `192.168.[1-3].0/24` thành 3 dải con phục vụ khớp scan result
 - Đổi theme UI sang xanh lá cây đậm làm chủ đạo, vùng làm việc kem xương, chữ đen trên nền sáng và chữ trắng trên nền xanh đậm.
+- Tinh chỉnh lại trạng thái menu sidebar:
+  - hover đổi nền và màu chữ rồi trả về bình thường khi leave
+  - active có màu riêng khác hover
+  - sidebar dùng nền `#064509`
+  - vùng nội dung chính chuyển sang nền trắng kem sáng hơn
 
 ### Trạng thái tạm thời
 

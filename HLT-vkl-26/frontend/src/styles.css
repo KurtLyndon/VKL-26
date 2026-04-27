@@ -1,7 +1,7 @@
 :root {
-  --bg: #1f4d36;
-  --bg-soft: #183b2b;
-  --bg-soft-2: #295c40;
+  --bg: #064509;
+  --bg-soft: #053808;
+  --bg-soft-2: #0b5a10;
   --bg-card: #f5efe2;
   --bg-card-strong: #fffaf0;
   --line: rgba(31, 77, 54, 0.16);
@@ -27,7 +27,7 @@ body {
   background:
     radial-gradient(circle at top left, rgba(255, 250, 240, 0.08), transparent 26%),
     radial-gradient(circle at top right, rgba(140, 166, 111, 0.16), transparent 24%),
-    linear-gradient(135deg, #173726, #1f4d36 55%, #123022);
+    linear-gradient(135deg, #053808, #064509 55%, #042e06);
   min-height: 100vh;
 }
 
@@ -57,7 +57,7 @@ select {
   padding: 32px 24px;
   border-right: 1px solid rgba(255, 250, 240, 0.12);
   background:
-    linear-gradient(180deg, rgba(20, 56, 39, 0.96), rgba(27, 71, 50, 0.96)),
+    linear-gradient(180deg, rgba(5, 56, 8, 0.98), rgba(6, 69, 9, 0.98)),
     var(--bg);
   backdrop-filter: blur(22px);
   display: flex;
@@ -143,9 +143,9 @@ select {
 
 .nav-link {
   padding: 14px 16px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 250, 240, 0.08);
   border-radius: 18px;
-  background: rgba(255, 250, 240, 0.08);
+  background: rgba(255, 250, 240, 0.06);
   transition: 180ms ease;
   display: flex;
   flex-direction: column;
@@ -156,11 +156,26 @@ select {
   color: var(--muted-inverse);
 }
 
-.nav-link.router-link-active,
 .nav-link:hover {
-  border-color: rgba(255, 250, 240, 0.32);
-  background: rgba(255, 250, 240, 0.18);
+  border-color: rgba(223, 236, 207, 0.4);
+  background: rgba(223, 236, 207, 0.16);
+  color: #f6fff2;
   transform: translateX(4px);
+}
+
+.nav-link:hover small {
+  color: #eef8e8;
+}
+
+.nav-link.router-link-active {
+  border-color: rgba(255, 250, 240, 0.48);
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.24), rgba(140, 166, 111, 0.18));
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 240, 0.1);
+}
+
+.nav-link.router-link-active small {
+  color: #f7ffef;
 }
 
 .user-card {
@@ -182,9 +197,7 @@ select {
   height: 100vh;
   overflow-y: auto;
   color: var(--text);
-  background:
-    radial-gradient(circle at top left, rgba(47, 107, 73, 0.08), transparent 24%),
-    linear-gradient(180deg, #fbf6ec, #f1eadb);
+  background: #fffaf0;
 }
 
 .page-header {
