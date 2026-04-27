@@ -5,7 +5,7 @@
         <p class="eyebrow">HLT internal security</p>
         <h1>Control Center</h1>
         <p class="sidebar-copy">
-          Nền tảng khởi tạo cho điều phối task agent, lưu trữ kết quả scan, quản trị CVE, báo cáo và phân quyền nhóm tài khoản.
+          Nền tảng điều phối agent, quản lý mục tiêu, lưu trữ kết quả scan, quản trị CVE, báo cáo và phân quyền.
         </p>
       </div>
 
@@ -74,10 +74,17 @@ const sections = [
       { to: "/operations", label: "Operations", caption: "Workflow và lịch chạy", permission: "operations.manage" },
       { to: "/operation-executions", label: "Executions", caption: "Tiến trình operation", permission: "runtime.control" },
       { to: "/task-executions", label: "Task Executions", caption: "Tiến trình task", permission: "runtime.control" },
-      { to: "/targets", label: "Targets", caption: "Tài sản và nhóm đối tượng", permission: "targets.manage" },
       { to: "/vulnerabilities", label: "CVE", caption: "Threat, proposal, PoC", permission: "vulnerabilities.manage" },
       { to: "/scan-results", label: "Scan Results", caption: "Dữ liệu chuẩn hóa", permission: "scan_results.view" },
       { to: "/scan-findings", label: "Findings", caption: "Lỗ hổng và bằng chứng", permission: "scan_results.view" },
+    ],
+  },
+  {
+    label: "Mục tiêu",
+    items: [
+      { to: "/targets", label: "Target", caption: "Danh sách, dải IP và import", permission: "targets.manage" },
+      { to: "/target-attributes", label: "Target Attribute", caption: "Thuộc tính động để lọc", permission: "targets.manage" },
+      { to: "/target-groups", label: "Target Group", caption: "Nhóm target và thành viên", permission: "targets.manage" },
     ],
   },
   {

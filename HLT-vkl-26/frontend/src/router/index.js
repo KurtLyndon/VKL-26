@@ -1,24 +1,23 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { getCurrentUser } from "../api/client";
 import { useAuthStore } from "../stores/auth";
+import AccountGroupPermissionsView from "../views/AccountGroupPermissionsView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import ExecutionMonitorView from "../views/ExecutionMonitorView.vue";
 import FindingExplorerView from "../views/FindingExplorerView.vue";
 import LoginView from "../views/LoginView.vue";
-import OperationDesignerView from "../views/OperationDesignerView.vue";
 import OperationControlView from "../views/OperationControlView.vue";
-import ResultExchangeView from "../views/ResultExchangeView.vue";
+import OperationDesignerView from "../views/OperationDesignerView.vue";
 import ResourceView from "../views/ResourceView.vue";
-import AccountGroupPermissionsView from "../views/AccountGroupPermissionsView.vue";
+import ResultExchangeView from "../views/ResultExchangeView.vue";
+import TargetAttributesView from "../views/TargetAttributesView.vue";
+import TargetGroupsView from "../views/TargetGroupsView.vue";
+import TargetManagementView from "../views/TargetManagementView.vue";
 
 const routes = [
   { path: "/login", name: "login", component: LoginView, meta: { title: "Login", public: true } },
   { path: "/", name: "dashboard", component: DashboardView, meta: { title: "Dashboard", permission: "dashboard.view" } },
-  {
-    path: "/control",
-    component: OperationControlView,
-    meta: { title: "Operation Control", permission: "runtime.control" },
-  },
+  { path: "/control", component: OperationControlView, meta: { title: "Operation Control", permission: "runtime.control" } },
   {
     path: "/operation-designer",
     component: OperationDesignerView,
@@ -100,15 +99,18 @@ const routes = [
   },
   {
     path: "/targets",
-    component: ResourceView,
+    component: TargetManagementView,
     meta: { title: "Targets", permission: "targets.manage" },
-    props: {
-      title: "Quản lý Target",
-      resource: "targets",
-      fields: ["code", "name", "target_type", "ip_range", "domain"],
-      jsonFields: [],
-      longTextFields: ["description"],
-    },
+  },
+  {
+    path: "/target-attributes",
+    component: TargetAttributesView,
+    meta: { title: "Target Attributes", permission: "targets.manage" },
+  },
+  {
+    path: "/target-groups",
+    component: TargetGroupsView,
+    meta: { title: "Target Groups", permission: "targets.manage" },
   },
   {
     path: "/vulnerabilities",

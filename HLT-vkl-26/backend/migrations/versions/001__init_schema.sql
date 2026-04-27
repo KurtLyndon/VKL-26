@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS target_attribute_value (
     id INT AUTO_INCREMENT PRIMARY KEY,
     target_id INT NOT NULL,
     attribute_definition_id INT NOT NULL,
-    value_text TEXT NOT NULL,
+    value_text TEXT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_target_attribute_value_target FOREIGN KEY (target_id) REFERENCES target(id),

@@ -41,6 +41,12 @@
 - Mở rộng `vulnerability` để lưu được cả `poc_text` và `poc_file_name`.
 - Thêm kho lưu trữ POC script tại `backend/data/poc_repository` để giữ bản sao script xác minh phục vụ đẩy xuống agent thực thi.
 - Script import sẽ tự copy file POC vào kho lưu trữ này và tạo/cập nhật `vulnerability_script` tương ứng.
+- Mở rộng cụm quản lý `Mục tiêu`:
+  - thêm UI riêng cho `Target`, `Target Attribute`, `Target Group`
+  - hỗ trợ gán thuộc tính động cho từng target, cho phép value `null`
+  - hỗ trợ gán target vào nhiều nhóm
+  - hỗ trợ import `Excel/CSV`, tự sinh attribute mới theo cột mới
+  - nhóm lại menu sidebar để `Mục tiêu` có 3 menu con riêng
 
 ### Trạng thái tạm thời
 

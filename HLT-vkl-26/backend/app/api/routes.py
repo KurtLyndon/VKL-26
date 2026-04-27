@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -25,6 +25,7 @@ from app.models import (
     TargetAttributeDefinition,
     TargetAttributeValue,
     TargetGroup,
+    TargetGroupMapping,
     Task,
     TaskExecution,
     UserAccount,
@@ -90,13 +91,21 @@ from app.schemas.resources import (
     TargetAttributeDefinitionCreate,
     TargetAttributeDefinitionRead,
     TargetAttributeDefinitionUpdate,
+    TargetAttributeAssignmentUpdateRequest,
     TargetAttributeValueCreate,
     TargetAttributeValueRead,
     TargetAttributeValueUpdate,
     TargetCreate,
+    TargetDetailRead,
     TargetGroupCreate,
+    TargetGroupAssignmentUpdateRequest,
+    TargetGroupMemberUpdateRequest,
+    TargetGroupMappingCreate,
+    TargetGroupMappingRead,
+    TargetGroupMappingUpdate,
     TargetGroupRead,
     TargetGroupUpdate,
+    TargetImportResponse,
     TargetRead,
     TargetUpdate,
     TaskExecutionHeartbeatRequest,
@@ -138,6 +147,17 @@ from app.services.execution import get_runtime_overview, launch_operation, updat
 from app.services.result_exchange import export_operation_results, import_operation_results
 from app.services.scan_results import normalize_and_store_scan_result
 from app.services.scheduler import run_scheduler_cycle
+from app.services.targets import (
+    create_target,
+    delete_target,
+    delete_target_attribute_definition,
+    delete_target_group,
+    import_targets_from_file,
+    list_targets_enriched,
+    update_target,
+    update_target_attribute_assignments,
+    update_target_group_assignments,
+)
 from app.services.worker import run_worker_cycle
 
 router = APIRouter()
@@ -344,6 +364,16 @@ register_crud_routes(
     read_schema=TargetGroupRead,
     create_schema=TargetGroupCreate,
     update_schema=TargetGroupUpdate,
+    list_permission="targets.manage",
+    write_permission="targets.manage",
+)
+register_crud_routes(
+    router,
+    path="/target-group-mappings",
+    model=TargetGroupMapping,
+    read_schema=TargetGroupMappingRead,
+    create_schema=TargetGroupMappingCreate,
+    update_schema=TargetGroupMappingUpdate,
     list_permission="targets.manage",
     write_permission="targets.manage",
 )
@@ -592,6 +622,177 @@ def list_operation_tasks(
     return db.scalars(
         select(OperationTask).where(OperationTask.operation_id == operation_id).order_by(OperationTask.order_index.asc())
     ).all()
+
+
+@router.get("/targets/enriched", response_model=list[TargetDetailRead])
+def list_targets_with_details(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    return list_targets_enriched(db)
+
+
+@router.post("/targets/manage", response_model=TargetRead, status_code=status.HTTP_201_CREATED)
+def create_target_item(
+    payload: TargetCreate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    return create_target(db, payload.model_dump(exclude_unset=True))
+
+
+@router.put("/targets/manage/{target_id}", response_model=TargetRead)
+def update_target_item(
+    target_id: int,
+    payload: TargetUpdate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    item = db.get(Target, target_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target not found")
+    return update_target(db, item, payload.model_dump(exclude_unset=True))
+
+
+@router.delete("/targets/manage/{target_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_target_item(
+    target_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    item = db.get(Target, target_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target not found")
+    delete_target(db, item)
+
+
+@router.put("/targets/{target_id}/attribute-values", response_model=list[TargetAttributeValueRead])
+def set_target_attribute_values(
+    target_id: int,
+    payload: TargetAttributeAssignmentUpdateRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    if not db.get(Target, target_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target not found")
+    return update_target_attribute_assignments(db, target_id, payload)
+
+
+@router.put("/targets/{target_id}/groups", response_model=list[TargetGroupMappingRead])
+def set_target_groups(
+    target_id: int,
+    payload: TargetGroupAssignmentUpdateRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    if not db.get(Target, target_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target not found")
+    return update_target_group_assignments(db, target_id, payload)
+
+
+@router.put("/target-groups/{group_id}/targets", response_model=list[TargetGroupMappingRead])
+def set_group_targets(
+    group_id: int,
+    payload: TargetGroupMemberUpdateRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    group = db.get(TargetGroup, group_id)
+    if not group:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target group not found")
+
+    existing = db.scalars(select(TargetGroupMapping).where(TargetGroupMapping.target_group_id == group_id)).all()
+    existing_ids = {item.target_id for item in existing}
+    desired_ids = set(payload.target_ids)
+
+    for item in existing:
+        if item.target_id not in desired_ids:
+            db.delete(item)
+
+    for target_id in desired_ids - existing_ids:
+        if db.get(Target, target_id):
+            db.add(TargetGroupMapping(target_id=target_id, target_group_id=group_id))
+
+    db.commit()
+    return db.scalars(select(TargetGroupMapping).where(TargetGroupMapping.target_group_id == group_id)).all()
+
+
+@router.post("/targets/import", response_model=TargetImportResponse, status_code=status.HTTP_201_CREATED)
+async def import_targets(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    if not file.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thiếu tên file import.")
+    content = await file.read()
+    try:
+        return import_targets_from_file(db, file.filename, content)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+
+@router.post("/target-attribute-definitions/manage", response_model=TargetAttributeDefinitionRead, status_code=status.HTTP_201_CREATED)
+def create_target_attribute_definition_item(
+    payload: TargetAttributeDefinitionCreate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    item = TargetAttributeDefinition(
+        attribute_code=payload.attribute_code or "",
+        attribute_name=payload.attribute_name,
+        data_type=payload.data_type,
+        is_required=payload.is_required,
+        default_value=payload.default_value,
+        description=payload.description,
+    )
+    if not item.attribute_code:
+        item.attribute_code = item.attribute_name.lower().strip().replace(" ", "_")[:50]
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/target-attribute-definitions/manage/{definition_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_target_attribute_definition_item(
+    definition_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    item = db.get(TargetAttributeDefinition, definition_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target attribute definition not found")
+    delete_target_attribute_definition(db, item)
+
+
+@router.post("/target-groups/manage", response_model=TargetGroupRead, status_code=status.HTTP_201_CREATED)
+def create_target_group_item(
+    payload: TargetGroupCreate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    item = TargetGroup(
+        code=payload.code or payload.name.lower().strip().replace(" ", "_")[:50],
+        name=payload.name,
+        description=payload.description,
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@router.delete("/target-groups/manage/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_target_group_item(
+    group_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("targets.manage")),
+):
+    item = db.get(TargetGroup, group_id)
+    if not item:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target group not found")
+    delete_target_group(db, item)
 
 
 @router.post("/operations/{operation_id}/launch", response_model=OperationLaunchResponse)

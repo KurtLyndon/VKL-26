@@ -311,7 +311,7 @@ class TaskExecutionRead(TaskExecutionBase, ORMModel):
 
 
 class TargetBase(BaseModel):
-    code: str
+    code: str | None = None
     name: str
     target_type: str = "network"
     ip_range: str | None = None
@@ -338,7 +338,7 @@ class TargetRead(TargetBase, ORMModel):
 
 
 class TargetAttributeDefinitionBase(BaseModel):
-    attribute_code: str
+    attribute_code: str | None = None
     attribute_name: str
     data_type: str = "text"
     is_required: bool = False
@@ -366,7 +366,7 @@ class TargetAttributeDefinitionRead(TargetAttributeDefinitionBase, ORMModel):
 class TargetAttributeValueBase(BaseModel):
     target_id: int
     attribute_definition_id: int
-    value_text: str
+    value_text: str | None = None
 
 
 class TargetAttributeValueCreate(TargetAttributeValueBase):
@@ -384,7 +384,7 @@ class TargetAttributeValueRead(TargetAttributeValueBase, ORMModel):
 
 
 class TargetGroupBase(BaseModel):
-    code: str
+    code: str | None = None
     name: str
     description: str | None = None
 
@@ -401,6 +401,71 @@ class TargetGroupUpdate(BaseModel):
 class TargetGroupRead(TargetGroupBase, ORMModel):
     id: int
     created_at: datetime
+
+
+class TargetGroupMappingBase(BaseModel):
+    target_id: int
+    target_group_id: int
+
+
+class TargetGroupMappingCreate(TargetGroupMappingBase):
+    pass
+
+
+class TargetGroupMappingUpdate(BaseModel):
+    target_id: int | None = None
+    target_group_id: int | None = None
+
+
+class TargetGroupMappingRead(TargetGroupMappingBase, ORMModel):
+    id: int
+    created_at: datetime
+
+
+class TargetAttributeAssignmentItem(BaseModel):
+    attribute_definition_id: int
+    attribute_code: str
+    attribute_name: str
+    data_type: str = "text"
+    value_text: str | None = None
+
+
+class TargetGroupSummaryItem(BaseModel):
+    id: int
+    code: str
+    name: str
+
+
+class TargetDetailRead(TargetRead):
+    ip_entry_type: str = "single"
+    attribute_values: list[TargetAttributeAssignmentItem] = Field(default_factory=list)
+    group_ids: list[int] = Field(default_factory=list)
+    groups: list[TargetGroupSummaryItem] = Field(default_factory=list)
+
+
+class TargetAttributeAssignmentUpdateItem(BaseModel):
+    attribute_definition_id: int
+    value_text: str | None = None
+
+
+class TargetAttributeAssignmentUpdateRequest(BaseModel):
+    items: list[TargetAttributeAssignmentUpdateItem]
+
+
+class TargetGroupAssignmentUpdateRequest(BaseModel):
+    target_group_ids: list[int]
+
+
+class TargetGroupMemberUpdateRequest(BaseModel):
+    target_ids: list[int]
+
+
+class TargetImportResponse(BaseModel):
+    imported_targets: int
+    created_targets: int
+    updated_targets: int
+    created_attribute_definitions: int
+    source_file_name: str
 
 
 class VulnerabilityBase(BaseModel):

@@ -83,6 +83,67 @@ export async function getOperationTasks(operationId) {
   return data;
 }
 
+export async function getTargetsEnriched() {
+  const { data } = await api.get("/targets/enriched");
+  return data;
+}
+
+export async function createManagedTarget(payload) {
+  const { data } = await api.post("/targets/manage", payload);
+  return data;
+}
+
+export async function updateManagedTarget(targetId, payload) {
+  const { data } = await api.put(`/targets/manage/${targetId}`, payload);
+  return data;
+}
+
+export async function deleteManagedTarget(targetId) {
+  await api.delete(`/targets/manage/${targetId}`);
+}
+
+export async function updateTargetAttributeValues(targetId, items) {
+  const { data } = await api.put(`/targets/${targetId}/attribute-values`, { items });
+  return data;
+}
+
+export async function updateTargetGroups(targetId, targetGroupIds) {
+  const { data } = await api.put(`/targets/${targetId}/groups`, { target_group_ids: targetGroupIds });
+  return data;
+}
+
+export async function importTargetsFile(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await api.post("/targets/import", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function createTargetAttributeDefinitionManaged(payload) {
+  const { data } = await api.post("/target-attribute-definitions/manage", payload);
+  return data;
+}
+
+export async function deleteTargetAttributeDefinitionManaged(definitionId) {
+  await api.delete(`/target-attribute-definitions/manage/${definitionId}`);
+}
+
+export async function createTargetGroupManaged(payload) {
+  const { data } = await api.post("/target-groups/manage", payload);
+  return data;
+}
+
+export async function deleteTargetGroupManaged(groupId) {
+  await api.delete(`/target-groups/manage/${groupId}`);
+}
+
+export async function updateTargetGroupMembers(groupId, targetIds) {
+  const { data } = await api.put(`/target-groups/${groupId}/targets`, { target_ids: targetIds });
+  return data;
+}
+
 export async function updateTaskExecutionStatus(taskExecutionId, payload) {
   const { data } = await api.post(`/task-executions/${taskExecutionId}/status`, payload);
   return data;

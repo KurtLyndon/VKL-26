@@ -223,7 +223,7 @@ class TargetAttributeValue(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     target_id: Mapped[int] = mapped_column(ForeignKey("target.id"), index=True)
     attribute_definition_id: Mapped[int] = mapped_column(ForeignKey("target_attribute_definition.id"), index=True)
-    value_text: Mapped[str] = mapped_column(Text)
+    value_text: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class TargetGroup(Base):
