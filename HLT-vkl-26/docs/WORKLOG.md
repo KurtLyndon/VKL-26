@@ -37,6 +37,10 @@
 - Bổ sung `mock demo flow` để launch operation + worker tự động trong 1 bước cho demo nội bộ.
 - Tinh gọn sidebar thành menu accordion: chỉ mở 1 menu cấp 1 tại một thời điểm, menu cấp 2 tự động thu gọn/expand tương ứng.
 - Khi chuyển menu và đổi view, panel bên phải tự focus/scroll lên đầu để thao tác nhanh hơn.
+- Bổ sung luồng import CVE từ file Excel STMNC, hỗ trợ map `Mã`, `Mức độ`, `Nguy cơ mất ATTT`, `Kiến nghị, đề xuất`, `Kiểm chứng`.
+- Mở rộng `vulnerability` để lưu được cả `poc_text` và `poc_file_name`.
+- Thêm kho lưu trữ POC script tại `backend/data/poc_repository` để giữ bản sao script xác minh phục vụ đẩy xuống agent thực thi.
+- Script import sẽ tự copy file POC vào kho lưu trữ này và tạo/cập nhật `vulnerability_script` tương ứng.
 
 ### Trạng thái tạm thời
 

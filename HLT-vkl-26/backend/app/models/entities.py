@@ -255,6 +255,7 @@ class Vulnerability(Base, TimestampMixin):
     threat: Mapped[str | None] = mapped_column(Text, nullable=True)
     proposal: Mapped[str | None] = mapped_column(Text, nullable=True)
     poc_file_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    poc_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 

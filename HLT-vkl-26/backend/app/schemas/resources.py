@@ -410,6 +410,7 @@ class VulnerabilityBase(BaseModel):
     threat: str | None = None
     proposal: str | None = None
     poc_file_name: str | None = None
+    poc_text: str | None = None
     description: str | None = None
 
 
@@ -423,6 +424,7 @@ class VulnerabilityUpdate(BaseModel):
     threat: str | None = None
     proposal: str | None = None
     poc_file_name: str | None = None
+    poc_text: str | None = None
     description: str | None = None
 
 

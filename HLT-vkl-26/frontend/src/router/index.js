@@ -119,7 +119,7 @@ const routes = [
       resource: "vulnerabilities",
       fields: ["code", "title", "level", "poc_file_name"],
       jsonFields: [],
-      longTextFields: ["threat", "proposal", "description"],
+      longTextFields: ["threat", "proposal", "poc_text", "description"],
     },
   },
   {

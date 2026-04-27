@@ -109,6 +109,7 @@ Mục tiêu của project con này:
 - Scheduler runner cho `cron` và `interval`, có API chạy tay và background loop qua env.
 - Worker runner xử lý `task_execution` theo thứ tự, mock-run agent, parse kết quả và lưu `scan_result`.
 - Có endpoint `POST /api/v1/demo/mock-flow` để chạy nhanh end-to-end mock flow.
+- Có thể import dữ liệu CVE từ Excel STMNC, bao gồm cả `POC` dạng text hoặc file script.
 - Import/export kết quả operation qua `JSON`, `CSV`, `XLSX`, và import lại dữ liệu scan bằng `JSON`.
 - Frontend có màn `Operation Designer`, `Execution Monitor`, `Finding Explorer` để thao tác workflow và lọc kết quả demo.
 - Worker có thể dispatch HTTP tới agent thật theo contract `execute`, hỗ trợ cả chế độ sync và async heartbeat/status callback, hoặc fallback về mock runner.
@@ -120,6 +121,7 @@ Mục tiêu của project con này:
 - Có nhật ký tiến độ trong `docs/WORKLOG.md` để lần sau tiếp tục.
 - Code parser từng agent được tách riêng trong `backend/app/services/agents`.
 - Parser hiện có cho `nmap` (XML + fallback text), `nuclei` (JSONL + fallback text), `acunetix` (JSON + fallback text).
+- Có kho lưu trữ script POC tại `backend/data/poc_repository` để giữ bản sao script xác minh.
 - Tài liệu contract agent thật: [docs/AGENT_RUNTIME_CONTRACT.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/docs/AGENT_RUNTIME_CONTRACT.md)
 
 ## Migration Versioned
@@ -156,6 +158,13 @@ Script Python seed hiện gọi migration runner trước, sau đó chỉ chèn 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
 python -m scripts.seed_data
+```
+
+Import CVE từ Excel:
+
+```powershell
+cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
+python -m scripts.import_vulnerabilities_from_xlsx "D:\Projects\VKL-26\STMNC\1-Codes-v1.8-19-03-2026.xlsx"
 ```
 
 ## Đề xuất bước tiếp theo
