@@ -515,6 +515,11 @@ textarea {
   letter-spacing: 0.06em;
 }
 
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+}
+
 @media (max-width: 980px) {
   .app-shell {
     grid-template-columns: 1fr;

@@ -33,21 +33,21 @@
     <article class="panel">
       <div class="panel-head">
         <h3>Quyền</h3>
-        <span class="badge">{{ permissionItems.length }} quyền</span>
+        <span class="badge">{{ sortedPermissionItems.length }} quyền</span>
       </div>
 
       <div v-if="selectedGroupId" class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Module</th>
-              <th>Mã quyền</th>
-              <th>Tên quyền</th>
-              <th>Bật / tắt</th>
+              <th class="sortable-header" @click="toggleSort('module_name')">Module{{ sortLabel('module_name') }}</th>
+              <th class="sortable-header" @click="toggleSort('permission_code')">Mã quyền{{ sortLabel('permission_code') }}</th>
+              <th class="sortable-header" @click="toggleSort('permission_name')">Tên quyền{{ sortLabel('permission_name') }}</th>
+              <th class="sortable-header" @click="toggleSort('is_enabled')">Bật / tắt{{ sortLabel('is_enabled') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in permissionItems" :key="item.permission_id">
+            <tr v-for="item in sortedPermissionItems" :key="item.permission_id">
               <td>{{ item.module_name }}</td>
               <td>{{ item.permission_code }}</td>
               <td>{{ item.permission_name }}</td>
@@ -64,23 +64,35 @@
 
       <p v-else class="inline-note">Chọn một nhóm tài khoản để quản lý quyền.</p>
 
-      <div class="form-actions" v-if="selectedGroupId">
+      <div v-if="selectedGroupId" class="form-actions">
         <button class="primary-button" type="button" @click="savePermissions">Lưu quyền</button>
       </div>
 
-      <p class="inline-note" v-if="message">{{ message }}</p>
+      <p v-if="message" class="inline-note">{{ message }}</p>
     </article>
   </section>
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { getGroupPermissions, getList, updateGroupPermissions } from "../api/client";
+import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const groups = ref([]);
 const permissionItems = ref([]);
 const selectedGroupId = ref(null);
 const message = ref("");
+const sortState = ref({ key: "module_name", direction: "desc" });
+
+const sortedPermissionItems = computed(() => sortRows(permissionItems.value, sortState.value));
+
+function toggleSort(key) {
+  sortState.value = nextSortState(sortState.value, key);
+}
+
+function sortLabel(key) {
+  return sortIndicator(sortState.value, key);
+}
 
 async function loadData() {
   groups.value = await getList("account-groups");

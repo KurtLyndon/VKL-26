@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">Finding explorer</p>
       <h2>Finding Filters</h2>
-      <p class="page-copy">Lọc finding theo severity, status, service và từ khóa để xem kết quả nhanh hơn.</p>
+      <p class="page-copy">Lọc finding theo severity, trạng thái, service và từ khóa để xem kết quả nhanh hơn.</p>
     </div>
     <button class="ghost-button" @click="loadData">Refresh</button>
   </section>
@@ -31,7 +31,7 @@
     <article class="panel">
       <div class="panel-head">
         <h3>Bộ lọc</h3>
-        <span class="badge">{{ filteredFindings.length }} kết quả</span>
+        <span class="badge">{{ sortedFindings.length }} kết quả</span>
       </div>
 
       <div class="filter-grid">
@@ -75,17 +75,17 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Mã finding</th>
-              <th>Tiêu đề</th>
-              <th>Severity</th>
-              <th>Service</th>
-              <th>Port</th>
-              <th>Trạng thái</th>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
+              <th class="sortable-header" @click="toggleSort('finding_code')">Mã finding{{ sortLabel('finding_code') }}</th>
+              <th class="sortable-header" @click="toggleSort('title')">Tiêu đề{{ sortLabel('title') }}</th>
+              <th class="sortable-header" @click="toggleSort('severity')">Severity{{ sortLabel('severity') }}</th>
+              <th class="sortable-header" @click="toggleSort('service_name')">Service{{ sortLabel('service_name') }}</th>
+              <th class="sortable-header" @click="toggleSort('port')">Port{{ sortLabel('port') }}</th>
+              <th class="sortable-header" @click="toggleSort('status')">Trạng thái{{ sortLabel('status') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in filteredFindings" :key="item.id">
+            <tr v-for="item in sortedFindings" :key="item.id">
               <td>{{ item.id }}</td>
               <td>{{ item.finding_code }}</td>
               <td>{{ item.title }}</td>
@@ -105,8 +105,10 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import { getList } from "../api/client";
 import StatusPill from "../components/StatusPill.vue";
+import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const findings = ref([]);
+const sortState = ref({ key: "id", direction: "desc" });
 const filters = reactive({
   severity: "",
   status: "",
@@ -129,6 +131,8 @@ const filteredFindings = computed(() =>
   })
 );
 
+const sortedFindings = computed(() => sortRows(filteredFindings.value, sortState.value));
+
 const highRiskCount = computed(
   () => findings.value.filter((item) => ["critical", "high"].includes((item.severity || "").toLowerCase())).length
 );
@@ -144,6 +148,14 @@ const topService = computed(() => {
   const top = [...counts.entries()].sort((left, right) => right[1] - left[1])[0];
   return top ? top[0] : "-";
 });
+
+function toggleSort(key) {
+  sortState.value = nextSortState(sortState.value, key);
+}
+
+function sortLabel(key) {
+  return sortIndicator(sortState.value, key);
+}
 
 async function loadData() {
   findings.value = await getList("scan-findings");

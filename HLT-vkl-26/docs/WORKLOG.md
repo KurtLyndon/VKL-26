@@ -47,6 +47,9 @@
   - hỗ trợ gán target vào nhiều nhóm
   - hỗ trợ import `Excel/CSV`, tự sinh attribute mới theo cột mới
   - nhóm lại menu sidebar để `Mục tiêu` có 3 menu con riêng
+- Bổ sung sort cho các bảng danh sách trên UI:
+  - mặc định load theo `ID` giảm dần nếu bảng có cột `ID`
+  - click tiêu đề cột để đổi qua lại `giảm dần <-> tăng dần`
 
 ### Trạng thái tạm thời
 

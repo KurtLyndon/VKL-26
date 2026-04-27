@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">Runtime filter</p>
       <h2>Execution Monitor</h2>
-      <p class="page-copy">Lọc nhanh execution theo operation, trigger type và status để theo dõi luồng chạy.</p>
+      <p class="page-copy">Lọc execution theo operation, trigger type và trạng thái để theo dõi luồng chạy.</p>
     </div>
     <button class="ghost-button" @click="loadData">Refresh</button>
   </section>
@@ -35,7 +35,7 @@
     <article class="panel">
       <div class="panel-head">
         <h3>Bộ lọc</h3>
-        <span class="badge">{{ filteredExecutions.length }} kết quả</span>
+        <span class="badge">{{ sortedExecutions.length }} kết quả</span>
       </div>
 
       <div class="filter-grid">
@@ -79,16 +79,16 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Operation</th>
-              <th>Mã execution</th>
-              <th>Trigger</th>
-              <th>Trạng thái</th>
-              <th>Tóm tắt</th>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
+              <th class="sortable-header" @click="toggleSort('operation_id')">Operation{{ sortLabel('operation_id') }}</th>
+              <th class="sortable-header" @click="toggleSort('execution_code')">Mã execution{{ sortLabel('execution_code') }}</th>
+              <th class="sortable-header" @click="toggleSort('trigger_type')">Trigger{{ sortLabel('trigger_type') }}</th>
+              <th class="sortable-header" @click="toggleSort('status')">Trạng thái{{ sortLabel('status') }}</th>
+              <th class="sortable-header" @click="toggleSort('summary_json')">Tóm tắt{{ sortLabel('summary_json') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in filteredExecutions" :key="item.id">
+            <tr v-for="item in sortedExecutions" :key="item.id">
               <td>{{ item.id }}</td>
               <td>{{ operationCode(item.operation_id) }}</td>
               <td>{{ item.execution_code }}</td>
@@ -107,9 +107,11 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import { getList } from "../api/client";
 import StatusPill from "../components/StatusPill.vue";
+import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const executions = ref([]);
 const operations = ref([]);
+const sortState = ref({ key: "id", direction: "desc" });
 const filters = reactive({
   operationId: "",
   status: "",
@@ -124,6 +126,8 @@ const filteredExecutions = computed(() =>
     return true;
   })
 );
+
+const sortedExecutions = computed(() => sortRows(filteredExecutions.value, sortState.value));
 
 function operationCode(operationId) {
   return operations.value.find((item) => item.id === operationId)?.code || operationId;
@@ -140,6 +144,14 @@ function summaryText(summaryJson) {
   if (typeof summary.completed_tasks === "number") parts.push(`${summary.completed_tasks} hoàn tất`);
   if (typeof summary.failed_tasks === "number" && summary.failed_tasks > 0) parts.push(`${summary.failed_tasks} lỗi`);
   return parts.length ? parts.join(" | ") : "-";
+}
+
+function toggleSort(key) {
+  sortState.value = nextSortState(sortState.value, key);
+}
+
+function sortLabel(key) {
+  return sortIndicator(sortState.value, key);
 }
 
 async function loadData() {

@@ -3,9 +3,7 @@
     <div>
       <p class="eyebrow">Mục tiêu</p>
       <h2>Quản lý Target Attribute</h2>
-      <p class="page-copy">
-        Khai báo các thuộc tính động để dùng cho lọc, thống kê và gán giá trị cho từng target.
-      </p>
+      <p class="page-copy">Khai báo các thuộc tính động để dùng cho lọc, thống kê và gán giá trị cho từng target.</p>
     </div>
     <button class="ghost-button" @click="loadData">Làm mới</button>
   </section>
@@ -14,7 +12,7 @@
     <article class="panel">
       <div class="panel-head">
         <h3>{{ form.id ? "Cập nhật thuộc tính" : "Thêm thuộc tính" }}</h3>
-        <span class="badge">{{ definitions.length }} thuộc tính</span>
+        <span class="badge">{{ sortedDefinitions.length }} thuộc tính</span>
       </div>
 
       <form class="resource-form" @submit.prevent="submitDefinition">
@@ -65,23 +63,23 @@
     <article class="panel">
       <div class="panel-head">
         <h3>Danh sách thuộc tính</h3>
-        <span class="badge">{{ definitions.length }} bản ghi</span>
+        <span class="badge">{{ sortedDefinitions.length }} bản ghi</span>
       </div>
 
       <div class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Tên</th>
-              <th>Mã</th>
-              <th>Kiểu</th>
-              <th>Bắt buộc</th>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
+              <th class="sortable-header" @click="toggleSort('attribute_name')">Tên{{ sortLabel('attribute_name') }}</th>
+              <th class="sortable-header" @click="toggleSort('attribute_code')">Mã{{ sortLabel('attribute_code') }}</th>
+              <th class="sortable-header" @click="toggleSort('data_type')">Kiểu{{ sortLabel('data_type') }}</th>
+              <th class="sortable-header" @click="toggleSort('is_required')">Bắt buộc{{ sortLabel('is_required') }}</th>
               <th>Tác vụ</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="definition in definitions" :key="definition.id">
+            <tr v-for="definition in sortedDefinitions" :key="definition.id">
               <td>{{ definition.id }}</td>
               <td>{{ definition.attribute_name }}</td>
               <td>{{ definition.attribute_code }}</td>
@@ -100,16 +98,18 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import {
   createTargetAttributeDefinitionManaged,
   deleteTargetAttributeDefinitionManaged,
   getList,
   updateItem,
 } from "../api/client";
+import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const definitions = ref([]);
 const message = ref("");
+const sortState = ref({ key: "id", direction: "desc" });
 
 const form = reactive({
   id: null,
@@ -121,6 +121,8 @@ const form = reactive({
   is_required: false,
 });
 
+const sortedDefinitions = computed(() => sortRows(definitions.value, sortState.value));
+
 function resetForm() {
   form.id = null;
   form.attribute_name = "";
@@ -129,6 +131,14 @@ function resetForm() {
   form.default_value = "";
   form.description = "";
   form.is_required = false;
+}
+
+function toggleSort(key) {
+  sortState.value = nextSortState(sortState.value, key);
+}
+
+function sortLabel(key) {
+  return sortIndicator(sortState.value, key);
 }
 
 async function loadData() {

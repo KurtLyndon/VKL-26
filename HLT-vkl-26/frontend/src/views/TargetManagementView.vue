@@ -3,9 +3,7 @@
     <div>
       <p class="eyebrow">Mục tiêu</p>
       <h2>Quản lý Target</h2>
-      <p class="page-copy">
-        Quản lý thông tin mục tiêu, dải IP, thuộc tính động và import danh sách từ Excel hoặc CSV.
-      </p>
+      <p class="page-copy">Quản lý mục tiêu, dải IP, thuộc tính động và import danh sách từ Excel hoặc CSV.</p>
     </div>
     <button class="ghost-button" @click="loadData">Làm mới</button>
   </section>
@@ -14,7 +12,7 @@
     <article class="panel">
       <div class="panel-head">
         <h3>{{ form.id ? "Cập nhật target" : "Thêm target" }}</h3>
-        <span class="badge">{{ targets.length }} target</span>
+        <span class="badge">{{ sortedTargets.length }} target</span>
       </div>
 
       <form class="resource-form" @submit.prevent="submitTarget">
@@ -87,23 +85,23 @@
     <article class="panel">
       <div class="panel-head">
         <h3>Danh sách target</h3>
-        <span class="badge">{{ targets.length }} bản ghi</span>
+        <span class="badge">{{ sortedTargets.length }} bản ghi</span>
       </div>
 
       <div class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Tên</th>
-              <th>Dải IP</th>
-              <th>Kiểu IP</th>
-              <th>Nhóm</th>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
+              <th class="sortable-header" @click="toggleSort('name')">Tên{{ sortLabel('name') }}</th>
+              <th class="sortable-header" @click="toggleSort('ip_range')">Dải IP{{ sortLabel('ip_range') }}</th>
+              <th class="sortable-header" @click="toggleSort('ip_entry_type')">Kiểu IP{{ sortLabel('ip_entry_type') }}</th>
+              <th class="sortable-header" @click="toggleSort('groups')">Nhóm{{ sortLabel('groups') }}</th>
               <th>Tác vụ</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="target in targets" :key="target.id">
+            <tr v-for="target in sortedTargets" :key="target.id">
               <td>{{ target.id }}</td>
               <td>{{ target.name }}</td>
               <td>{{ target.ip_range || "-" }}</td>
@@ -128,11 +126,7 @@
       <div v-if="selectedTarget" class="resource-form">
         <label v-for="definition in attributeDefinitions" :key="definition.id" class="field-block">
           <span>{{ definition.attribute_name }}</span>
-          <textarea
-            v-if="definition.data_type === 'textarea'"
-            v-model="attributeDrafts[definition.id]"
-            rows="3"
-          />
+          <textarea v-if="definition.data_type === 'textarea'" v-model="attributeDrafts[definition.id]" rows="3" />
           <input v-else v-model="attributeDrafts[definition.id]" />
         </label>
 
@@ -158,7 +152,7 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import {
   createManagedTarget,
   deleteManagedTarget,
@@ -169,6 +163,7 @@ import {
   updateTargetAttributeValues,
   updateTargetGroups,
 } from "../api/client";
+import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const targets = ref([]);
 const attributeDefinitions = ref([]);
@@ -179,6 +174,7 @@ const attributeDrafts = reactive({});
 const importFile = ref(null);
 const message = ref("");
 const importMessage = ref("");
+const sortState = ref({ key: "id", direction: "desc" });
 
 const form = reactive({
   id: null,
@@ -188,6 +184,15 @@ const form = reactive({
   domain: "",
   description: "",
 });
+
+const sortedTargets = computed(() =>
+  sortRows(targets.value, sortState.value, (row, key) => {
+    if (key === "groups") {
+      return row.groups.map((group) => group.name).join(", ");
+    }
+    return row?.[key];
+  })
+);
 
 function resetForm() {
   form.id = null;
@@ -201,6 +206,14 @@ function resetForm() {
   Object.keys(attributeDrafts).forEach((key) => {
     attributeDrafts[key] = "";
   });
+}
+
+function toggleSort(key) {
+  sortState.value = nextSortState(sortState.value, key);
+}
+
+function sortLabel(key) {
+  return sortIndicator(sortState.value, key);
 }
 
 function applyTargetSelection(target) {

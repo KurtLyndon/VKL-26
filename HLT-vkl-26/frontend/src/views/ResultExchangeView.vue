@@ -3,9 +3,7 @@
     <div>
       <p class="eyebrow">Result exchange</p>
       <h2>Import / Export Results</h2>
-      <p class="page-copy">
-        Export kết quả operation ra `JSON`, `CSV`, `XLSX` và import lại dữ liệu scan từ `JSON`.
-      </p>
+      <p class="page-copy">Export kết quả operation ra JSON, CSV, XLSX và import lại dữ liệu scan từ JSON.</p>
     </div>
     <button class="ghost-button" @click="loadData">Refresh</button>
   </section>
@@ -80,24 +78,24 @@
     <article class="panel">
       <div class="panel-head">
         <h3>History</h3>
-        <span class="badge">{{ filteredHistory.length }} records</span>
+        <span class="badge">{{ sortedHistory.length }} records</span>
       </div>
 
       <div class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>operation_id</th>
-              <th>action_type</th>
-              <th>file_name</th>
-              <th>file_format</th>
-              <th>status</th>
-              <th>note</th>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
+              <th class="sortable-header" @click="toggleSort('operation_id')">operation_id{{ sortLabel('operation_id') }}</th>
+              <th class="sortable-header" @click="toggleSort('action_type')">action_type{{ sortLabel('action_type') }}</th>
+              <th class="sortable-header" @click="toggleSort('file_name')">file_name{{ sortLabel('file_name') }}</th>
+              <th class="sortable-header" @click="toggleSort('file_format')">file_format{{ sortLabel('file_format') }}</th>
+              <th class="sortable-header" @click="toggleSort('status')">status{{ sortLabel('status') }}</th>
+              <th class="sortable-header" @click="toggleSort('note')">note{{ sortLabel('note') }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in filteredHistory" :key="item.id">
+            <tr v-for="item in sortedHistory" :key="item.id">
               <td>{{ item.id }}</td>
               <td>{{ item.operation_id }}</td>
               <td>{{ item.action_type }}</td>
@@ -116,6 +114,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { exportOperationResults, getList, importOperationResults } from "../api/client";
+import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const operations = ref([]);
 const historyItems = ref([]);
@@ -124,12 +123,23 @@ const exportFormat = ref("json");
 const importPayload = ref('{"scan_results":[],"findings":[]}');
 const exportMessage = ref("");
 const importMessage = ref("");
+const sortState = ref({ key: "id", direction: "desc" });
 
 const filteredHistory = computed(() =>
-  historyItems.value
-    .filter((item) => !selectedOperationId.value || item.operation_id === Number(selectedOperationId.value))
-    .sort((left, right) => right.id - left.id)
+  historyItems.value.filter(
+    (item) => !selectedOperationId.value || item.operation_id === Number(selectedOperationId.value)
+  )
 );
+
+const sortedHistory = computed(() => sortRows(filteredHistory.value, sortState.value));
+
+function toggleSort(key) {
+  sortState.value = nextSortState(sortState.value, key);
+}
+
+function sortLabel(key) {
+  return sortIndicator(sortState.value, key);
+}
 
 async function loadData() {
   const [operationList, historyList] = await Promise.all([

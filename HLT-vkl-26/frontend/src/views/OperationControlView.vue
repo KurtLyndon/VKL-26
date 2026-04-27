@@ -3,9 +3,7 @@
     <div>
       <p class="eyebrow">Execution runtime</p>
       <h2>Operation Control</h2>
-      <p class="page-copy">
-        Launch operation, xem execution gần nhất và cập nhật trạng thái task execution trong lúc dev scheduler.
-      </p>
+      <p class="page-copy">Launch operation, chạy scheduler hoặc worker, và theo dõi task execution trong lúc dev.</p>
     </div>
     <button class="ghost-button" @click="loadRuntime">Refresh</button>
   </section>
@@ -16,15 +14,10 @@
         <h3>Scheduler Runner</h3>
         <span class="badge">cron + interval</span>
       </div>
-
-      <p class="page-copy">
-        Chạy một vòng scheduler để tự động launch các operation đến hạn. Background loop có thể bật qua file env.
-      </p>
-
+      <p class="page-copy">Chạy một vòng scheduler để tự động launch các operation đến hạn.</p>
       <div class="form-actions">
         <button class="primary-button" type="button" @click="runScheduler">Run Scheduler Now</button>
       </div>
-
       <p v-if="schedulerSummary" class="inline-note">{{ schedulerSummary }}</p>
     </article>
 
@@ -33,15 +26,10 @@
         <h3>Worker Runner</h3>
         <span class="badge">sequential mock-run</span>
       </div>
-
-      <p class="page-copy">
-        Xử lý task execution đang queued theo đúng thứ tự, tự parse kết quả và cập nhật execution summary.
-      </p>
-
+      <p class="page-copy">Xử lý task execution đang queued theo đúng thứ tự và tự cập nhật execution summary.</p>
       <div class="form-actions">
         <button class="primary-button" type="button" @click="runWorker">Run Worker Now</button>
       </div>
-
       <p v-if="workerSummary" class="inline-note">{{ workerSummary }}</p>
     </article>
 
@@ -50,15 +38,12 @@
         <h3>Mock Demo Flow</h3>
         <span class="badge">launch + worker</span>
       </div>
-
-      <p class="page-copy">
-        Chạy nhanh toàn bộ luồng mock: tạo operation execution, xử lý worker và sinh finding để demo nội bộ.
-      </p>
-
+      <p class="page-copy">Chạy nhanh toàn bộ luồng mock: tạo execution, xử lý worker và sinh finding để demo.</p>
       <div class="form-actions">
-        <button class="primary-button" type="button" @click="runMockFlow" :disabled="!selectedOperationId">Run Mock Demo</button>
+        <button class="primary-button" type="button" :disabled="!selectedOperationId" @click="runMockFlow">
+          Run Mock Demo
+        </button>
       </div>
-
       <p v-if="mockSummary" class="inline-note">{{ mockSummary }}</p>
     </article>
 
@@ -78,10 +63,7 @@
         >
           <strong>{{ item.operation_name }}</strong>
           <span>{{ item.operation_code }}</span>
-          <small>
-            {{ item.total_executions }} executions | latest:
-            {{ item.latest_execution_status || "no-run" }}
-          </small>
+          <small>{{ item.total_executions }} executions | latest: {{ item.latest_execution_status || "no-run" }}</small>
         </button>
       </div>
     </article>
@@ -120,22 +102,26 @@
     <article class="panel">
       <div class="panel-head">
         <h3>Recent Executions</h3>
-        <span class="badge">{{ filteredExecutions.length }} records</span>
+        <span class="badge">{{ sortedExecutions.length }} records</span>
       </div>
 
       <div class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>execution_code</th>
-              <th>trigger_type</th>
-              <th>status</th>
+              <th class="sortable-header" @click="toggleExecutionSort('id')">ID{{ executionSortLabel('id') }}</th>
+              <th class="sortable-header" @click="toggleExecutionSort('execution_code')">
+                execution_code{{ executionSortLabel('execution_code') }}
+              </th>
+              <th class="sortable-header" @click="toggleExecutionSort('trigger_type')">
+                trigger_type{{ executionSortLabel('trigger_type') }}
+              </th>
+              <th class="sortable-header" @click="toggleExecutionSort('status')">status{{ executionSortLabel('status') }}</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="execution in filteredExecutions" :key="execution.id">
+            <tr v-for="execution in sortedExecutions" :key="execution.id">
               <td>{{ execution.id }}</td>
               <td>{{ execution.execution_code }}</td>
               <td>{{ execution.trigger_type }}</td>
@@ -159,15 +145,15 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>task_id</th>
-              <th>agent_id</th>
-              <th>status</th>
+              <th class="sortable-header" @click="toggleTaskSort('id')">ID{{ taskSortLabel('id') }}</th>
+              <th class="sortable-header" @click="toggleTaskSort('task_id')">task_id{{ taskSortLabel('task_id') }}</th>
+              <th class="sortable-header" @click="toggleTaskSort('agent_id')">agent_id{{ taskSortLabel('agent_id') }}</th>
+              <th class="sortable-header" @click="toggleTaskSort('status')">status{{ taskSortLabel('status') }}</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="taskExecution in executionTasks" :key="taskExecution.id">
+            <tr v-for="taskExecution in sortedExecutionTasks" :key="taskExecution.id">
               <td>{{ taskExecution.id }}</td>
               <td>{{ taskExecution.task_id }}</td>
               <td>{{ taskExecution.agent_id }}</td>
@@ -199,6 +185,7 @@ import {
   runWorkerNow,
   updateTaskExecutionStatus,
 } from "../api/client";
+import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const runtimeItems = ref([]);
 const executions = ref([]);
@@ -209,6 +196,8 @@ const message = ref("");
 const schedulerSummary = ref("");
 const workerSummary = ref("");
 const mockSummary = ref("");
+const executionSortState = ref({ key: "id", direction: "desc" });
+const taskSortState = ref({ key: "id", direction: "desc" });
 
 const launchForm = reactive({
   trigger_type: "manual",
@@ -220,10 +209,27 @@ const selectedOperation = computed(() =>
 );
 
 const filteredExecutions = computed(() =>
-  executions.value
-    .filter((item) => !selectedOperationId.value || item.operation_id === selectedOperationId.value)
-    .sort((left, right) => right.id - left.id)
+  executions.value.filter((item) => !selectedOperationId.value || item.operation_id === selectedOperationId.value)
 );
+
+const sortedExecutions = computed(() => sortRows(filteredExecutions.value, executionSortState.value));
+const sortedExecutionTasks = computed(() => sortRows(executionTasks.value, taskSortState.value));
+
+function executionSortLabel(key) {
+  return sortIndicator(executionSortState.value, key);
+}
+
+function taskSortLabel(key) {
+  return sortIndicator(taskSortState.value, key);
+}
+
+function toggleExecutionSort(key) {
+  executionSortState.value = nextSortState(executionSortState.value, key);
+}
+
+function toggleTaskSort(key) {
+  taskSortState.value = nextSortState(taskSortState.value, key);
+}
 
 function parseSharedInput() {
   try {

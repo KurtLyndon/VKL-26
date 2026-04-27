@@ -50,13 +50,20 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th v-for="field in fields" :key="field">{{ field }}</th>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
+              <th
+                v-for="field in fields"
+                :key="field"
+                class="sortable-header"
+                @click="toggleSort(field)"
+              >
+                {{ field }}{{ sortLabel(field) }}
+              </th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in items" :key="item.id">
+            <tr v-for="item in sortedItems" :key="item.id">
               <td>{{ item.id }}</td>
               <td v-for="field in fields" :key="field">{{ displayValue(item[field]) }}</td>
               <td class="action-cell">
@@ -74,6 +81,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { createItem, deleteItem, getList, updateItem } from "../api/client";
+import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const props = defineProps({
   title: { type: String, required: true },
@@ -84,12 +92,15 @@ const props = defineProps({
 });
 
 const items = ref([]);
+const sortState = ref({ key: "id", direction: "desc" });
 const form = reactive({});
 
 const allFormFields = computed(() => {
   const merged = [...props.fields, ...props.jsonFields, ...props.longTextFields];
   return [...new Set(merged)];
 });
+
+const sortedItems = computed(() => sortRows(items.value, sortState.value));
 
 function resetForm() {
   Object.keys(form).forEach((key) => delete form[key]);
@@ -148,6 +159,14 @@ function toPayload() {
 
 async function loadItems() {
   items.value = await getList(props.resource);
+}
+
+function toggleSort(key) {
+  sortState.value = nextSortState(sortState.value, key);
+}
+
+function sortLabel(key) {
+  return sortIndicator(sortState.value, key);
 }
 
 function editItem(item) {
