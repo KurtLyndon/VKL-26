@@ -50,6 +50,10 @@
 - Bổ sung sort cho các bảng danh sách trên UI:
   - mặc định load theo `ID` giảm dần nếu bảng có cột `ID`
   - click tiêu đề cột để đổi qua lại `giảm dần <-> tăng dần`
+- Bổ sung chuẩn hóa và phân giải `Dải IP` cho target:
+  - hỗ trợ nhiều dải/IP cách nhau bằng dấu phẩy
+  - tự chuẩn hóa các pattern lỗi như `[1 - 3]`, `[1_3]` về `[1-3]`
+  - thêm hàm phân giải để mở rộng `192.168.[1-3].0/24` thành 3 dải con phục vụ khớp scan result
 
 ### Trạng thái tạm thời
 

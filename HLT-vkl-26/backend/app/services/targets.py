@@ -1,4 +1,5 @@
 import csv
+import ipaddress
 import re
 import unicodedata
 from io import BytesIO, StringIO
@@ -61,13 +62,104 @@ def make_code(prefix: str, value: str, fallback_index: int) -> str:
 def detect_ip_entry_type(ip_range: str | None) -> str:
     if not ip_range:
         return "empty"
+    if "," in ip_range:
+        return "mixed"
+    if "[" in ip_range and "]" in ip_range:
+        return "pattern"
     if "/" in ip_range:
         return "cidr"
     if "-" in ip_range:
         return "range"
-    if "," in ip_range or "\n" in ip_range:
-        return "list"
     return "single"
+
+
+def normalize_target_ip_range(ip_range: str | None) -> str | None:
+    if not ip_range:
+        return None
+
+    raw_parts = [part.strip() for part in ip_range.replace("\n", ",").split(",")]
+    normalized_parts = [normalize_ip_entry(part) for part in raw_parts if part.strip()]
+    return ", ".join(part for part in normalized_parts if part) or None
+
+
+def normalize_ip_entry(entry: str) -> str:
+    value = re.sub(r"\s+", "", entry or "")
+    value = value.replace("_", "-")
+    value = re.sub(r"\[\s*(\d+)\s*-\s*(\d+)\s*\]", r"[\1-\2]", value)
+    value = re.sub(r"\[\s*(\d+)\s*-\s*(\d+)\s*\]", r"[\1-\2]", value)
+    value = re.sub(r"\[\s*(\d+)\s*-\s*(\d+)\s*\]", r"[\1-\2]", value)
+    value = re.sub(r"\[\s*(\d+)\s*_\s*(\d+)\s*\]", r"[\1-\2]", value)
+    value = re.sub(r"\[\s*(\d+)\s*-\s*(\d+)\s*\]", r"[\1-\2]", value)
+    value = re.sub(r"\[(\d+)-(\d+)\]", _normalize_bracket_range, value)
+    return value
+
+
+def _normalize_bracket_range(match: re.Match[str]) -> str:
+    start = int(match.group(1))
+    end = int(match.group(2))
+    if start <= end:
+        return f"[{start}-{end}]"
+    return f"[{end}-{start}]"
+
+
+def resolve_target_ip_entries(ip_range: str | None) -> list[str]:
+    normalized = normalize_target_ip_range(ip_range)
+    if not normalized:
+        return []
+
+    resolved: list[str] = []
+    for part in normalized.split(","):
+        resolved.extend(_expand_bracket_ranges(part.strip()))
+    return resolved
+
+
+def _expand_bracket_ranges(value: str) -> list[str]:
+    match = re.search(r"\[(\d+)-(\d+)\]", value)
+    if not match:
+        return [value]
+
+    start = int(match.group(1))
+    end = int(match.group(2))
+    prefix = value[: match.start()]
+    suffix = value[match.end() :]
+    items: list[str] = []
+    for number in range(start, end + 1):
+        items.extend(_expand_bracket_ranges(f"{prefix}{number}{suffix}"))
+    return items
+
+
+def target_contains_ip(ip_range: str | None, ip_value: str) -> bool:
+    try:
+        ip_object = ipaddress.ip_address(ip_value.strip())
+    except ValueError:
+        return False
+
+    for entry in resolve_target_ip_entries(ip_range):
+        if _entry_contains_ip(entry, ip_object):
+            return True
+    return False
+
+
+def _entry_contains_ip(entry: str, ip_object: ipaddress._BaseAddress) -> bool:
+    if "/" in entry:
+        try:
+            return ip_object in ipaddress.ip_network(entry, strict=False)
+        except ValueError:
+            return False
+
+    if "-" in entry and "[" not in entry:
+        left, right = entry.split("-", 1)
+        try:
+            left_ip = ipaddress.ip_address(left)
+            right_ip = ipaddress.ip_address(right)
+            return int(left_ip) <= int(ip_object) <= int(right_ip)
+        except ValueError:
+            return False
+
+    try:
+        return ip_object == ipaddress.ip_address(entry)
+    except ValueError:
+        return False
 
 
 def list_targets_enriched(db: Session) -> list[TargetDetailRead]:
@@ -102,6 +194,7 @@ def list_targets_enriched(db: Session) -> list[TargetDetailRead]:
                 created_at=target.created_at,
                 updated_at=target.updated_at,
                 ip_entry_type=detect_ip_entry_type(target.ip_range),
+                resolved_ip_entries=resolve_target_ip_entries(target.ip_range),
                 attribute_values=[
                     {
                         "attribute_definition_id": definition.id,
@@ -139,7 +232,7 @@ def create_target(db: Session, payload: dict) -> Target:
         code=code,
         name=payload["name"],
         target_type=payload.get("target_type") or "network",
-        ip_range=payload.get("ip_range"),
+        ip_range=normalize_target_ip_range(payload.get("ip_range")),
         domain=payload.get("domain"),
         description=payload.get("description"),
     )
@@ -152,7 +245,7 @@ def create_target(db: Session, payload: dict) -> Target:
 def update_target(db: Session, target: Target, payload: dict) -> Target:
     for field in ("name", "target_type", "ip_range", "domain", "description"):
         if field in payload:
-            setattr(target, field, payload[field])
+            setattr(target, field, normalize_target_ip_range(payload[field]) if field == "ip_range" else payload[field])
     if payload.get("code") and payload["code"] != target.code:
         target.code = payload["code"]
     db.commit()
@@ -284,7 +377,7 @@ def import_targets_from_file(db: Session, file_name: str, content: bytes) -> Tar
                 code=code,
                 name=name,
                 target_type=base_payload.get("target_type") or "network",
-                ip_range=base_payload.get("ip_range"),
+                ip_range=normalize_target_ip_range(base_payload.get("ip_range")),
                 domain=base_payload.get("domain"),
                 description=base_payload.get("description"),
             )
@@ -294,7 +387,7 @@ def import_targets_from_file(db: Session, file_name: str, content: bytes) -> Tar
         else:
             target.name = name
             target.target_type = base_payload.get("target_type") or target.target_type
-            target.ip_range = base_payload.get("ip_range")
+            target.ip_range = normalize_target_ip_range(base_payload.get("ip_range"))
             target.domain = base_payload.get("domain")
             target.description = base_payload.get("description")
             updated_targets += 1

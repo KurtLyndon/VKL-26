@@ -23,7 +23,10 @@
 
         <label class="field-block">
           <span>Dải IP</span>
-          <input v-model="form.ip_range" placeholder="192.168.1.0/24 hoặc 10.0.0.1-10.0.0.10" />
+          <input
+            v-model="form.ip_range"
+            placeholder="192.168.[1-3].0/24, 10.0.0.10, 10.0.0.20-10.0.0.30"
+          />
         </label>
 
         <label class="field-block">
@@ -77,6 +80,10 @@
       <p class="inline-note">
         Cột chuẩn: `Tên`, `Dải IP`, `Mô tả`, `Domain`, `Loại target`. Cột mới sẽ tự tạo thành thuộc tính động.
       </p>
+      <p class="inline-note">
+        Có thể nhập nhiều dải/IP cách nhau bằng dấu phẩy. Hệ thống sẽ tự chuẩn hóa các dạng như
+        `192.168.[1 - 3].0/24` hoặc `192.168.[1_3].0/24` về `192.168.[1-3].0/24`.
+      </p>
       <p v-if="importMessage" class="inline-note">{{ importMessage }}</p>
     </article>
   </section>
@@ -124,6 +131,13 @@
       </div>
 
       <div v-if="selectedTarget" class="resource-form">
+        <p class="inline-note">
+          Dải IP đã chuẩn hóa: {{ selectedTarget.ip_range || "-" }}
+        </p>
+        <p class="inline-note">
+          Phân giải để khớp scan: {{ selectedTarget.resolved_ip_entries.join(", ") || "-" }}
+        </p>
+
         <label v-for="definition in attributeDefinitions" :key="definition.id" class="field-block">
           <span>{{ definition.attribute_name }}</span>
           <textarea v-if="definition.data_type === 'textarea'" v-model="attributeDrafts[definition.id]" rows="3" />

@@ -438,6 +438,7 @@ class TargetGroupSummaryItem(BaseModel):
 
 class TargetDetailRead(TargetRead):
     ip_entry_type: str = "single"
+    resolved_ip_entries: list[str] = Field(default_factory=list)
     attribute_values: list[TargetAttributeAssignmentItem] = Field(default_factory=list)
     group_ids: list[int] = Field(default_factory=list)
     groups: list[TargetGroupSummaryItem] = Field(default_factory=list)
