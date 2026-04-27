@@ -1,12 +1,12 @@
 <template>
-  <router-view v-if="route.meta.public" />
+  <router-view v-if="route.meta.public" :key="route.fullPath" />
   <AppShell v-else @navigate="scrollMainToTop">
-    <router-view />
+    <router-view :key="route.fullPath" />
   </AppShell>
 </template>
 
 <script setup>
-import { nextTick } from "vue";
+import { nextTick, watch } from "vue";
 import { useRoute } from "vue-router";
 import AppShell from "./components/AppShell.vue";
 
@@ -21,4 +21,11 @@ async function scrollMainToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 }
+
+watch(
+  () => route.fullPath,
+  async () => {
+    await scrollMainToTop();
+  }
+);
 </script>
