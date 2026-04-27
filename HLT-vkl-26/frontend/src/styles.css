@@ -170,8 +170,9 @@ select {
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
 }
 
-.nav-link-home small {
-  color: #4d603d;
+.nav-link.nav-link-home small {
+  color: #2f4f3a;
+  font-weight: 600;
 }
 
 .nav-link small {
@@ -196,8 +197,8 @@ select {
   color: #eef8e8;
 }
 
-.nav-link-home:hover small {
-  color: #4d603d;
+.nav-link.nav-link-home:hover small {
+  color: #2f4f3a;
 }
 
 .nav-link.router-link-active {
