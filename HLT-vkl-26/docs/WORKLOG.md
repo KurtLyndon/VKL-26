@@ -54,6 +54,7 @@
   - hỗ trợ nhiều dải/IP cách nhau bằng dấu phẩy
   - tự chuẩn hóa các pattern lỗi như `[1 - 3]`, `[1_3]` về `[1-3]`
   - thêm hàm phân giải để mở rộng `192.168.[1-3].0/24` thành 3 dải con phục vụ khớp scan result
+- Đổi theme UI sang xanh lá cây đậm làm chủ đạo, vùng làm việc kem xương, chữ đen trên nền sáng và chữ trắng trên nền xanh đậm.
 
 ### Trạng thái tạm thời
 
