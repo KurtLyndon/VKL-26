@@ -63,6 +63,7 @@
 - Nhập dữ liệu STMNC vào database:
   - seed CVE từ `1-Codes-v1.8-19-03-2026.xlsx`
   - seed Target từ `2-Targets-basing.xlsx`
+  - toàn bộ target từ workbook này được gán vào `Target Group` tên `TRTA2`
   - copy nguồn seed vào `backend/database/seed_sources`
   - cập nhật `seed_data.py` để bootstrap mới sẽ import lại đúng bộ CVE/Target này
   - loại bỏ seed demo cũ khỏi dataset hiện tại và khỏi `002_seed_sample_data.sql`
