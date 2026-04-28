@@ -60,6 +60,20 @@ def ensure_core_seed_data() -> None:
                 "status": "online",
             },
         )
+        agent_importer, _ = get_or_create(
+            db,
+            Agent,
+            {"code": "AG-SYSTEM-IMPORT"},
+            {
+                "name": "System Import Agent",
+                "agent_type": "historical_import",
+                "host": "localhost",
+                "ip_address": "127.0.0.1",
+                "port": 0,
+                "version": "1.0.0",
+                "status": "online",
+            },
+        )
 
         task_nmap, _ = get_or_create(
             db,
@@ -93,6 +107,22 @@ def ensure_core_seed_data() -> None:
                 "output_schema_json": {"findings": "array"},
             },
         )
+        task_historical_import, _ = get_or_create(
+            db,
+            Task,
+            {"code": "TASK-HIST-SERVICES-VULNS-IMPORT"},
+            {
+                "name": "Historical services_vulns.csv Import",
+                "agent_type": "historical_import",
+                "script_name": "services_vulns_importer",
+                "script_path": "internal://services_vulns_importer",
+                "description": "Import dữ liệu scan lịch sử từ services_vulns.csv.",
+                "version": "1.0.0",
+                "is_active": True,
+                "input_schema_json": {"file": "csv", "metadata": "object", "target_ids": "array"},
+                "output_schema_json": {"scan_results": "array", "findings": "array"},
+            },
+        )
 
         operation, _ = get_or_create(
             db,
@@ -103,6 +133,18 @@ def ensure_core_seed_data() -> None:
                 "description": "Operation mau cho kiem thu dinh ky he thong noi bo.",
                 "schedule_type": "cron",
                 "schedule_config_json": {"expression": "0 1 * * 1"},
+                "is_active": True,
+            },
+        )
+        operation_historical_import, _ = get_or_create(
+            db,
+            Operation,
+            {"code": "OP-HIST-SCAN-IMPORT"},
+            {
+                "name": "Historical Scan Import",
+                "description": "Operation hệ thống dùng để import kết quả scan lịch sử.",
+                "schedule_type": "none",
+                "schedule_config_json": None,
                 "is_active": True,
             },
         )
@@ -155,14 +197,35 @@ def ensure_core_seed_data() -> None:
                 )
             )
 
+        operation_task_historical = db.scalar(
+            select(OperationTask).where(
+                OperationTask.operation_id == operation_historical_import.id,
+                OperationTask.task_id == task_historical_import.id,
+                OperationTask.order_index == 1,
+            )
+        )
+        if operation_task_historical is None:
+            db.add(
+                OperationTask(
+                    operation_id=operation_historical_import.id,
+                    task_id=task_historical_import.id,
+                    order_index=1,
+                    input_override_json={"source": "services_vulns.csv"},
+                    continue_on_error=False,
+                )
+            )
+
         db.commit()
         print(
             "Core seed completed:",
             agent_nmap.code,
             agent_nuclei.code,
+            agent_importer.code,
             task_nmap.code,
             task_nuclei.code,
+            task_historical_import.code,
             operation.code,
+            operation_historical_import.code,
             report_template.code,
         )
     finally:

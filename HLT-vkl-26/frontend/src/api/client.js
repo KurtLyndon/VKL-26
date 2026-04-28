@@ -173,6 +173,39 @@ export async function importOperationResults(operationId, payloadJson) {
   return data;
 }
 
+export async function previewHistoricalServicesVulnsImport(payload) {
+  const formData = new FormData();
+  formData.append("batch_code", payload.batch_code);
+  formData.append("selected_target_ids_json", JSON.stringify(payload.selected_target_ids));
+  if (payload.manual_target_mapping) {
+    formData.append("manual_target_mapping_json", JSON.stringify(payload.manual_target_mapping));
+  }
+  formData.append("file", payload.file);
+  const { data } = await api.post("/historical-scan-imports/services-vulns/preview", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function commitHistoricalServicesVulnsImport(payload) {
+  const formData = new FormData();
+  formData.append("batch_code", payload.batch_code);
+  formData.append("scan_year", String(payload.scan_year));
+  formData.append("scan_quarter", String(payload.scan_quarter));
+  formData.append("scan_week", String(payload.scan_week));
+  if (payload.scan_started_at) formData.append("scan_started_at", payload.scan_started_at);
+  if (payload.scan_finished_at) formData.append("scan_finished_at", payload.scan_finished_at);
+  if (payload.note) formData.append("note", payload.note);
+  if (payload.source_root_path) formData.append("source_root_path", payload.source_root_path);
+  formData.append("selected_target_ids_json", JSON.stringify(payload.selected_target_ids));
+  formData.append("manual_target_mapping_json", JSON.stringify(payload.manual_target_mapping || {}));
+  formData.append("file", payload.file);
+  const { data } = await api.post("/historical-scan-imports/services-vulns/commit", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
 export async function getGroupPermissions(groupId) {
   const { data } = await api.get(`/account-groups/${groupId}/permissions`);
   return data;

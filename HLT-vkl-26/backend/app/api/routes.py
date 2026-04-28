@@ -1,6 +1,7 @@
+import json
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -66,6 +67,8 @@ from app.schemas.resources import (
     OperationResultExchangeUpdate,
     OperationResultExportRequest,
     OperationResultExportResponse,
+    HistoricalImportCommitResponse,
+    HistoricalImportPreviewResponse,
     OperationResultImportRequest,
     OperationResultImportResponse,
     OperationRuntimeOverviewItem,
@@ -144,6 +147,7 @@ from app.services.agent_runtime import (
     update_task_execution_heartbeat,
 )
 from app.services.execution import get_runtime_overview, launch_operation, update_task_execution_status
+from app.services.historical_scan_imports import commit_services_vulns_import, preview_services_vulns_import
 from app.services.result_exchange import export_operation_results, import_operation_results
 from app.services.scan_results import normalize_and_store_scan_result
 from app.services.scheduler import run_scheduler_cycle
@@ -165,6 +169,31 @@ router = APIRouter()
 
 def _payload_dict(payload: BaseModel) -> dict[str, Any]:
     return payload.model_dump(exclude_unset=True)
+
+
+def _parse_json_list(raw_value: str, field_name: str) -> list[int]:
+    try:
+        parsed = json.loads(raw_value)
+    except json.JSONDecodeError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{field_name} không phải JSON hợp lệ.") from error
+    if not isinstance(parsed, list):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{field_name} phải là mảng JSON.")
+    try:
+        return [int(item) for item in parsed]
+    except (TypeError, ValueError) as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{field_name} chứa giá trị không hợp lệ.") from error
+
+
+def _parse_json_mapping(raw_value: str | None, field_name: str) -> dict[str, str | int | None]:
+    if raw_value in (None, ""):
+        return {}
+    try:
+        parsed = json.loads(raw_value)
+    except json.JSONDecodeError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{field_name} không phải JSON hợp lệ.") from error
+    if not isinstance(parsed, dict):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{field_name} phải là object JSON.")
+    return {str(key): value for key, value in parsed.items()}
 
 
 def register_crud_routes(
@@ -905,6 +934,81 @@ def import_results(
         imported_scan_results=imported_scan_results,
         imported_findings=imported_findings,
     )
+
+
+@router.post(
+    "/historical-scan-imports/services-vulns/preview",
+    response_model=HistoricalImportPreviewResponse,
+)
+async def preview_historical_services_vulns_import(
+    batch_code: str = Form(...),
+    selected_target_ids_json: str = Form(...),
+    manual_target_mapping_json: str | None = Form(default=None),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("reports.manage")),
+):
+    if not file.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thiếu file services_vulns.csv.")
+    content = await file.read()
+    selected_target_ids = _parse_json_list(selected_target_ids_json, "selected_target_ids_json")
+    manual_target_mapping = _parse_json_mapping(manual_target_mapping_json, "manual_target_mapping_json")
+    try:
+        return preview_services_vulns_import(
+            db,
+            file_name=file.filename,
+            content=content,
+            batch_code=batch_code,
+            selected_target_ids=selected_target_ids,
+            manual_mapping=manual_target_mapping,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+
+@router.post(
+    "/historical-scan-imports/services-vulns/commit",
+    response_model=HistoricalImportCommitResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def commit_historical_services_vulns_import(
+    batch_code: str = Form(...),
+    scan_year: int = Form(...),
+    scan_quarter: int = Form(...),
+    scan_week: int = Form(...),
+    scan_started_at: str | None = Form(default=None),
+    scan_finished_at: str | None = Form(default=None),
+    note: str | None = Form(default=None),
+    source_root_path: str | None = Form(default=None),
+    selected_target_ids_json: str = Form(...),
+    manual_target_mapping_json: str | None = Form(default=None),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("reports.manage")),
+):
+    if not file.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thiếu file services_vulns.csv.")
+    content = await file.read()
+    selected_target_ids = _parse_json_list(selected_target_ids_json, "selected_target_ids_json")
+    manual_target_mapping = _parse_json_mapping(manual_target_mapping_json, "manual_target_mapping_json")
+    try:
+        return commit_services_vulns_import(
+            db,
+            file_name=file.filename,
+            content=content,
+            batch_code=batch_code,
+            scan_year=scan_year,
+            scan_quarter=scan_quarter,
+            scan_week=scan_week,
+            scan_started_at=scan_started_at,
+            scan_finished_at=scan_finished_at,
+            note=note,
+            source_root_path=source_root_path,
+            selected_target_ids=selected_target_ids,
+            manual_mapping=manual_target_mapping,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
 
 
 @router.get("/operation-executions/{execution_id}/tasks", response_model=list[TaskExecutionRead])

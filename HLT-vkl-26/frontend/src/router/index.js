@@ -5,6 +5,7 @@ import AccountGroupPermissionsView from "../views/AccountGroupPermissionsView.vu
 import DashboardView from "../views/DashboardView.vue";
 import ExecutionMonitorView from "../views/ExecutionMonitorView.vue";
 import FindingExplorerView from "../views/FindingExplorerView.vue";
+import HistoricalScanImportView from "../views/HistoricalScanImportView.vue";
 import LoginView from "../views/LoginView.vue";
 import OperationControlView from "../views/OperationControlView.vue";
 import OperationDesignerView from "../views/OperationDesignerView.vue";
@@ -37,6 +38,11 @@ const routes = [
     path: "/result-exchange",
     component: ResultExchangeView,
     meta: { title: "Result Exchange", permission: "reports.manage" },
+  },
+  {
+    path: "/historical-scan-import",
+    component: HistoricalScanImportView,
+    meta: { title: "Historical Scan Import", permission: "reports.manage" },
   },
   {
     path: "/agents",

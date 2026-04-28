@@ -344,6 +344,25 @@ class OperationResultImportExport(Base):
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
+class ScanImportBatch(Base, TimestampMixin):
+    __tablename__ = "scan_import_batch"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    operation_execution_id: Mapped[int] = mapped_column(ForeignKey("operation_execution.id"), index=True)
+    task_execution_id: Mapped[int] = mapped_column(ForeignKey("task_execution.id"), index=True)
+    batch_code: Mapped[str] = mapped_column(String(100), index=True)
+    scan_year: Mapped[int] = mapped_column(Integer)
+    scan_quarter: Mapped[int] = mapped_column(Integer)
+    scan_week: Mapped[int] = mapped_column(Integer)
+    scan_started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    scan_finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_root_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    source_file_name: Mapped[str] = mapped_column(String(255))
+    selected_target_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    summary_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
 class ReportTemplate(Base, TimestampMixin):
     __tablename__ = "report_template"
 

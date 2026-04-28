@@ -107,3 +107,9 @@
   - bỏ nút `Edit`
   - click trực tiếp vào dòng để đẩy dữ liệu sang form cập nhật
   - giữ nút `Delete` riêng và highlight dòng đang được chọn
+- Khởi động Phase 1 của kế hoạch import scan cũ:
+  - thêm backend import `services_vulns.csv` với 2 bước `preview` và `commit`
+  - hỗ trợ carry forward IP, tách nhiều vuln code bằng `;`, lookup theo `Vulnerability.code`
+  - map IP vào tập `Target` đã chọn, cho phép manual override hoặc đánh dấu `unmapped`
+  - lưu metadata đợt import vào `scan_import_batch` và tạo `operation_execution` / `task_execution` lịch sử tương ứng
+  - thêm màn UI `Import Scan Cũ` để upload file, nhập metadata, chọn target, xem preview và xác nhận import

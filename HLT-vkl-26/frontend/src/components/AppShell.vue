@@ -10,12 +10,7 @@
       </div>
 
       <nav class="nav-section-list">
-        <RouterLink
-          v-if="canViewDashboard"
-          to="/"
-          class="nav-link nav-link-home"
-          @click="emitNavigate"
-        >
+        <RouterLink v-if="canViewDashboard" to="/" class="nav-link nav-link-home" @click="emitNavigate">
           <span>Dashboard</span>
           <small>Tổng quan hệ thống</small>
         </RouterLink>
@@ -23,17 +18,11 @@
         <section v-for="section in visibleSections" :key="section.label" class="nav-section">
           <button class="nav-section-toggle" type="button" @click="toggleSection(section.label)">
             <span>{{ section.label }}</span>
-            <small>{{ expandedSection === section.label ? "−" : "+" }}</small>
+            <small>{{ expandedSection === section.label ? "-" : "+" }}</small>
           </button>
 
           <div v-if="expandedSection === section.label" class="nav-list">
-            <RouterLink
-              v-for="item in section.items"
-              :key="item.to"
-              :to="item.to"
-              class="nav-link"
-              @click="emitNavigate"
-            >
+            <RouterLink v-for="item in section.items" :key="item.to" :to="item.to" class="nav-link" @click="emitNavigate">
               <span>{{ item.label }}</span>
               <small>{{ item.caption }}</small>
             </RouterLink>
@@ -100,6 +89,7 @@ const sections = [
   {
     label: "Báo cáo",
     items: [
+      { to: "/historical-scan-import", label: "Import scan cũ", caption: "services_vulns.csv và preview", permission: "reports.manage" },
       { to: "/report-templates", label: "Reports", caption: "Mẫu và thống kê", permission: "reports.manage" },
       { to: "/generated-reports", label: "Generated", caption: "Báo cáo đã sinh ra", permission: "reports.manage" },
       { to: "/report-snapshots", label: "Snapshots", caption: "Dữ liệu snapshot", permission: "reports.manage" },

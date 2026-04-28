@@ -852,6 +852,70 @@ class OperationResultExchangeRead(OperationResultExchangeBase, ORMModel):
     id: int
 
 
+class ScanImportBatchBase(BaseModel):
+    operation_execution_id: int
+    task_execution_id: int
+    batch_code: str
+    scan_year: int
+    scan_quarter: int
+    scan_week: int
+    scan_started_at: datetime | None = None
+    scan_finished_at: datetime | None = None
+    note: str | None = None
+    source_root_path: str | None = None
+    source_file_name: str
+    selected_target_ids_json: list[int] | None = None
+    summary_json: dict | None = None
+
+
+class ScanImportBatchRead(ScanImportBatchBase, ORMModel):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class HistoricalImportCandidateTarget(BaseModel):
+    id: int
+    code: str | None = None
+    name: str
+    ip_range: str | None = None
+
+
+class HistoricalImportIpMappingItem(BaseModel):
+    ip: str
+    status: str
+    matched_target_ids: list[int] = Field(default_factory=list)
+    matched_targets: list[HistoricalImportCandidateTarget] = Field(default_factory=list)
+    resolved_target_id: int | None = None
+    resolved_target_name: str | None = None
+
+
+class HistoricalImportPreviewResponse(BaseModel):
+    source_file_name: str
+    batch_code: str
+    total_rows: int
+    detected_ips: int
+    service_rows: int
+    finding_count: int
+    matched_vulnerability_count: int
+    unmatched_vulnerability_count: int
+    unmatched_vulnerability_codes: list[str] = Field(default_factory=list)
+    mapped_ip_count: int
+    manual_required_ip_count: int
+    unmapped_ip_count: int
+    mapping_items: list[HistoricalImportIpMappingItem] = Field(default_factory=list)
+    warning_messages: list[str] = Field(default_factory=list)
+
+
+class HistoricalImportCommitResponse(BaseModel):
+    batch: ScanImportBatchRead
+    created_scan_results: int
+    created_findings: int
+    auto_mapped_ip_count: int
+    manually_mapped_ip_count: int
+    unmapped_ip_count: int
+
+
 class OperationResultExportRequest(BaseModel):
     file_format: str = "json"
 
