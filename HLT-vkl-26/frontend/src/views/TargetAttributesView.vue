@@ -2,7 +2,7 @@
   <section class="page-header">
     <div>
       <p class="eyebrow">Mục tiêu</p>
-      <h2>Quản lý Target Attribute</h2>
+      <h2>Quản lý Thuộc tính Target</h2>
       <p class="page-copy">Khai báo các thuộc tính động để dùng cho lọc, thống kê và gán giá trị cho từng target.</p>
     </div>
     <button class="ghost-button" @click="loadData">Làm mới</button>
@@ -11,8 +11,58 @@
   <section class="panel-grid">
     <article class="panel">
       <div class="panel-head">
-        <h3>{{ form.id ? "Cập nhật thuộc tính" : "Thêm thuộc tính" }}</h3>
-        <span class="badge">{{ sortedDefinitions.length }} thuộc tính</span>
+        <h3>Danh sách Thuộc tính Target</h3>
+        <span class="badge">{{ totalItems }} bản ghi</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel("id") }}</th>
+              <th class="sortable-header" @click="toggleSort('attribute_name')">Tên{{ sortLabel("attribute_name") }}</th>
+              <th class="sortable-header" @click="toggleSort('attribute_code')">Mã{{ sortLabel("attribute_code") }}</th>
+              <th class="sortable-header" @click="toggleSort('data_type')">Kiểu{{ sortLabel("data_type") }}</th>
+              <th class="sortable-header" @click="toggleSort('is_required')">Bắt buộc{{ sortLabel("is_required") }}</th>
+              <th>Tác vụ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="definition in paginatedDefinitions"
+              :key="definition.id"
+              class="row-selectable"
+              :class="{ 'row-selected': form.id === definition.id }"
+              @click="editDefinition(definition)"
+            >
+              <td>{{ definition.id }}</td>
+              <td>{{ definition.attribute_name }}</td>
+              <td>{{ definition.attribute_code || "-" }}</td>
+              <td>{{ definition.data_type }}</td>
+              <td>{{ definition.is_required ? "Có" : "Không" }}</td>
+              <td class="action-cell">
+                <button class="table-button danger" @click.stop="removeDefinition(definition.id)">Xóa</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <PaginationBar
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total-items="totalItems"
+        :total-pages="totalPages"
+        @update:page-size="pageSize = $event"
+        @previous="goToPreviousPage"
+        @next="goToNextPage"
+      />
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <h3>{{ form.id ? "Chỉnh sửa Thuộc tính Target" : "Thêm Thuộc tính Target" }}</h3>
+        <span class="badge">{{ form.id ? `ID ${form.id}` : "tạo mới" }}</span>
       </div>
 
       <form class="resource-form" @submit.prevent="submitDefinition">
@@ -59,41 +109,6 @@
 
       <p v-if="message" class="inline-note">{{ message }}</p>
     </article>
-
-    <article class="panel">
-      <div class="panel-head">
-        <h3>Danh sách thuộc tính</h3>
-        <span class="badge">{{ sortedDefinitions.length }} bản ghi</span>
-      </div>
-
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
-              <th class="sortable-header" @click="toggleSort('attribute_name')">Tên{{ sortLabel('attribute_name') }}</th>
-              <th class="sortable-header" @click="toggleSort('attribute_code')">Mã{{ sortLabel('attribute_code') }}</th>
-              <th class="sortable-header" @click="toggleSort('data_type')">Kiểu{{ sortLabel('data_type') }}</th>
-              <th class="sortable-header" @click="toggleSort('is_required')">Bắt buộc{{ sortLabel('is_required') }}</th>
-              <th>Tác vụ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="definition in sortedDefinitions" :key="definition.id">
-              <td>{{ definition.id }}</td>
-              <td>{{ definition.attribute_name }}</td>
-              <td>{{ definition.attribute_code }}</td>
-              <td>{{ definition.data_type }}</td>
-              <td>{{ definition.is_required ? "Có" : "Không" }}</td>
-              <td class="action-cell">
-                <button class="table-button" @click="editDefinition(definition)">Sửa</button>
-                <button class="table-button danger" @click="removeDefinition(definition.id)">Xóa</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </article>
   </section>
 </template>
 
@@ -105,6 +120,8 @@ import {
   getList,
   updateItem,
 } from "../api/client";
+import PaginationBar from "../components/PaginationBar.vue";
+import { usePagination } from "../composables/usePagination";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const definitions = ref([]);
@@ -122,6 +139,15 @@ const form = reactive({
 });
 
 const sortedDefinitions = computed(() => sortRows(definitions.value, sortState.value));
+const {
+  currentPage,
+  pageSize,
+  paginatedItems: paginatedDefinitions,
+  totalItems,
+  totalPages,
+  goToPreviousPage,
+  goToNextPage,
+} = usePagination(sortedDefinitions);
 
 function resetForm() {
   form.id = null;

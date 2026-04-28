@@ -2,10 +2,8 @@
   <section class="page-header">
     <div>
       <p class="eyebrow">Mục tiêu</p>
-      <h2>Quản lý Target Group</h2>
-      <p class="page-copy">
-        Quản lý nhóm target và thêm hoặc gỡ target khỏi từng nhóm ngay trên giao diện.
-      </p>
+      <h2>Quản lý Nhóm Target</h2>
+      <p class="page-copy">Quản lý nhóm target và thao tác thành viên theo dạng bảng để dễ lọc, rà soát và cập nhật.</p>
     </div>
     <button class="ghost-button" @click="loadData">Làm mới</button>
   </section>
@@ -13,8 +11,56 @@
   <section class="panel-grid">
     <article class="panel">
       <div class="panel-head">
-        <h3>{{ form.id ? "Cập nhật nhóm" : "Thêm nhóm" }}</h3>
-        <span class="badge">{{ groups.length }} nhóm</span>
+        <h3>Danh sách Nhóm Target</h3>
+        <span class="badge">{{ totalGroupItems }} bản ghi</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable-header" @click="toggleGroupSort('id')">ID{{ groupSortLabel("id") }}</th>
+              <th class="sortable-header" @click="toggleGroupSort('name')">Tên nhóm{{ groupSortLabel("name") }}</th>
+              <th class="sortable-header" @click="toggleGroupSort('code')">Mã nhóm{{ groupSortLabel("code") }}</th>
+              <th class="sortable-header" @click="toggleGroupSort('description')">Mô tả{{ groupSortLabel("description") }}</th>
+              <th>Tác vụ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="group in paginatedGroups"
+              :key="group.id"
+              class="row-selectable"
+              :class="{ 'row-selected': selectedGroup?.id === group.id }"
+              @click="selectGroup(group)"
+            >
+              <td>{{ group.id }}</td>
+              <td>{{ group.name }}</td>
+              <td>{{ group.code || "-" }}</td>
+              <td>{{ group.description || "-" }}</td>
+              <td class="action-cell">
+                <button class="table-button danger" @click.stop="removeGroup(group.id)">Xóa</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <PaginationBar
+        :current-page="groupCurrentPage"
+        :page-size="groupPageSize"
+        :total-items="totalGroupItems"
+        :total-pages="groupTotalPages"
+        @update:page-size="groupPageSize = $event"
+        @previous="goToPreviousGroupPage"
+        @next="goToNextGroupPage"
+      />
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <h3>{{ form.id ? "Chỉnh sửa Nhóm Target" : "Thêm Nhóm Target" }}</h3>
+        <span class="badge">{{ form.id ? `ID ${form.id}` : "tạo mới" }}</span>
       </div>
 
       <form class="resource-form" @submit.prevent="submitGroup">
@@ -41,55 +87,60 @@
 
       <p v-if="message" class="inline-note">{{ message }}</p>
     </article>
-
-    <article class="panel">
-      <div class="panel-head">
-        <h3>Danh sách nhóm</h3>
-        <span class="badge">{{ groups.length }} bản ghi</span>
-      </div>
-
-      <div class="runtime-list">
-        <button
-          v-for="group in groups"
-          :key="group.id"
-          class="runtime-card"
-          :class="{ active: selectedGroup?.id === group.id }"
-          @click="selectGroup(group)"
-        >
-          <strong>{{ group.name }}</strong>
-          <span>{{ group.code }}</span>
-          <small>{{ group.description || "Chưa có mô tả" }}</small>
-        </button>
-      </div>
-    </article>
   </section>
 
   <section class="panel-grid">
     <article class="panel">
       <div class="panel-head">
-        <h3>Thành viên nhóm</h3>
+        <h3>Thành viên Nhóm Target</h3>
         <span class="badge">{{ selectedGroup ? selectedGroup.name : "chưa chọn" }}</span>
       </div>
 
-      <div v-if="selectedGroup" class="group-check-grid">
-        <label v-for="target in targets" :key="target.id" class="switch-line">
-          <input v-model="selectedTargetIds" :value="target.id" type="checkbox" />
-          <span>{{ target.name }} <small>({{ target.ip_range || "no-ip" }})</small></span>
-        </label>
+      <div v-if="selectedGroup" class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable-header" @click="toggleMemberSort('id')">ID target{{ memberSortLabel("id") }}</th>
+              <th class="sortable-header" @click="toggleMemberSort('name')">Tên target{{ memberSortLabel("name") }}</th>
+              <th class="sortable-header" @click="toggleMemberSort('ip_range')">Dải IP{{ memberSortLabel("ip_range") }}</th>
+              <th>Chọn</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="target in paginatedTargets" :key="target.id">
+              <td>{{ target.id }}</td>
+              <td>{{ target.name }}</td>
+              <td>{{ target.ip_range || "-" }}</td>
+              <td>
+                <input v-model="selectedTargetIds" :value="target.id" type="checkbox" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+
+      <PaginationBar
+        v-if="selectedGroup"
+        :current-page="targetCurrentPage"
+        :page-size="targetPageSize"
+        :total-items="totalTargetItems"
+        :total-pages="targetTotalPages"
+        @update:page-size="targetPageSize = $event"
+        @previous="goToPreviousTargetPage"
+        @next="goToNextTargetPage"
+      />
 
       <div v-if="selectedGroup" class="form-actions">
         <button class="primary-button" type="button" @click="saveMembers">Lưu thành viên</button>
-        <button class="table-button danger" type="button" @click="removeGroup(selectedGroup.id)">Xóa nhóm</button>
       </div>
 
-      <p v-else class="inline-note">Chọn một nhóm để thêm hoặc gỡ target.</p>
+      <p v-else class="inline-note">Chọn một nhóm để quản lý thành viên.</p>
     </article>
   </section>
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import {
   createTargetGroupManaged,
   deleteTargetGroupManaged,
@@ -98,12 +149,17 @@ import {
   updateItem,
   updateTargetGroupMembers,
 } from "../api/client";
+import PaginationBar from "../components/PaginationBar.vue";
+import { usePagination } from "../composables/usePagination";
+import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const groups = ref([]);
 const targets = ref([]);
 const selectedGroup = ref(null);
 const selectedTargetIds = ref([]);
 const message = ref("");
+const groupSortState = ref({ key: "id", direction: "desc" });
+const memberSortState = ref({ key: "id", direction: "desc" });
 
 const form = reactive({
   id: null,
@@ -111,6 +167,29 @@ const form = reactive({
   code: "",
   description: "",
 });
+
+const sortedGroups = computed(() => sortRows(groups.value, groupSortState.value));
+const sortedTargets = computed(() => sortRows(targets.value, memberSortState.value));
+
+const {
+  currentPage: groupCurrentPage,
+  pageSize: groupPageSize,
+  paginatedItems: paginatedGroups,
+  totalItems: totalGroupItems,
+  totalPages: groupTotalPages,
+  goToPreviousPage: goToPreviousGroupPage,
+  goToNextPage: goToNextGroupPage,
+} = usePagination(sortedGroups);
+
+const {
+  currentPage: targetCurrentPage,
+  pageSize: targetPageSize,
+  paginatedItems: paginatedTargets,
+  totalItems: totalTargetItems,
+  totalPages: targetTotalPages,
+  goToPreviousPage: goToPreviousTargetPage,
+  goToNextPage: goToNextTargetPage,
+} = usePagination(sortedTargets);
 
 function resetForm() {
   form.id = null;
@@ -121,10 +200,26 @@ function resetForm() {
   selectedTargetIds.value = [];
 }
 
+function toggleGroupSort(key) {
+  groupSortState.value = nextSortState(groupSortState.value, key);
+}
+
+function toggleMemberSort(key) {
+  memberSortState.value = nextSortState(memberSortState.value, key);
+}
+
+function groupSortLabel(key) {
+  return sortIndicator(groupSortState.value, key);
+}
+
+function memberSortLabel(key) {
+  return sortIndicator(memberSortState.value, key);
+}
+
 async function loadData() {
   const [groupList, targetList] = await Promise.all([getList("target-groups"), getTargetsEnriched()]);
-  groups.value = groupList.sort((left, right) => left.name.localeCompare(right.name));
-  targets.value = targetList.sort((left, right) => left.name.localeCompare(right.name));
+  groups.value = groupList;
+  targets.value = targetList;
 
   if (selectedGroup.value) {
     const refreshed = groups.value.find((item) => item.id === selectedGroup.value.id);

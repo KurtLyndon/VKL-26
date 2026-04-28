@@ -3,14 +3,58 @@
     <div>
       <p class="eyebrow">Resource manager</p>
       <h2>{{ title }}</h2>
-      <p class="page-copy">
-        CRUD cơ bản cho giai đoạn khởi tạo dự án. Nhập các trường dạng JSON bằng object hợp lệ.
-      </p>
+      <p class="page-copy">CRUD cơ bản cho giai đoạn khởi tạo dự án. Nhập các trường JSON bằng object hợp lệ.</p>
     </div>
     <button class="ghost-button" @click="loadItems">Refresh</button>
   </section>
 
   <section class="panel-grid">
+    <article class="panel panel-table">
+      <div class="panel-head">
+        <h3>Danh sách</h3>
+        <span class="badge">{{ totalItems }} bản ghi</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel("id") }}</th>
+              <th v-for="field in fields" :key="field" class="sortable-header" @click="toggleSort(field)">
+                {{ field }}{{ sortLabel(field) }}
+              </th>
+              <th>Tác vụ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="item in paginatedItems"
+              :key="item.id"
+              class="row-selectable"
+              :class="{ 'row-selected': form.id === item.id }"
+              @click="editItem(item)"
+            >
+              <td>{{ item.id }}</td>
+              <td v-for="field in fields" :key="field">{{ displayValue(item[field]) }}</td>
+              <td class="action-cell">
+                <button class="table-button danger" @click.stop="removeItem(item.id)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <PaginationBar
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total-items="totalItems"
+        :total-pages="totalPages"
+        @update:page-size="pageSize = $event"
+        @previous="goToPreviousPage"
+        @next="goToNextPage"
+      />
+    </article>
+
     <article class="panel panel-form">
       <div class="panel-head">
         <h3>{{ form.id ? "Cập nhật bản ghi" : "Tạo mới bản ghi" }}</h3>
@@ -39,48 +83,14 @@
         </div>
       </form>
     </article>
-
-    <article class="panel panel-table">
-      <div class="panel-head">
-        <h3>Danh sách</h3>
-        <span class="badge">{{ items.length }} records</span>
-      </div>
-
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
-              <th
-                v-for="field in fields"
-                :key="field"
-                class="sortable-header"
-                @click="toggleSort(field)"
-              >
-                {{ field }}{{ sortLabel(field) }}
-              </th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="item in sortedItems" :key="item.id">
-              <td>{{ item.id }}</td>
-              <td v-for="field in fields" :key="field">{{ displayValue(item[field]) }}</td>
-              <td class="action-cell">
-                <button class="table-button" @click="editItem(item)">Edit</button>
-                <button class="table-button danger" @click="removeItem(item.id)">Delete</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </article>
   </section>
 </template>
 
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { createItem, deleteItem, getList, updateItem } from "../api/client";
+import PaginationBar from "../components/PaginationBar.vue";
+import { usePagination } from "../composables/usePagination";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const props = defineProps({
@@ -101,6 +111,8 @@ const allFormFields = computed(() => {
 });
 
 const sortedItems = computed(() => sortRows(items.value, sortState.value));
+const { currentPage, pageSize, paginatedItems, totalItems, totalPages, goToPreviousPage, goToNextPage } =
+  usePagination(sortedItems);
 
 function resetForm() {
   Object.keys(form).forEach((key) => delete form[key]);

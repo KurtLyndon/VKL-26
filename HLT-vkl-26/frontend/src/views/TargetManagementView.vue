@@ -11,8 +11,58 @@
   <section class="panel-grid">
     <article class="panel">
       <div class="panel-head">
-        <h3>{{ form.id ? "Cập nhật target" : "Thêm target" }}</h3>
-        <span class="badge">{{ sortedTargets.length }} target</span>
+        <h3>Danh sách Target</h3>
+        <span class="badge">{{ totalItems }} bản ghi</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel("id") }}</th>
+              <th class="sortable-header" @click="toggleSort('name')">Tên{{ sortLabel("name") }}</th>
+              <th class="sortable-header" @click="toggleSort('ip_range')">Dải IP{{ sortLabel("ip_range") }}</th>
+              <th class="sortable-header" @click="toggleSort('ip_entry_type')">Kiểu IP{{ sortLabel("ip_entry_type") }}</th>
+              <th class="sortable-header" @click="toggleSort('groups')">Nhóm{{ sortLabel("groups") }}</th>
+              <th>Tác vụ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="target in paginatedTargets"
+              :key="target.id"
+              class="row-selectable"
+              :class="{ 'row-selected': selectedTarget?.id === target.id }"
+              @click="selectTarget(target)"
+            >
+              <td>{{ target.id }}</td>
+              <td>{{ target.name }}</td>
+              <td>{{ target.ip_range || "-" }}</td>
+              <td>{{ target.ip_entry_type }}</td>
+              <td>{{ target.groups.map((group) => group.name).join(", ") || "-" }}</td>
+              <td class="action-cell">
+                <button class="table-button danger" @click.stop="removeTarget(target.id)">Xóa</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <PaginationBar
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total-items="totalItems"
+        :total-pages="totalPages"
+        @update:page-size="pageSize = $event"
+        @previous="goToPreviousPage"
+        @next="goToNextPage"
+      />
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <h3>{{ form.id ? "Chỉnh sửa Target" : "Thêm Target" }}</h3>
+        <span class="badge">{{ form.id ? `ID ${form.id}` : "tạo mới" }}</span>
       </div>
 
       <form class="resource-form" @submit.prevent="submitTarget">
@@ -23,10 +73,7 @@
 
         <label class="field-block">
           <span>Dải IP</span>
-          <input
-            v-model="form.ip_range"
-            placeholder="192.168.[1-3].0/24, 10.0.0.10, 10.0.0.20-10.0.0.30"
-          />
+          <input v-model="form.ip_range" placeholder="192.168.[1-3].0/24, 10.0.0.10, 10.0.0.20-10.0.0.30" />
         </label>
 
         <label class="field-block">
@@ -50,80 +97,16 @@
         </label>
 
         <div class="form-actions">
-          <button class="primary-button" type="submit">{{ form.id ? "Lưu target" : "Tạo target" }}</button>
+          <button class="primary-button" type="submit">{{ form.id ? "Lưu Target" : "Tạo Target" }}</button>
           <button v-if="form.id" class="ghost-button" type="button" @click="resetForm">Bỏ chọn</button>
         </div>
       </form>
 
       <p v-if="message" class="inline-note">{{ message }}</p>
     </article>
-
-    <article class="panel">
-      <div class="panel-head">
-        <h3>Import danh sách</h3>
-        <span class="badge">Excel / CSV</span>
-      </div>
-
-      <div class="resource-form">
-        <label class="field-block">
-          <span>Chọn file</span>
-          <input type="file" accept=".xlsx,.xlsm,.csv" @change="handleFileChange" />
-        </label>
-
-        <div class="form-actions">
-          <button class="primary-button" type="button" :disabled="!importFile" @click="submitImport">
-            Import target
-          </button>
-        </div>
-      </div>
-
-      <p class="inline-note">
-        Cột chuẩn: `Tên`, `Dải IP`, `Mô tả`, `Domain`, `Loại target`. Cột mới sẽ tự tạo thành thuộc tính động.
-      </p>
-      <p class="inline-note">
-        Có thể nhập nhiều dải/IP cách nhau bằng dấu phẩy. Hệ thống sẽ tự chuẩn hóa các dạng như
-        `192.168.[1 - 3].0/24` hoặc `192.168.[1_3].0/24` về `192.168.[1-3].0/24`.
-      </p>
-      <p v-if="importMessage" class="inline-note">{{ importMessage }}</p>
-    </article>
   </section>
 
   <section class="panel-grid">
-    <article class="panel">
-      <div class="panel-head">
-        <h3>Danh sách target</h3>
-        <span class="badge">{{ sortedTargets.length }} bản ghi</span>
-      </div>
-
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
-              <th class="sortable-header" @click="toggleSort('name')">Tên{{ sortLabel('name') }}</th>
-              <th class="sortable-header" @click="toggleSort('ip_range')">Dải IP{{ sortLabel('ip_range') }}</th>
-              <th class="sortable-header" @click="toggleSort('ip_entry_type')">Kiểu IP{{ sortLabel('ip_entry_type') }}</th>
-              <th class="sortable-header" @click="toggleSort('groups')">Nhóm{{ sortLabel('groups') }}</th>
-              <th>Tác vụ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="target in sortedTargets" :key="target.id">
-              <td>{{ target.id }}</td>
-              <td>{{ target.name }}</td>
-              <td>{{ target.ip_range || "-" }}</td>
-              <td>{{ target.ip_entry_type }}</td>
-              <td>{{ target.groups.map((group) => group.name).join(", ") || "-" }}</td>
-              <td class="action-cell">
-                <button class="table-button" @click="selectTarget(target)">Chọn</button>
-                <button class="table-button danger" @click="removeTarget(target.id)">Xóa</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </article>
-
     <article class="panel">
       <div class="panel-head">
         <h3>Thuộc tính và nhóm</h3>
@@ -131,12 +114,8 @@
       </div>
 
       <div v-if="selectedTarget" class="resource-form">
-        <p class="inline-note">
-          Dải IP đã chuẩn hóa: {{ selectedTarget.ip_range || "-" }}
-        </p>
-        <p class="inline-note">
-          Phân giải để khớp scan: {{ selectedTarget.resolved_ip_entries.join(", ") || "-" }}
-        </p>
+        <p class="inline-note">Dải IP đã chuẩn hóa: {{ selectedTarget.ip_range || "-" }}</p>
+        <p class="inline-note">Phân giải để khớp scan: {{ selectedTarget.resolved_ip_entries.join(", ") || "-" }}</p>
 
         <label v-for="definition in attributeDefinitions" :key="definition.id" class="field-block">
           <span>{{ definition.attribute_name }}</span>
@@ -162,6 +141,28 @@
 
       <p v-else class="inline-note">Chọn một target để chỉnh sửa thuộc tính và nhóm.</p>
     </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <h3>Import danh sách</h3>
+        <span class="badge">Excel / CSV</span>
+      </div>
+
+      <div class="resource-form">
+        <label class="field-block">
+          <span>Chọn file</span>
+          <input type="file" accept=".xlsx,.xlsm,.csv" @change="handleFileChange" />
+        </label>
+
+        <div class="form-actions">
+          <button class="primary-button" type="button" :disabled="!importFile" @click="submitImport">Import target</button>
+        </div>
+      </div>
+
+      <p class="inline-note">Cột chuẩn: `Tên`, `Dải IP`, `Mô tả`, `Domain`, `Loại target`. Cột mới sẽ tự tạo thành thuộc tính động.</p>
+      <p class="inline-note">Có thể nhập nhiều dải/IP cách nhau bằng dấu phẩy. Hệ thống sẽ tự chuẩn hóa các dạng như `192.168.[1 - 3].0/24` hoặc `192.168.[1_3].0/24` về `192.168.[1-3].0/24`.</p>
+      <p v-if="importMessage" class="inline-note">{{ importMessage }}</p>
+    </article>
   </section>
 </template>
 
@@ -177,6 +178,8 @@ import {
   updateTargetAttributeValues,
   updateTargetGroups,
 } from "../api/client";
+import PaginationBar from "../components/PaginationBar.vue";
+import { usePagination } from "../composables/usePagination";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const targets = ref([]);
@@ -201,12 +204,13 @@ const form = reactive({
 
 const sortedTargets = computed(() =>
   sortRows(targets.value, sortState.value, (row, key) => {
-    if (key === "groups") {
-      return row.groups.map((group) => group.name).join(", ");
-    }
+    if (key === "groups") return row.groups.map((group) => group.name).join(", ");
     return row?.[key];
   })
 );
+
+const { currentPage, pageSize, paginatedItems: paginatedTargets, totalItems, totalPages, goToPreviousPage, goToNextPage } =
+  usePagination(sortedTargets);
 
 function resetForm() {
   form.id = null;
@@ -241,9 +245,7 @@ function applyTargetSelection(target) {
   selectedGroupIds.value = [...target.group_ids];
 
   attributeDefinitions.value.forEach((definition) => {
-    const valueItem = target.attribute_values.find(
-      (item) => item.attribute_definition_id === definition.id
-    );
+    const valueItem = target.attribute_values.find((item) => item.attribute_definition_id === definition.id);
     attributeDrafts[definition.id] = valueItem?.value_text || "";
   });
 }
@@ -255,9 +257,7 @@ async function loadData() {
     getList("target-groups"),
   ]);
   targets.value = targetList;
-  attributeDefinitions.value = definitionList.sort((left, right) =>
-    left.attribute_name.localeCompare(right.attribute_name)
-  );
+  attributeDefinitions.value = definitionList.sort((left, right) => left.attribute_name.localeCompare(right.attribute_name));
   targetGroups.value = groupList.sort((left, right) => left.name.localeCompare(right.name));
 
   attributeDefinitions.value.forEach((definition) => {
@@ -288,15 +288,11 @@ async function submitTarget() {
     domain: form.domain || null,
     description: form.description || null,
   };
-  const saved = form.id
-    ? await updateManagedTarget(form.id, payload)
-    : await createManagedTarget(payload);
+  const saved = form.id ? await updateManagedTarget(form.id, payload) : await createManagedTarget(payload);
   message.value = form.id ? "Đã cập nhật target." : "Đã tạo target mới.";
   await loadData();
   const refreshed = targets.value.find((item) => item.id === saved.id);
-  if (refreshed) {
-    applyTargetSelection(refreshed);
-  }
+  if (refreshed) applyTargetSelection(refreshed);
 }
 
 async function saveAttributes() {
@@ -322,9 +318,7 @@ async function saveGroups() {
 async function removeTarget(targetId) {
   await deleteManagedTarget(targetId);
   message.value = "Đã xóa target.";
-  if (selectedTarget.value?.id === targetId) {
-    resetForm();
-  }
+  if (selectedTarget.value?.id === targetId) resetForm();
   await loadData();
 }
 
@@ -335,9 +329,7 @@ function handleFileChange(event) {
 async function submitImport() {
   if (!importFile.value) return;
   const result = await importTargetsFile(importFile.value);
-  importMessage.value =
-    `Đã import ${result.imported_targets} target, tạo mới ${result.created_targets}, ` +
-    `cập nhật ${result.updated_targets}, sinh ${result.created_attribute_definitions} thuộc tính mới.`;
+  importMessage.value = `Đã import ${result.imported_targets} target, tạo mới ${result.created_targets}, cập nhật ${result.updated_targets}, sinh ${result.created_attribute_definitions} thuộc tính mới.`;
   importFile.value = null;
   await loadData();
 }

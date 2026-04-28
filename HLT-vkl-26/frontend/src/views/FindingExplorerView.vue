@@ -31,7 +31,7 @@
     <article class="panel">
       <div class="panel-head">
         <h3>Bộ lọc</h3>
-        <span class="badge">{{ sortedFindings.length }} kết quả</span>
+        <span class="badge">{{ totalItems }} kết quả</span>
       </div>
 
       <div class="filter-grid">
@@ -75,17 +75,17 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
-              <th class="sortable-header" @click="toggleSort('finding_code')">Mã finding{{ sortLabel('finding_code') }}</th>
-              <th class="sortable-header" @click="toggleSort('title')">Tiêu đề{{ sortLabel('title') }}</th>
-              <th class="sortable-header" @click="toggleSort('severity')">Severity{{ sortLabel('severity') }}</th>
-              <th class="sortable-header" @click="toggleSort('service_name')">Service{{ sortLabel('service_name') }}</th>
-              <th class="sortable-header" @click="toggleSort('port')">Port{{ sortLabel('port') }}</th>
-              <th class="sortable-header" @click="toggleSort('status')">Trạng thái{{ sortLabel('status') }}</th>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel("id") }}</th>
+              <th class="sortable-header" @click="toggleSort('finding_code')">Mã finding{{ sortLabel("finding_code") }}</th>
+              <th class="sortable-header" @click="toggleSort('title')">Tiêu đề{{ sortLabel("title") }}</th>
+              <th class="sortable-header" @click="toggleSort('severity')">Severity{{ sortLabel("severity") }}</th>
+              <th class="sortable-header" @click="toggleSort('service_name')">Service{{ sortLabel("service_name") }}</th>
+              <th class="sortable-header" @click="toggleSort('port')">Port{{ sortLabel("port") }}</th>
+              <th class="sortable-header" @click="toggleSort('status')">Trạng thái{{ sortLabel("status") }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in sortedFindings" :key="item.id">
+            <tr v-for="item in paginatedItems" :key="item.id">
               <td>{{ item.id }}</td>
               <td>{{ item.finding_code }}</td>
               <td>{{ item.title }}</td>
@@ -97,6 +97,16 @@
           </tbody>
         </table>
       </div>
+
+      <PaginationBar
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total-items="totalItems"
+        :total-pages="totalPages"
+        @update:page-size="pageSize = $event"
+        @previous="goToPreviousPage"
+        @next="goToNextPage"
+      />
     </article>
   </section>
 </template>
@@ -104,7 +114,9 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { getList } from "../api/client";
+import PaginationBar from "../components/PaginationBar.vue";
 import StatusPill from "../components/StatusPill.vue";
+import { usePagination } from "../composables/usePagination";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const findings = ref([]);
@@ -132,6 +144,8 @@ const filteredFindings = computed(() =>
 );
 
 const sortedFindings = computed(() => sortRows(filteredFindings.value, sortState.value));
+const { currentPage, pageSize, paginatedItems, totalItems, totalPages, goToPreviousPage, goToNextPage } =
+  usePagination(sortedFindings);
 
 const highRiskCount = computed(
   () => findings.value.filter((item) => ["critical", "high"].includes((item.severity || "").toLowerCase())).length

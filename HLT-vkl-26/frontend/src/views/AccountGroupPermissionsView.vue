@@ -2,7 +2,7 @@
   <section class="page-header">
     <div>
       <p class="eyebrow">RBAC management</p>
-      <h2>Quyền theo nhóm</h2>
+      <h2>Quyền theo Nhóm</h2>
       <p class="page-copy">Chọn nhóm tài khoản, sau đó bật hoặc tắt quyền cho từng phân hệ.</p>
     </div>
     <button class="ghost-button" @click="loadData">Refresh</button>
@@ -33,21 +33,25 @@
     <article class="panel">
       <div class="panel-head">
         <h3>Quyền</h3>
-        <span class="badge">{{ sortedPermissionItems.length }} quyền</span>
+        <span class="badge">{{ totalItems }} quyền</span>
       </div>
 
       <div v-if="selectedGroupId" class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th class="sortable-header" @click="toggleSort('module_name')">Module{{ sortLabel('module_name') }}</th>
-              <th class="sortable-header" @click="toggleSort('permission_code')">Mã quyền{{ sortLabel('permission_code') }}</th>
-              <th class="sortable-header" @click="toggleSort('permission_name')">Tên quyền{{ sortLabel('permission_name') }}</th>
-              <th class="sortable-header" @click="toggleSort('is_enabled')">Bật / tắt{{ sortLabel('is_enabled') }}</th>
+              <th class="sortable-header" @click="toggleSort('module_name')">Module{{ sortLabel("module_name") }}</th>
+              <th class="sortable-header" @click="toggleSort('permission_code')">
+                Mã quyền{{ sortLabel("permission_code") }}
+              </th>
+              <th class="sortable-header" @click="toggleSort('permission_name')">
+                Tên quyền{{ sortLabel("permission_name") }}
+              </th>
+              <th class="sortable-header" @click="toggleSort('is_enabled')">Bật / tắt{{ sortLabel("is_enabled") }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in sortedPermissionItems" :key="item.permission_id">
+            <tr v-for="item in paginatedItems" :key="item.permission_id">
               <td>{{ item.module_name }}</td>
               <td>{{ item.permission_code }}</td>
               <td>{{ item.permission_name }}</td>
@@ -64,6 +68,17 @@
 
       <p v-else class="inline-note">Chọn một nhóm tài khoản để quản lý quyền.</p>
 
+      <PaginationBar
+        v-if="selectedGroupId"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total-items="totalItems"
+        :total-pages="totalPages"
+        @update:page-size="pageSize = $event"
+        @previous="goToPreviousPage"
+        @next="goToNextPage"
+      />
+
       <div v-if="selectedGroupId" class="form-actions">
         <button class="primary-button" type="button" @click="savePermissions">Lưu quyền</button>
       </div>
@@ -76,6 +91,8 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { getGroupPermissions, getList, updateGroupPermissions } from "../api/client";
+import PaginationBar from "../components/PaginationBar.vue";
+import { usePagination } from "../composables/usePagination";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const groups = ref([]);
@@ -85,6 +102,8 @@ const message = ref("");
 const sortState = ref({ key: "module_name", direction: "desc" });
 
 const sortedPermissionItems = computed(() => sortRows(permissionItems.value, sortState.value));
+const { currentPage, pageSize, paginatedItems, totalItems, totalPages, goToPreviousPage, goToNextPage } =
+  usePagination(sortedPermissionItems);
 
 function toggleSort(key) {
   sortState.value = nextSortState(sortState.value, key);

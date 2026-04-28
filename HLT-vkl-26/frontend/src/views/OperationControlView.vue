@@ -102,26 +102,28 @@
     <article class="panel">
       <div class="panel-head">
         <h3>Recent Executions</h3>
-        <span class="badge">{{ sortedExecutions.length }} records</span>
+        <span class="badge">{{ totalExecutionItems }} bản ghi</span>
       </div>
 
       <div class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th class="sortable-header" @click="toggleExecutionSort('id')">ID{{ executionSortLabel('id') }}</th>
+              <th class="sortable-header" @click="toggleExecutionSort('id')">ID{{ executionSortLabel("id") }}</th>
               <th class="sortable-header" @click="toggleExecutionSort('execution_code')">
-                execution_code{{ executionSortLabel('execution_code') }}
+                execution_code{{ executionSortLabel("execution_code") }}
               </th>
               <th class="sortable-header" @click="toggleExecutionSort('trigger_type')">
-                trigger_type{{ executionSortLabel('trigger_type') }}
+                trigger_type{{ executionSortLabel("trigger_type") }}
               </th>
-              <th class="sortable-header" @click="toggleExecutionSort('status')">status{{ executionSortLabel('status') }}</th>
+              <th class="sortable-header" @click="toggleExecutionSort('status')">
+                status{{ executionSortLabel("status") }}
+              </th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="execution in sortedExecutions" :key="execution.id">
+            <tr v-for="execution in paginatedExecutions" :key="execution.id">
               <td>{{ execution.id }}</td>
               <td>{{ execution.execution_code }}</td>
               <td>{{ execution.trigger_type }}</td>
@@ -133,6 +135,16 @@
           </tbody>
         </table>
       </div>
+
+      <PaginationBar
+        :current-page="executionCurrentPage"
+        :page-size="executionPageSize"
+        :total-items="totalExecutionItems"
+        :total-pages="executionTotalPages"
+        @update:page-size="executionPageSize = $event"
+        @previous="goToPreviousExecutionPage"
+        @next="goToNextExecutionPage"
+      />
     </article>
 
     <article class="panel">
@@ -145,15 +157,17 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th class="sortable-header" @click="toggleTaskSort('id')">ID{{ taskSortLabel('id') }}</th>
-              <th class="sortable-header" @click="toggleTaskSort('task_id')">task_id{{ taskSortLabel('task_id') }}</th>
-              <th class="sortable-header" @click="toggleTaskSort('agent_id')">agent_id{{ taskSortLabel('agent_id') }}</th>
-              <th class="sortable-header" @click="toggleTaskSort('status')">status{{ taskSortLabel('status') }}</th>
+              <th class="sortable-header" @click="toggleTaskSort('id')">ID{{ taskSortLabel("id") }}</th>
+              <th class="sortable-header" @click="toggleTaskSort('task_id')">task_id{{ taskSortLabel("task_id") }}</th>
+              <th class="sortable-header" @click="toggleTaskSort('agent_id')">
+                agent_id{{ taskSortLabel("agent_id") }}
+              </th>
+              <th class="sortable-header" @click="toggleTaskSort('status')">status{{ taskSortLabel("status") }}</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="taskExecution in sortedExecutionTasks" :key="taskExecution.id">
+            <tr v-for="taskExecution in paginatedExecutionTasks" :key="taskExecution.id">
               <td>{{ taskExecution.id }}</td>
               <td>{{ taskExecution.task_id }}</td>
               <td>{{ taskExecution.agent_id }}</td>
@@ -167,6 +181,17 @@
           </tbody>
         </table>
       </div>
+
+      <PaginationBar
+        v-if="selectedExecution"
+        :current-page="taskCurrentPage"
+        :page-size="taskPageSize"
+        :total-items="totalTaskItems"
+        :total-pages="taskTotalPages"
+        @update:page-size="taskPageSize = $event"
+        @previous="goToPreviousTaskPage"
+        @next="goToNextTaskPage"
+      />
 
       <p v-else class="inline-note">Chọn một execution để xem và cập nhật task runtime.</p>
     </article>
@@ -185,6 +210,8 @@ import {
   runWorkerNow,
   updateTaskExecutionStatus,
 } from "../api/client";
+import PaginationBar from "../components/PaginationBar.vue";
+import { usePagination } from "../composables/usePagination";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const runtimeItems = ref([]);
@@ -204,8 +231,8 @@ const launchForm = reactive({
   shared_input: "{}",
 });
 
-const selectedOperation = computed(() =>
-  runtimeItems.value.find((item) => item.operation_id === selectedOperationId.value) || null
+const selectedOperation = computed(
+  () => runtimeItems.value.find((item) => item.operation_id === selectedOperationId.value) || null
 );
 
 const filteredExecutions = computed(() =>
@@ -214,6 +241,26 @@ const filteredExecutions = computed(() =>
 
 const sortedExecutions = computed(() => sortRows(filteredExecutions.value, executionSortState.value));
 const sortedExecutionTasks = computed(() => sortRows(executionTasks.value, taskSortState.value));
+
+const {
+  currentPage: executionCurrentPage,
+  pageSize: executionPageSize,
+  paginatedItems: paginatedExecutions,
+  totalItems: totalExecutionItems,
+  totalPages: executionTotalPages,
+  goToPreviousPage: goToPreviousExecutionPage,
+  goToNextPage: goToNextExecutionPage,
+} = usePagination(sortedExecutions);
+
+const {
+  currentPage: taskCurrentPage,
+  pageSize: taskPageSize,
+  paginatedItems: paginatedExecutionTasks,
+  totalItems: totalTaskItems,
+  totalPages: taskTotalPages,
+  goToPreviousPage: goToPreviousTaskPage,
+  goToNextPage: goToNextTaskPage,
+} = usePagination(sortedExecutionTasks);
 
 function executionSortLabel(key) {
   return sortIndicator(executionSortState.value, key);
@@ -240,10 +287,7 @@ function parseSharedInput() {
 }
 
 async function loadRuntime() {
-  const [overview, executionList] = await Promise.all([
-    getOperationsRuntimeOverview(),
-    getList("operation-executions"),
-  ]);
+  const [overview, executionList] = await Promise.all([getOperationsRuntimeOverview(), getList("operation-executions")]);
   runtimeItems.value = overview;
   executions.value = executionList;
 

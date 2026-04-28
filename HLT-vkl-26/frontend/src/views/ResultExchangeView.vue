@@ -78,24 +78,30 @@
     <article class="panel">
       <div class="panel-head">
         <h3>History</h3>
-        <span class="badge">{{ sortedHistory.length }} records</span>
+        <span class="badge">{{ totalItems }} bản ghi</span>
       </div>
 
       <div class="table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel('id') }}</th>
-              <th class="sortable-header" @click="toggleSort('operation_id')">operation_id{{ sortLabel('operation_id') }}</th>
-              <th class="sortable-header" @click="toggleSort('action_type')">action_type{{ sortLabel('action_type') }}</th>
-              <th class="sortable-header" @click="toggleSort('file_name')">file_name{{ sortLabel('file_name') }}</th>
-              <th class="sortable-header" @click="toggleSort('file_format')">file_format{{ sortLabel('file_format') }}</th>
-              <th class="sortable-header" @click="toggleSort('status')">status{{ sortLabel('status') }}</th>
-              <th class="sortable-header" @click="toggleSort('note')">note{{ sortLabel('note') }}</th>
+              <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel("id") }}</th>
+              <th class="sortable-header" @click="toggleSort('operation_id')">
+                operation_id{{ sortLabel("operation_id") }}
+              </th>
+              <th class="sortable-header" @click="toggleSort('action_type')">
+                action_type{{ sortLabel("action_type") }}
+              </th>
+              <th class="sortable-header" @click="toggleSort('file_name')">file_name{{ sortLabel("file_name") }}</th>
+              <th class="sortable-header" @click="toggleSort('file_format')">
+                file_format{{ sortLabel("file_format") }}
+              </th>
+              <th class="sortable-header" @click="toggleSort('status')">status{{ sortLabel("status") }}</th>
+              <th class="sortable-header" @click="toggleSort('note')">note{{ sortLabel("note") }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in sortedHistory" :key="item.id">
+            <tr v-for="item in paginatedItems" :key="item.id">
               <td>{{ item.id }}</td>
               <td>{{ item.operation_id }}</td>
               <td>{{ item.action_type }}</td>
@@ -107,6 +113,16 @@
           </tbody>
         </table>
       </div>
+
+      <PaginationBar
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total-items="totalItems"
+        :total-pages="totalPages"
+        @update:page-size="pageSize = $event"
+        @previous="goToPreviousPage"
+        @next="goToNextPage"
+      />
     </article>
   </section>
 </template>
@@ -114,6 +130,8 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { exportOperationResults, getList, importOperationResults } from "../api/client";
+import PaginationBar from "../components/PaginationBar.vue";
+import { usePagination } from "../composables/usePagination";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const operations = ref([]);
@@ -126,12 +144,12 @@ const importMessage = ref("");
 const sortState = ref({ key: "id", direction: "desc" });
 
 const filteredHistory = computed(() =>
-  historyItems.value.filter(
-    (item) => !selectedOperationId.value || item.operation_id === Number(selectedOperationId.value)
-  )
+  historyItems.value.filter((item) => !selectedOperationId.value || item.operation_id === Number(selectedOperationId.value))
 );
 
 const sortedHistory = computed(() => sortRows(filteredHistory.value, sortState.value));
+const { currentPage, pageSize, paginatedItems, totalItems, totalPages, goToPreviousPage, goToNextPage } =
+  usePagination(sortedHistory);
 
 function toggleSort(key) {
   sortState.value = nextSortState(sortState.value, key);
@@ -142,10 +160,7 @@ function sortLabel(key) {
 }
 
 async function loadData() {
-  const [operationList, historyList] = await Promise.all([
-    getList("operations"),
-    getList("operation-result-history"),
-  ]);
+  const [operationList, historyList] = await Promise.all([getList("operations"), getList("operation-result-history")]);
   operations.value = operationList;
   historyItems.value = historyList;
   if (!selectedOperationId.value && operationList.length > 0) {

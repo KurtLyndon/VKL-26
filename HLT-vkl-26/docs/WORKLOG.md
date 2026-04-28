@@ -81,3 +81,29 @@
 3. Thêm export PDF.
 4. Rà soát lại UI/encoding trong browser và build frontend.
 5. Cân nhắc Alembic nếu sau này cần autogenerate/revision phức tạp hơn.
+
+## 2026-04-28
+
+### Cập nhật UI danh sách và bố cục quản trị
+
+- Chuyển `Target Group` sang dạng quản trị bằng bảng:
+  - danh sách nhóm target hiển thị theo bảng
+  - thành viên nhóm hiển thị theo bảng với `ID target`, `Tên target`, `Dải IP`, `checkbox`
+- Thêm phân trang `10 / 20 / 50 / toàn bộ` cho các view danh sách chính:
+  - `ResourceView`
+  - `Target`
+  - `Target Attribute`
+  - `Target Group`
+  - `Execution Monitor`
+  - `Finding Explorer`
+  - `Operation Control`
+  - `Result Exchange`
+  - `Quyền theo Nhóm`
+- Sắp lại bố cục các màn có form quản trị theo hướng:
+  - danh sách bên trái
+  - thêm hoặc chỉnh sửa bên phải
+  - các panel phụ ở hàng dưới nếu có
+- Chuẩn hóa thao tác chỉnh sửa trên các bảng CRUD:
+  - bỏ nút `Edit`
+  - click trực tiếp vào dòng để đẩy dữ liệu sang form cập nhật
+  - giữ nút `Delete` riêng và highlight dòng đang được chọn
