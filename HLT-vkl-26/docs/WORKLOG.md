@@ -60,6 +60,12 @@
   - active có màu riêng khác hover
   - sidebar dùng nền `#064509`
   - vùng nội dung chính chuyển sang nền trắng kem sáng hơn
+- Nhập dữ liệu STMNC vào database:
+  - seed CVE từ `1-Codes-v1.8-19-03-2026.xlsx`
+  - seed Target từ `2-Targets-basing.xlsx`
+  - copy nguồn seed vào `backend/database/seed_sources`
+  - cập nhật `seed_data.py` để bootstrap mới sẽ import lại đúng bộ CVE/Target này
+  - loại bỏ seed demo cũ khỏi dataset hiện tại và khỏi `002_seed_sample_data.sql`
 
 ### Trạng thái tạm thời
 

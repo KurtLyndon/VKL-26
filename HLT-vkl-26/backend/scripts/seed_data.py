@@ -1,138 +1,194 @@
+from pathlib import Path
+
 from sqlalchemy import select
 
 from app.db.session import SessionLocal
-from app.models import Agent, Operation, OperationTask, ReportTemplate, Target, Task, Vulnerability, VulnerabilityScript
+from app.models import Agent, Operation, OperationTask, ReportTemplate, Task
 from database.migrations import apply_migrations
+from scripts.import_targets_from_xlsx import import_workbook as import_targets_workbook
+from scripts.import_vulnerabilities_from_xlsx import import_workbook as import_vulnerabilities_workbook
 
 
-def seed() -> None:
-    apply_migrations()
+ROOT_DIR = Path(__file__).resolve().parents[1]
+SEED_SOURCE_DIR = ROOT_DIR / "database" / "seed_sources"
+VULNERABILITY_WORKBOOK = SEED_SOURCE_DIR / "1-Codes-v1.8-19-03-2026.xlsx"
+TARGET_WORKBOOK = SEED_SOURCE_DIR / "2-Targets-basing.xlsx"
 
+
+def get_or_create(db, model, lookup: dict, defaults: dict):
+    item = db.scalar(select(model).filter_by(**lookup))
+    if item is None:
+        item = model(**lookup, **defaults)
+        db.add(item)
+        db.flush()
+        return item, True
+
+    for field, value in defaults.items():
+        setattr(item, field, value)
+    db.flush()
+    return item, False
+
+
+def ensure_core_seed_data() -> None:
     db = SessionLocal()
     try:
-        if db.scalar(select(Agent.id).limit(1)):
-            print("Seed skipped: data already exists.")
-            return
-
-        agent_nmap = Agent(
-            code="AG-NMAP-01",
-            name="Nmap Agent 01",
-            agent_type="nmap",
-            host="agent-nmap-01",
-            ip_address="192.168.10.21",
-            port=8081,
-            version="1.0.0",
-            status="online",
+        agent_nmap, _ = get_or_create(
+            db,
+            Agent,
+            {"code": "AG-NMAP-01"},
+            {
+                "name": "Nmap Agent 01",
+                "agent_type": "nmap",
+                "host": "agent-nmap-01",
+                "ip_address": "192.168.10.21",
+                "port": 8081,
+                "version": "1.0.0",
+                "status": "online",
+            },
         )
-        agent_nuclei = Agent(
-            code="AG-NUCLEI-01",
-            name="Nuclei Agent 01",
-            agent_type="nuclei",
-            host="agent-nuclei-01",
-            ip_address="192.168.10.22",
-            port=8082,
-            version="1.0.0",
-            status="online",
-        )
-
-        task_nmap = Task(
-            code="TASK-NMAP-TCP",
-            name="TCP Port Discovery",
-            agent_type="nmap",
-            script_name="tcp_scan.py",
-            script_path="/opt/hlt/tasks/tcp_scan.py",
-            description="Quet port TCP co ban cho target network.",
-            version="1.0.0",
-            input_schema_json={"target": "cidr", "ports": "string"},
-            output_schema_json={"hosts": "array", "ports": "array"},
-        )
-        task_nuclei = Task(
-            code="TASK-NUCLEI-WEB",
-            name="Web Vulnerability Discovery",
-            agent_type="nuclei",
-            script_name="web_vuln.py",
-            script_path="/opt/hlt/tasks/web_vuln.py",
-            description="Quet template nuclei cho web target.",
-            version="1.0.0",
-            input_schema_json={"target": "url", "templates": "array"},
-            output_schema_json={"findings": "array"},
+        agent_nuclei, _ = get_or_create(
+            db,
+            Agent,
+            {"code": "AG-NUCLEI-01"},
+            {
+                "name": "Nuclei Agent 01",
+                "agent_type": "nuclei",
+                "host": "agent-nuclei-01",
+                "ip_address": "192.168.10.22",
+                "port": 8082,
+                "version": "1.0.0",
+                "status": "online",
+            },
         )
 
-        operation = Operation(
-            code="OP-INTERNAL-WEEKLY",
-            name="Weekly Internal Assessment",
-            description="Operation mau cho kiem thu dinh ky he thong noi bo.",
-            schedule_type="cron",
-            schedule_config_json={"expression": "0 1 * * 1"},
-            is_active=True,
+        task_nmap, _ = get_or_create(
+            db,
+            Task,
+            {"code": "TASK-NMAP-TCP"},
+            {
+                "name": "TCP Port Discovery",
+                "agent_type": "nmap",
+                "script_name": "tcp_scan.py",
+                "script_path": "/opt/hlt/tasks/tcp_scan.py",
+                "description": "Quet port TCP co ban cho target network.",
+                "version": "1.0.0",
+                "is_active": True,
+                "input_schema_json": {"target": "cidr", "ports": "string"},
+                "output_schema_json": {"hosts": "array", "ports": "array"},
+            },
+        )
+        task_nuclei, _ = get_or_create(
+            db,
+            Task,
+            {"code": "TASK-NUCLEI-WEB"},
+            {
+                "name": "Web Vulnerability Discovery",
+                "agent_type": "nuclei",
+                "script_name": "web_vuln.py",
+                "script_path": "/opt/hlt/tasks/web_vuln.py",
+                "description": "Quet template nuclei cho web target.",
+                "version": "1.0.0",
+                "is_active": True,
+                "input_schema_json": {"target": "url", "templates": "array"},
+                "output_schema_json": {"findings": "array"},
+            },
         )
 
-        target_network = Target(
-            code="TGT-DC-NET",
-            name="Domain Controller Segment",
-            target_type="network",
-            ip_range="192.168.10.0/24",
-            description="Mang noi bo chua cac may chu dich vu quan trong.",
-        )
-        target_web = Target(
-            code="TGT-PORTAL",
-            name="Internal Portal",
-            target_type="web",
-            domain="portal.internal.local",
-            description="Cong thong tin noi bo.",
+        operation, _ = get_or_create(
+            db,
+            Operation,
+            {"code": "OP-INTERNAL-WEEKLY"},
+            {
+                "name": "Weekly Internal Assessment",
+                "description": "Operation mau cho kiem thu dinh ky he thong noi bo.",
+                "schedule_type": "cron",
+                "schedule_config_json": {"expression": "0 1 * * 1"},
+                "is_active": True,
+            },
         )
 
-        vuln = Vulnerability(
-            code="CVE-2024-DEMO-0001",
-            title="Demo Internal RCE",
-            level=4,
-            threat="Co the dan den thuc thi lenh tu xa tren dich vu noi bo.",
-            proposal="Cap nhat ban va han che truy cap den dich vu quan tri.",
-            poc_file_name="demo_rce_check.py",
-            description="Ban ghi mau de dev giao dien va quy trinh quan ly CVE.",
+        report_template, _ = get_or_create(
+            db,
+            ReportTemplate,
+            {"code": "RPT-WEEKLY-SUMMARY"},
+            {
+                "name": "Weekly Security Summary",
+                "report_type": "weekly",
+                "filter_config_json": {"severity": ["critical", "high", "medium"]},
+                "layout_config_json": {"sections": ["overview", "findings", "targets"]},
+            },
         )
 
-        db.add_all([agent_nmap, agent_nuclei, task_nmap, task_nuclei, operation, target_network, target_web, vuln])
-        db.flush()
-
-        db.add_all(
-            [
+        operation_task_1 = db.scalar(
+            select(OperationTask).where(
+                OperationTask.operation_id == operation.id,
+                OperationTask.task_id == task_nmap.id,
+                OperationTask.order_index == 1,
+            )
+        )
+        if operation_task_1 is None:
+            db.add(
                 OperationTask(
                     operation_id=operation.id,
                     task_id=task_nmap.id,
                     order_index=1,
                     input_override_json={"ports": "1-1024"},
                     continue_on_error=False,
-                ),
+                )
+            )
+
+        operation_task_2 = db.scalar(
+            select(OperationTask).where(
+                OperationTask.operation_id == operation.id,
+                OperationTask.task_id == task_nuclei.id,
+                OperationTask.order_index == 2,
+            )
+        )
+        if operation_task_2 is None:
+            db.add(
                 OperationTask(
                     operation_id=operation.id,
                     task_id=task_nuclei.id,
                     order_index=2,
                     input_override_json={"templates": ["cves", "default-logins"]},
                     continue_on_error=True,
-                ),
-                VulnerabilityScript(
-                    vulnerability_id=vuln.id,
-                    script_name="demo_rce_check.py",
-                    script_type="py",
-                    script_content='print("safe poc placeholder")',
-                    version="1.0.0",
-                    is_active=True,
-                ),
-                ReportTemplate(
-                    code="RPT-WEEKLY-SUMMARY",
-                    name="Weekly Security Summary",
-                    report_type="weekly",
-                    filter_config_json={"severity": ["critical", "high", "medium"]},
-                    layout_config_json={"sections": ["overview", "findings", "targets"]},
-                ),
-            ]
-        )
+                )
+            )
 
         db.commit()
-        print("Seed completed successfully.")
+        print(
+            "Core seed completed:",
+            agent_nmap.code,
+            agent_nuclei.code,
+            task_nmap.code,
+            task_nuclei.code,
+            operation.code,
+            report_template.code,
+        )
     finally:
         db.close()
+
+
+def seed() -> None:
+    apply_migrations()
+    ensure_core_seed_data()
+
+    if VULNERABILITY_WORKBOOK.exists():
+        created, updated, copied_poc_files = import_vulnerabilities_workbook(VULNERABILITY_WORKBOOK)
+        print(
+            f"Seeded vulnerabilities from {VULNERABILITY_WORKBOOK.name}: "
+            f"created={created}, updated={updated}, poc_files_copied={copied_poc_files}"
+        )
+    else:
+        print(f"Skip vulnerability seed source: {VULNERABILITY_WORKBOOK} not found.")
+
+    if TARGET_WORKBOOK.exists():
+        created, updated = import_targets_workbook(TARGET_WORKBOOK)
+        print(f"Seeded targets from {TARGET_WORKBOOK.name}: created={created}, updated={updated}")
+    else:
+        print(f"Skip target seed source: {TARGET_WORKBOOK} not found.")
+
+    print("Seed completed successfully.")
 
 
 if __name__ == "__main__":
