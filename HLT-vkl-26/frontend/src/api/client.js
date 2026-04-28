@@ -84,7 +84,7 @@ export async function getOperationTasks(operationId) {
 }
 
 export async function getTargetsEnriched() {
-  const { data } = await api.get("/targets/enriched");
+  const { data } = await api.get("/targets-enriched");
   return data;
 }
 

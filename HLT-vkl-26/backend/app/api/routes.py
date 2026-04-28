@@ -624,7 +624,7 @@ def list_operation_tasks(
     ).all()
 
 
-@router.get("/targets/enriched", response_model=list[TargetDetailRead])
+@router.get("/targets-enriched", response_model=list[TargetDetailRead])
 def list_targets_with_details(
     db: Session = Depends(get_db),
     _current_user=Depends(require_permissions("targets.manage")),
