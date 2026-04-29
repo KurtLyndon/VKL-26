@@ -104,14 +104,20 @@
           <thead>
             <tr>
               <th>Chọn</th>
-              <th>ID</th>
-              <th>Tên target</th>
-              <th>Dải IP</th>
+              <th class="sortable-header" @click="toggleTargetSort('id')">ID{{ targetSortLabel("id") }}</th>
+              <th class="sortable-header" @click="toggleTargetSort('name')">Tên target{{ targetSortLabel("name") }}</th>
+              <th class="sortable-header" @click="toggleTargetSort('ip_range')">Dải IP{{ targetSortLabel("ip_range") }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="target in paginatedTargets" :key="target.id">
-              <td><input v-model="selectedTargetIds" :value="target.id" type="checkbox" /></td>
+            <tr
+              v-for="target in paginatedTargets"
+              :key="target.id"
+              class="row-selectable"
+              :class="{ 'row-selected': selectedTargetIds.includes(target.id) }"
+              @click="toggleTargetSelection(target.id)"
+            >
+              <td><input :checked="selectedTargetIds.includes(target.id)" type="checkbox" @click.stop="toggleTargetSelection(target.id)" /></td>
               <td>{{ target.id }}</td>
               <td>{{ target.name }}</td>
               <td>{{ target.ip_range || "-" }}</td>
@@ -196,9 +202,9 @@
               <td>{{ candidateLabel(item) }}</td>
               <td>
                 <select v-model="manualTargetMappings[item.ip]">
-                  <option value="">Giữ tự động / cần chọn</option>
+                  <option value="">{{ item.status === "auto" ? "Giữ tự động" : "Cần chọn thủ công" }}</option>
                   <option value="__UNMAPPED__">Đánh dấu unmapped</option>
-                  <option v-for="target in selectedTargets" :key="target.id" :value="String(target.id)">
+                  <option v-for="target in mappingOptions(item)" :key="target.id" :value="String(target.id)">
                     {{ target.name }} (ID {{ target.id }})
                   </option>
                 </select>
@@ -234,6 +240,7 @@ import { computed, reactive, ref } from "vue";
 import { commitHistoricalServicesVulnsImport, getTargetsEnriched, previewHistoricalServicesVulnsImport } from "../api/client";
 import PaginationBar from "../components/PaginationBar.vue";
 import { usePagination } from "../composables/usePagination";
+import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const targets = ref([]);
 const importFile = ref(null);
@@ -244,6 +251,7 @@ const commitMessage = ref("");
 const targetSearch = ref("");
 const selectedTargetIds = ref([]);
 const manualTargetMappings = reactive({});
+const targetSortState = ref({ key: "id", direction: "desc" });
 
 const form = reactive({
   batch_code: "",
@@ -258,14 +266,15 @@ const form = reactive({
 
 const filteredTargets = computed(() => {
   const keyword = targetSearch.value.trim().toLowerCase();
-  if (!keyword) return targets.value;
-  return targets.value.filter((target) => {
-    const haystack = `${target.code || ""} ${target.name || ""} ${target.ip_range || ""}`.toLowerCase();
-    return haystack.includes(keyword);
-  });
+  const baseList = !keyword
+    ? targets.value
+    : targets.value.filter((target) => {
+        const haystack = `${target.code || ""} ${target.name || ""} ${target.ip_range || ""}`.toLowerCase();
+        return haystack.includes(keyword);
+      });
+  return sortRows(baseList, targetSortState.value);
 });
 
-const selectedTargets = computed(() => targets.value.filter((target) => selectedTargetIds.value.includes(target.id)));
 const {
   currentPage: targetCurrentPage,
   pageSize: targetPageSize,
@@ -290,6 +299,22 @@ const {
 const canPreview = computed(() => Boolean(importFile.value && form.batch_code.trim() && selectedTargetIds.value.length));
 const canCommit = computed(() => Boolean(preview.value) && preview.value.unmatched_vulnerability_count === 0);
 
+function toggleTargetSort(key) {
+  targetSortState.value = nextSortState(targetSortState.value, key);
+}
+
+function targetSortLabel(key) {
+  return sortIndicator(targetSortState.value, key);
+}
+
+function toggleTargetSelection(targetId) {
+  if (selectedTargetIds.value.includes(targetId)) {
+    selectedTargetIds.value = selectedTargetIds.value.filter((item) => item !== targetId);
+  } else {
+    selectedTargetIds.value = [...selectedTargetIds.value, targetId];
+  }
+}
+
 function buildManualMappingPayload() {
   const payload = {};
   for (const item of previewMappings.value) {
@@ -302,7 +327,14 @@ function buildManualMappingPayload() {
 
 function candidateLabel(item) {
   if (!item.matched_targets.length) return "-";
-  return item.matched_targets.map((target) => `${target.name} (ID ${target.id})`).join(", ");
+  return [...item.matched_targets]
+    .sort((left, right) => left.id - right.id)
+    .map((target) => `${target.name} (ID ${target.id})`)
+    .join(", ");
+}
+
+function mappingOptions(item) {
+  return [...item.matched_targets].sort((left, right) => left.id - right.id);
 }
 
 function handleFileChange(event) {

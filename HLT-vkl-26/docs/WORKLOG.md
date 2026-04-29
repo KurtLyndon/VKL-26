@@ -113,3 +113,7 @@
   - map IP vào tập `Target` đã chọn, cho phép manual override hoặc đánh dấu `unmapped`
   - lưu metadata đợt import vào `scan_import_batch` và tạo `operation_execution` / `task_execution` lịch sử tương ứng
   - thêm màn UI `Import Scan Cũ` để upload file, nhập metadata, chọn target, xem preview và xác nhận import
+  - bảng chọn Target trong màn `Import Scan Cũ` hỗ trợ:
+    - click tiêu đề cột để sắp xếp
+    - click cả dòng để chọn hoặc bỏ chọn target
+  - combobox mapping ở phần preview chỉ hiển thị đúng các target khớp với IP đó và sắp theo `ID` tăng dần
