@@ -138,3 +138,6 @@
   - chuyển popup chọn nhiều mục thành sidebar trượt từ bên phải để tránh bị các thẻ phía dưới che khuất
   - gộp `Thống kê tổng quan theo thời gian` và `Top 5 vuln/CVE` vào chung một thẻ lớn, bộ lọc nằm bên ngoài thẻ
   - cho 2 biểu đồ nhóm trọng điểm hiển thị dọc toàn chiều rộng thẻ lớn: biểu đồ số lượng ở trên, biểu đồ tỉ lệ ở dưới
+  - giữ sidebar trái vẫn nhìn thấy khi mở drawer chọn nhiều mục trên desktop
+  - thu nhỏ option trong drawer và đổi thứ tự để biểu đồ so sánh target nằm dưới cụm nhóm mục tiêu trọng điểm
+  - Đưa các nút `Bỏ chọn hết / Đóng / Áp dụng` lên ngay dưới tiêu đề drawer, giới hạn danh sách hiển thị khoảng 5 option rồi cuộn, và cho lớp overlay phủ toàn màn hình

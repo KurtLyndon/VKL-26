@@ -14,6 +14,12 @@
           <span class="badge">{{ draftSelection.length }}/{{ maxSelected }}</span>
         </div>
 
+        <div class="form-actions selection-dialog-actions selection-dialog-actions-top">
+          <button class="ghost-button" type="button" @click="clearSelection">Bỏ chọn hết</button>
+          <button class="ghost-button" type="button" @click="closeDialog">Đóng</button>
+          <button class="primary-button" type="button" @click="applySelection">Áp dụng</button>
+        </div>
+
         <label class="field-block">
           <span>Tìm kiếm</span>
           <input v-model="keyword" :placeholder="searchPlaceholder" />
@@ -35,12 +41,6 @@
           </div>
           <span>{{ isSelected(option) ? "Đã chọn" : "Chưa chọn" }}</span>
         </button>
-      </div>
-
-      <div class="form-actions selection-dialog-actions">
-        <button class="ghost-button" type="button" @click="clearSelection">Bỏ chọn hết</button>
-        <button class="ghost-button" type="button" @click="closeDialog">Đóng</button>
-        <button class="primary-button" type="button" @click="applySelection">Áp dụng</button>
       </div>
     </aside>
   </div>
