@@ -267,9 +267,9 @@ export async function previewHistoricalServicesVulnsImport(payload) {
 export async function commitHistoricalServicesVulnsImport(payload) {
   const formData = new FormData();
   formData.append("batch_code", payload.batch_code);
-  formData.append("scan_year", String(payload.scan_year));
-  formData.append("scan_quarter", String(payload.scan_quarter));
-  formData.append("scan_week", String(payload.scan_week));
+  formData.append("year", String(payload.year));
+  formData.append("quarter", String(payload.quarter));
+  formData.append("week", String(payload.week));
   if (payload.scan_started_at) formData.append("scan_started_at", payload.scan_started_at);
   if (payload.scan_finished_at) formData.append("scan_finished_at", payload.scan_finished_at);
   if (payload.note) formData.append("note", payload.note);

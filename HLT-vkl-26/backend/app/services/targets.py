@@ -43,6 +43,7 @@ BASE_TARGET_COLUMNS = {
     "description": "description",
     "mo_ta": "description",
 }
+SYSTEM_TARGET_CODES = {"target_unmapped_historical"}
 
 
 def normalize_key(value: str) -> str:
@@ -163,7 +164,9 @@ def _entry_contains_ip(entry: str, ip_object: ipaddress._BaseAddress) -> bool:
 
 
 def list_targets_enriched(db: Session) -> list[TargetDetailRead]:
-    targets = db.scalars(select(Target).order_by(Target.id.desc())).all()
+    targets = db.scalars(
+        select(Target).where(Target.code.not_in(SYSTEM_TARGET_CODES)).order_by(Target.id.desc())
+    ).all()
     definitions = db.scalars(select(TargetAttributeDefinition).order_by(TargetAttributeDefinition.attribute_name.asc())).all()
     definition_map = {item.id: item for item in definitions}
 

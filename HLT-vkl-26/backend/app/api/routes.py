@@ -774,7 +774,9 @@ def historical_dashboard_target_options(
     db: Session = Depends(get_db),
     _current_user=Depends(require_permissions("dashboard.view")),
 ):
-    return db.scalars(select(Target).order_by(Target.id.asc())).all()
+    return db.scalars(
+        select(Target).where(Target.code != "target_unmapped_historical").order_by(Target.id.asc())
+    ).all()
 
 
 @router.get("/dashboard/historical/target-quarterly", response_model=HistoricalTargetQuarterComparison)
@@ -1174,9 +1176,9 @@ async def preview_historical_services_vulns_import(
 )
 async def commit_historical_services_vulns_import(
     batch_code: str = Form(...),
-    scan_year: int = Form(...),
-    scan_quarter: int = Form(...),
-    scan_week: int = Form(...),
+    year: int = Form(...),
+    quarter: int = Form(...),
+    week: int = Form(...),
     scan_started_at: str | None = Form(default=None),
     scan_finished_at: str | None = Form(default=None),
     note: str | None = Form(default=None),
@@ -1198,9 +1200,9 @@ async def commit_historical_services_vulns_import(
             file_name=file.filename,
             content=content,
             batch_code=batch_code,
-            scan_year=scan_year,
-            scan_quarter=scan_quarter,
-            scan_week=scan_week,
+            year=year,
+            quarter=quarter,
+            week=week,
             scan_started_at=scan_started_at,
             scan_finished_at=scan_finished_at,
             note=note,

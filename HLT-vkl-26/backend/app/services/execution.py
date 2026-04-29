@@ -29,7 +29,17 @@ def launch_operation(db: Session, operation_id: int, payload: OperationLaunchReq
         trigger_type=payload.trigger_type,
         status="queued",
         started_at=datetime.utcnow(),
-        summary_json={"task_count": len(operation_tasks), "shared_input": payload.shared_input or {}},
+        year=payload.year,
+        quarter=payload.quarter,
+        week=payload.week,
+        note=payload.note,
+        source_root_path=payload.source_root_path,
+        selected_target_ids_json=payload.target_ids or None,
+        summary_json={
+            "task_count": len(operation_tasks),
+            "shared_input": payload.shared_input or {},
+            "selected_target_count": len(payload.target_ids or []),
+        },
     )
     db.add(execution)
     db.flush()
@@ -52,6 +62,9 @@ def launch_operation(db: Session, operation_id: int, payload: OperationLaunchReq
             )
 
         input_payload = dict(shared_input)
+        if payload.target_ids:
+            input_payload["target_ids"] = payload.target_ids
+            input_payload.setdefault("target_id", payload.target_ids[0])
         if operation_task.input_override_json:
             input_payload.update(operation_task.input_override_json)
 
@@ -141,14 +154,18 @@ def refresh_operation_execution_summary(
     else:
         operation_execution.status = "queued"
 
-    operation_execution.summary_json = {
-        "task_count": total_count,
-        "queued_count": queued_count,
-        "running_count": running_count,
-        "failed_count": failed_count,
-        "completed_count": completed_count,
-        "canceled_count": canceled_count,
-    }
+    summary_payload = dict(operation_execution.summary_json or {})
+    summary_payload.update(
+        {
+            "task_count": total_count,
+            "queued_count": queued_count,
+            "running_count": running_count,
+            "failed_count": failed_count,
+            "completed_count": completed_count,
+            "canceled_count": canceled_count,
+        }
+    )
+    operation_execution.summary_json = summary_payload
     return operation_execution
 
 

@@ -145,3 +145,7 @@
   - Đổi tên thẻ con `Thống kê tổng quan theo thời gian` thành `Thống kê` và chuyển `Vuln phát hiện` xuống ô cuối cùng của hàng 2
   - Tô đỏ value của 3 ô cuối trong thẻ `Thống kê`: `Target có nguy cơ`, `IP có nguy cơ`, `Vuln phát hiện`
   - Đổi tên màn `Dashboard lịch sử scan` thành `Dashboard` và cập nhật mô tả theo hướng tổng hợp cả dữ liệu import lẫn dữ liệu agent scan sẽ đổ về sau này
+  - Chuyển metadata `year / quarter / week / note / source_root_path / selected_target_ids` sang `operation_execution` để execution trở thành thực thể trung tâm cho dashboard và runtime
+  - Điều chỉnh luồng import scan history để coi đây là kết quả execution thật của `Agent System Import`, đồng thời tạo placeholder scan result cho target trùng dải IP hoặc không phát hiện IP public
+  - Bổ sung giao diện chọn target và metadata cơ bản khi launch execution từ `Operation Control`
+  - Thêm migration chuyển dữ liệu metadata lịch sử từ `scan_import_batch` sang `operation_execution`, kèm script dọn dữ liệu runtime/import cũ để import lại sạch

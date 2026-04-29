@@ -84,6 +84,55 @@
           </select>
         </label>
 
+        <div class="filter-grid">
+          <label class="field-block">
+            <span>Năm</span>
+            <input v-model.number="launchForm.year" type="number" min="2000" max="2100" />
+          </label>
+
+          <label class="field-block">
+            <span>Quý</span>
+            <select v-model.number="launchForm.quarter">
+              <option :value="null">-</option>
+              <option :value="1">1</option>
+              <option :value="2">2</option>
+              <option :value="3">3</option>
+              <option :value="4">4</option>
+            </select>
+          </label>
+
+          <label class="field-block">
+            <span>Tuần</span>
+            <input v-model.number="launchForm.week" type="number" min="1" max="53" />
+          </label>
+        </div>
+
+        <div class="selection-toolbar">
+          <MultiSelectDialog
+            v-model="selectedTargetIds"
+            title="Chọn mục tiêu cho execution"
+            :options="targetPickerOptions"
+            button-label="Chọn target"
+            search-placeholder="Tìm theo tên target hoặc ID..."
+          />
+
+          <div class="selected-chip-list">
+            <span v-for="item in selectedTargetChips" :key="item.id" class="selected-chip">
+              {{ item.name }}
+            </span>
+          </div>
+        </div>
+
+        <label class="field-block">
+          <span>source_root_path</span>
+          <input v-model="launchForm.source_root_path" placeholder="Đường dẫn nguồn nếu có" />
+        </label>
+
+        <label class="field-block">
+          <span>note</span>
+          <textarea v-model="launchForm.note" rows="3" placeholder="Ghi chú execution" />
+        </label>
+
         <label class="field-block">
           <span>shared_input</span>
           <textarea v-model="launchForm.shared_input" rows="5" placeholder='{"target_id": 1}' />
@@ -204,12 +253,14 @@ import {
   getExecutionTasks,
   getList,
   getOperationsRuntimeOverview,
+  getTargetsEnriched,
   launchOperation,
   runMockDemoFlow,
   runSchedulerNow,
   runWorkerNow,
   updateTaskExecutionStatus,
 } from "../api/client";
+import MultiSelectDialog from "../components/MultiSelectDialog.vue";
 import PaginationBar from "../components/PaginationBar.vue";
 import { usePagination } from "../composables/usePagination";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
@@ -217,8 +268,10 @@ import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 const runtimeItems = ref([]);
 const executions = ref([]);
 const executionTasks = ref([]);
+const targets = ref([]);
 const selectedOperationId = ref(null);
 const selectedExecution = ref(null);
+const selectedTargetIds = ref([]);
 const message = ref("");
 const schedulerSummary = ref("");
 const workerSummary = ref("");
@@ -228,6 +281,11 @@ const taskSortState = ref({ key: "id", direction: "desc" });
 
 const launchForm = reactive({
   trigger_type: "manual",
+  year: new Date().getFullYear(),
+  quarter: null,
+  week: null,
+  note: "",
+  source_root_path: "",
   shared_input: "{}",
 });
 
@@ -241,6 +299,19 @@ const filteredExecutions = computed(() =>
 
 const sortedExecutions = computed(() => sortRows(filteredExecutions.value, executionSortState.value));
 const sortedExecutionTasks = computed(() => sortRows(executionTasks.value, taskSortState.value));
+const targetPickerOptions = computed(() =>
+  [...targets.value]
+    .sort((left, right) => left.id - right.id)
+    .map((target) => ({
+      value: target.id,
+      label: target.name,
+      description: `ID ${target.id}${target.ip_range ? ` • ${target.ip_range}` : ""}`,
+    }))
+);
+const selectedTargetChips = computed(() => {
+  const targetMap = new Map(targets.value.map((item) => [item.id, item]));
+  return selectedTargetIds.value.map((id) => targetMap.get(id)).filter(Boolean);
+});
 
 const {
   currentPage: executionCurrentPage,
@@ -287,9 +358,14 @@ function parseSharedInput() {
 }
 
 async function loadRuntime() {
-  const [overview, executionList] = await Promise.all([getOperationsRuntimeOverview(), getList("operation-executions")]);
+  const [overview, executionList, targetList] = await Promise.all([
+    getOperationsRuntimeOverview(),
+    getList("operation-executions"),
+    getTargetsEnriched(),
+  ]);
   runtimeItems.value = overview;
   executions.value = executionList;
+  targets.value = targetList;
 
   if (!selectedOperationId.value && overview.length > 0) {
     selectedOperationId.value = overview[0].operation_id;
@@ -312,6 +388,12 @@ async function submitLaunch() {
   try {
     const response = await launchOperation(selectedOperationId.value, {
       trigger_type: launchForm.trigger_type,
+      target_ids: selectedTargetIds.value,
+      year: launchForm.year || null,
+      quarter: launchForm.quarter || null,
+      week: launchForm.week || null,
+      note: launchForm.note || null,
+      source_root_path: launchForm.source_root_path || null,
       shared_input: parseSharedInput(),
     });
     message.value = `Đã launch execution ${response.execution.execution_code} với ${response.task_executions.length} task.`;
@@ -349,6 +431,7 @@ async function runMockFlow() {
   try {
     const result = await runMockDemoFlow({
       operation_id: selectedOperationId.value,
+      target_id: selectedTargetIds.value[0] || null,
     });
     mockSummary.value = `Mock flow đã tạo execution #${result.operation_execution_id}, sinh ${result.findings_created} finding và trạng thái cuối là ${result.execution_status}.`;
     await loadRuntime();

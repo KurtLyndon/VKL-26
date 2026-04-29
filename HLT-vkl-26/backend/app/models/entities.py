@@ -167,6 +167,12 @@ class OperationExecution(Base):
     status: Mapped[str] = mapped_column(String(30), default="pending")
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    quarter: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    week: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_root_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    selected_target_ids_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
     summary_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

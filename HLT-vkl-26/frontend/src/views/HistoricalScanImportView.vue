@@ -26,12 +26,12 @@
         <div class="filter-grid">
           <label class="field-block">
             <span>Năm</span>
-            <input v-model.number="form.scan_year" type="number" min="2000" max="2100" required />
+            <input v-model.number="form.year" type="number" min="2000" max="2100" required />
           </label>
 
           <label class="field-block">
             <span>Quý</span>
-            <select v-model.number="form.scan_quarter">
+            <select v-model.number="form.quarter">
               <option :value="1">1</option>
               <option :value="2">2</option>
               <option :value="3">3</option>
@@ -41,7 +41,7 @@
 
           <label class="field-block">
             <span>Tuần</span>
-            <input v-model.number="form.scan_week" type="number" min="1" max="53" required />
+            <input v-model.number="form.week" type="number" min="1" max="53" required />
           </label>
         </div>
 
@@ -255,9 +255,9 @@ const targetSortState = ref({ key: "id", direction: "desc" });
 
 const form = reactive({
   batch_code: "",
-  scan_year: new Date().getFullYear(),
-  scan_quarter: 1,
-  scan_week: 1,
+  year: new Date().getFullYear(),
+  quarter: 1,
+  week: 1,
   scan_started_at: "",
   scan_finished_at: "",
   note: "",
@@ -390,9 +390,9 @@ async function commitImport() {
     const result = await commitHistoricalServicesVulnsImport({
       file: importFile.value,
       batch_code: form.batch_code,
-      scan_year: form.scan_year,
-      scan_quarter: form.scan_quarter,
-      scan_week: form.scan_week,
+      year: form.year,
+      quarter: form.quarter,
+      week: form.week,
       scan_started_at: form.scan_started_at || null,
       scan_finished_at: form.scan_finished_at || null,
       note: form.note || null,

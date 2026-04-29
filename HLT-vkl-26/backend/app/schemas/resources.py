@@ -259,6 +259,12 @@ class OperationExecutionBase(BaseModel):
     status: str = "pending"
     started_at: datetime | None = None
     finished_at: datetime | None = None
+    year: int | None = None
+    quarter: int | None = None
+    week: int | None = None
+    note: str | None = None
+    source_root_path: str | None = None
+    selected_target_ids_json: list[int] | None = None
     summary_json: dict | None = None
 
 
@@ -271,6 +277,12 @@ class OperationExecutionUpdate(BaseModel):
     status: str | None = None
     started_at: datetime | None = None
     finished_at: datetime | None = None
+    year: int | None = None
+    quarter: int | None = None
+    week: int | None = None
+    note: str | None = None
+    source_root_path: str | None = None
+    selected_target_ids_json: list[int] | None = None
     summary_json: dict | None = None
 
 
@@ -682,6 +694,12 @@ class ReportSnapshotRead(ReportSnapshotBase, ORMModel):
 
 class OperationLaunchRequest(BaseModel):
     trigger_type: str = "manual"
+    target_ids: list[int] = Field(default_factory=list)
+    year: int | None = None
+    quarter: int | None = None
+    week: int | None = None
+    note: str | None = None
+    source_root_path: str | None = None
     shared_input: dict | None = None
 
 

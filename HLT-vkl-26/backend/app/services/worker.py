@@ -20,6 +20,16 @@ def _resolve_target(db: Session, task_execution: TaskExecution) -> tuple[Target 
         if target:
             return target, target.domain or target.ip_range or target.name
 
+    target_ids = input_data.get("target_ids") or []
+    if isinstance(target_ids, list):
+        for selected_target_id in target_ids:
+            try:
+                target = db.get(Target, int(selected_target_id))
+            except (TypeError, ValueError):
+                target = None
+            if target:
+                return target, target.domain or target.ip_range or target.name
+
     target = db.scalar(select(Target).order_by(Target.id.asc()).limit(1))
     if target:
         return target, target.domain or target.ip_range or target.name

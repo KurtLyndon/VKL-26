@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Agent, Operation, OperationExecution, OperationTask, ScanImportBatch, ScanResult, ScanResultFinding, Target, Task, TaskExecution, Vulnerability
 from app.schemas.resources import HistoricalImportCandidateTarget, HistoricalImportCommitResponse, HistoricalImportIpMappingItem, HistoricalImportPreviewResponse, OperationLaunchRequest, ScanImportBatchRead
-from app.services.targets import target_contains_ip
+from app.services.targets import normalize_target_ip_range, target_contains_ip
 
 
 HISTORICAL_IMPORT_AGENT_CODE = "AG-SYSTEM-IMPORT"
@@ -37,6 +37,25 @@ class MappingResolution:
     status: str
     matched_targets: list[Target]
     resolved_target: Target | None
+
+
+def _build_duplicate_target_notes(selected_targets: list[Target]) -> dict[int, str]:
+    targets_by_range: dict[str, list[Target]] = {}
+    for target in selected_targets:
+        normalized_range = normalize_target_ip_range(target.ip_range)
+        if not normalized_range:
+            continue
+        targets_by_range.setdefault(normalized_range, []).append(target)
+
+    notes: dict[int, str] = {}
+    for targets in targets_by_range.values():
+        if len(targets) < 2:
+            continue
+        for target in targets:
+            other_names = [item.name for item in targets if item.id != target.id]
+            if other_names:
+                notes[target.id] = f"Trùng dải IP với {', '.join(other_names)}"
+    return notes
 
 
 def _decode_csv_bytes(content: bytes) -> str:
@@ -357,9 +376,9 @@ def commit_services_vulns_import(
     file_name: str,
     content: bytes,
     batch_code: str,
-    scan_year: int,
-    scan_quarter: int,
-    scan_week: int,
+    year: int,
+    quarter: int,
+    week: int,
     scan_started_at: str | None,
     scan_finished_at: str | None,
     note: str | None,
@@ -403,12 +422,18 @@ def commit_services_vulns_import(
         summary_json={
             "source_file_name": file_name,
             "source_root_path": source_root_path,
-            "scan_year": scan_year,
-            "scan_quarter": scan_quarter,
-            "scan_week": scan_week,
+            "year": year,
+            "quarter": quarter,
+            "week": week,
             "service_rows": preview.service_rows,
             "finding_count": preview.finding_count,
         },
+        year=year,
+        quarter=quarter,
+        week=week,
+        note=note,
+        source_root_path=source_root_path,
+        selected_target_ids_json=selected_target_ids,
     )
     db.add(execution)
     db.flush()
@@ -423,6 +448,9 @@ def commit_services_vulns_import(
             "batch_code": batch_code.strip(),
             "selected_target_ids": selected_target_ids,
             "source_file_name": file_name,
+            "year": year,
+            "quarter": quarter,
+            "week": week,
         },
         output_data_json={
             "service_rows": preview.service_rows,
@@ -436,12 +464,17 @@ def commit_services_vulns_import(
     db.flush()
 
     mapping_by_ip = {item.ip: item for item in mapping_items}
+    selected_targets = db.scalars(select(Target).where(Target.id.in_(selected_target_ids)).order_by(Target.id.asc())).all()
+    duplicate_target_notes = _build_duplicate_target_notes(selected_targets)
+    created_target_ids: set[int] = set()
     created_scan_results = 0
     created_findings = 0
 
     for row in rows:
         mapping = mapping_by_ip[row.ip]
         target = mapping.resolved_target or unmapped_target
+        target_note = duplicate_target_notes.get(target.id)
+        created_target_ids.add(target.id)
 
         scan_result = ScanResult(
             operation_execution_id=execution.id,
@@ -457,6 +490,7 @@ def commit_services_vulns_import(
                     "version": row.version,
                     "vulns": row.vuln_codes,
                     "row_number": row.row_number,
+                    "note": target_note,
                 },
                 ensure_ascii=False,
             ),
@@ -467,6 +501,7 @@ def commit_services_vulns_import(
                 "version": row.version,
                 "vulns": row.vuln_codes,
                 "batch_code": batch_code.strip(),
+                "note": target_note,
             },
             detected_at=finished_at or execution.finished_at,
             parse_status="success",
@@ -497,13 +532,46 @@ def commit_services_vulns_import(
             db.add(finding)
             created_findings += 1
 
+    for target in selected_targets:
+        if target.id in created_target_ids:
+            continue
+
+        note_message = duplicate_target_notes.get(target.id) or "Không phát hiện IP public"
+        placeholder_scan_result = ScanResult(
+            operation_execution_id=execution.id,
+            task_execution_id=task_execution.id,
+            target_id=target.id,
+            agent_type="historical_import",
+            source_tool="services_vulns.csv",
+            raw_output=json.dumps(
+                {
+                    "target_id": target.id,
+                    "target_name": target.name,
+                    "note": note_message,
+                    "placeholder": True,
+                },
+                ensure_ascii=False,
+            ),
+            normalized_output_json={
+                "target_id": target.id,
+                "target_name": target.name,
+                "batch_code": batch_code.strip(),
+                "note": note_message,
+                "placeholder": True,
+            },
+            detected_at=finished_at or execution.finished_at,
+            parse_status="success",
+        )
+        db.add(placeholder_scan_result)
+        created_scan_results += 1
+
     batch = ScanImportBatch(
         operation_execution_id=execution.id,
         task_execution_id=task_execution.id,
         batch_code=batch_code.strip(),
-        scan_year=scan_year,
-        scan_quarter=scan_quarter,
-        scan_week=scan_week,
+        scan_year=year,
+        scan_quarter=quarter,
+        scan_week=week,
         scan_started_at=started_at,
         scan_finished_at=finished_at,
         note=note,
