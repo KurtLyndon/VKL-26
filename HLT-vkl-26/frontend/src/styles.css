@@ -624,6 +624,22 @@ select {
   background: rgba(47, 107, 73, 0.04);
 }
 
+.data-table tbody tr {
+  transition: background 160ms ease;
+}
+
+.data-table tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.data-table tbody tr:nth-child(even) {
+  background: rgba(47, 107, 73, 0.06);
+}
+
+.data-table tbody tr:not(.row-selected):hover {
+  background: rgba(47, 107, 73, 0.12);
+}
+
 .sortable-header {
   cursor: pointer;
   user-select: none;
