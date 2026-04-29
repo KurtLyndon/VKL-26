@@ -636,6 +636,98 @@ select {
   box-shadow: inset 4px 0 0 var(--danger);
 }
 
+.selection-toolbar {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.selection-dialog-trigger {
+  display: grid;
+  gap: 8px;
+}
+
+.selection-dialog-help {
+  color: var(--muted);
+}
+
+.selected-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.selected-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(6, 69, 9, 0.12);
+  color: var(--text);
+  border: 1px solid rgba(6, 69, 9, 0.18);
+}
+
+.selection-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(6, 24, 10, 0.42);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.selection-dialog {
+  width: min(760px, 100%);
+  max-height: min(80vh, 760px);
+  overflow: auto;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.selection-dialog-list {
+  display: grid;
+  gap: 10px;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.selection-dialog-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.selection-dialog-item div {
+  display: grid;
+  gap: 4px;
+}
+
+.selection-dialog-item small,
+.selection-dialog-item span {
+  color: var(--muted);
+}
+
+.selection-dialog-item.active {
+  border-color: rgba(6, 69, 9, 0.34);
+  background: rgba(6, 69, 9, 0.12);
+  box-shadow: inset 4px 0 0 var(--danger);
+}
+
 .chart-card {
   display: grid;
   gap: 16px;

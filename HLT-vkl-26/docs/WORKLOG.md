@@ -131,3 +131,5 @@
   - thêm biểu đồ top 5 vuln/CVE theo bộ lọc thời gian
   - thêm biểu đồ nhóm trọng điểm `ĐV Cấp 1` cho số lượng vuln và tỉ lệ target có nguy cơ
   - thêm biểu đồ xu hướng vuln theo quý
+  - tinh gọn UX bộ chọn target và nhóm trọng điểm bằng popup có tìm kiếm thay vì hiển thị toàn bộ option trực tiếp trên màn hình
+  - giảm độ phồng tối thiểu của cột biểu đồ để cột có giá trị lớn nhất nổi bật đúng tỷ lệ hơn

@@ -92,18 +92,19 @@
         </label>
       </div>
 
-      <div class="option-chip-grid">
-        <button
-          v-for="target in targetOptions"
-          :key="target.id"
-          type="button"
-          class="option-chip"
-          :class="{ active: selectedTargetIds.includes(target.id) }"
-          @click="toggleTargetSelection(target.id)"
-        >
-          <strong>{{ target.name }}</strong>
-          <small>ID {{ target.id }}</small>
-        </button>
+      <div class="selection-toolbar">
+        <MultiSelectDialog
+          v-model="selectedTargetIds"
+          title="Chọn mục tiêu để so sánh"
+          :options="targetPickerOptions"
+          button-label="Chọn target"
+          search-placeholder="Tìm theo tên target hoặc ID..."
+        />
+        <div class="selected-chip-list">
+          <span v-for="item in selectedTargetChips" :key="item.id" class="selected-chip">
+            {{ item.name }}
+          </span>
+        </div>
       </div>
 
       <GroupedBarChart
@@ -139,17 +140,19 @@
         </label>
       </div>
 
-      <div class="option-chip-grid">
-        <button
-          v-for="group in coreGroupOptions"
-          :key="group"
-          type="button"
-          class="option-chip"
-          :class="{ active: selectedCoreGroups.includes(group) }"
-          @click="toggleCoreGroup(group)"
-        >
-          <strong>{{ group }}</strong>
-        </button>
+      <div class="selection-toolbar">
+        <MultiSelectDialog
+          v-model="selectedCoreGroups"
+          title="Chọn nhóm ĐV Cấp 1"
+          :options="coreGroupPickerOptions"
+          button-label="Chọn nhóm trọng điểm"
+          search-placeholder="Tìm theo mã nhóm..."
+        />
+        <div class="selected-chip-list">
+          <span v-for="group in selectedCoreGroups" :key="group" class="selected-chip">
+            {{ group }}
+          </span>
+        </div>
       </div>
 
       <GroupedBarChart
@@ -198,6 +201,7 @@ import {
   getHistoricalVulnerabilityTrend,
 } from "../api/client";
 import GroupedBarChart from "../components/GroupedBarChart.vue";
+import MultiSelectDialog from "../components/MultiSelectDialog.vue";
 import StatCard from "../components/StatCard.vue";
 import TopListChart from "../components/TopListChart.vue";
 import TrendLineChart from "../components/TrendLineChart.vue";
@@ -266,6 +270,29 @@ const targetQuarterlySeries = computed(() =>
     label: item.target_name,
     quarters: item.quarters,
     color: targetPalette[index % targetPalette.length],
+  }))
+);
+
+const targetPickerOptions = computed(() =>
+  [...targetOptions].sort((left, right) => left.id - right.id).map((target) => ({
+    value: target.id,
+    label: target.name,
+    description: `ID ${target.id}${target.ip_range ? ` • ${target.ip_range}` : ""}`,
+  }))
+);
+
+const selectedTargetChips = computed(() => {
+  const targetMap = new Map(targetOptions.map((item) => [item.id, item]));
+  return selectedTargetIds
+    .map((id) => targetMap.get(id))
+    .filter(Boolean);
+});
+
+const coreGroupPickerOptions = computed(() =>
+  [...coreGroupOptions].map((group) => ({
+    value: group,
+    label: group,
+    description: group === "Khác" ? "Các giá trị ngoài A đến I" : `Nhóm ĐV Cấp 1 ${group}`,
   }))
 );
 
@@ -372,26 +399,6 @@ async function loadDashboard() {
     groupChartYear.value = String(filterOptions.years[filterOptions.years.length - 1]);
   }
   await Promise.all([loadTargetQuarterlyChart(), loadCoreGroupCharts()]);
-}
-
-function toggleTargetSelection(targetId) {
-  const index = selectedTargetIds.indexOf(targetId);
-  if (index >= 0) {
-    selectedTargetIds.splice(index, 1);
-    return;
-  }
-  if (selectedTargetIds.length >= 5) return;
-  selectedTargetIds.push(targetId);
-}
-
-function toggleCoreGroup(group) {
-  const index = selectedCoreGroups.indexOf(group);
-  if (index >= 0) {
-    selectedCoreGroups.splice(index, 1);
-    return;
-  }
-  if (selectedCoreGroups.length >= 5) return;
-  selectedCoreGroups.push(group);
 }
 
 watch(
