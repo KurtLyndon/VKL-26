@@ -142,3 +142,4 @@
   - thu nhỏ option trong drawer và đổi thứ tự để biểu đồ so sánh target nằm dưới cụm nhóm mục tiêu trọng điểm
   - Đưa các nút `Bỏ chọn hết / Đóng / Áp dụng` lên ngay dưới tiêu đề drawer, giới hạn danh sách hiển thị khoảng 5 option rồi cuộn, và cho lớp overlay phủ toàn màn hình
   - Thu gọn phần trống phía dưới drawer trên desktop bằng cách cho panel cao theo nội dung, chỉ giữ cuộn ở danh sách option
+  - Đổi tên thẻ con `Thống kê tổng quan theo thời gian` thành `Thống kê` và chuyển `Vuln phát hiện` xuống ô cuối cùng của hàng 2
