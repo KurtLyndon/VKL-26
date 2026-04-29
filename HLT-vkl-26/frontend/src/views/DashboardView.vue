@@ -10,42 +10,42 @@
     <button class="ghost-button" @click="loadDashboard">Làm mới dashboard</button>
   </section>
 
-  <section class="filter-strip">
-    <label class="field-block">
-      <span>Năm</span>
-      <select v-model="filters.year">
-        <option value="">Tất cả</option>
-        <option v-for="year in filterOptions.years" :key="year" :value="String(year)">{{ year }}</option>
-      </select>
-    </label>
-    <label class="field-block">
-      <span>Quý</span>
-      <select v-model="filters.quarter">
-        <option value="">Tất cả</option>
-        <option v-for="quarter in filterOptions.quarters" :key="quarter" :value="String(quarter)">Quý {{ quarter }}</option>
-      </select>
-    </label>
-    <label class="field-block">
-      <span>Tháng</span>
-      <select v-model="filters.month">
-        <option value="">Tất cả</option>
-        <option v-for="month in filterOptions.months" :key="month" :value="String(month)">Tháng {{ month }}</option>
-      </select>
-    </label>
-    <label class="field-block">
-      <span>Tuần</span>
-      <select v-model="filters.week">
-        <option value="">Tất cả</option>
-        <option v-for="week in filterOptions.weeks" :key="week" :value="String(week)">Tuần {{ week }}</option>
-      </select>
-    </label>
-  </section>
-
   <section class="panel-grid panel-grid-loose">
     <article class="panel panel-span-full">
       <div class="panel-head">
-        <h3>Tổng quan theo thời gian và Top 5 vuln/CVE</h3>
+        <h3>Tổng quan theo thời gian</h3>
         <span class="badge">lọc linh hoạt</span>
+      </div>
+
+      <div class="filter-strip">
+        <label class="field-block">
+          <span>Năm</span>
+          <select v-model="filters.year">
+            <option value="">Tất cả</option>
+            <option v-for="year in filterOptions.years" :key="year" :value="String(year)">{{ year }}</option>
+          </select>
+        </label>
+        <label class="field-block">
+          <span>Quý</span>
+          <select v-model="filters.quarter">
+            <option value="">Tất cả</option>
+            <option v-for="quarter in filterOptions.quarters" :key="quarter" :value="String(quarter)">Quý {{ quarter }}</option>
+          </select>
+        </label>
+        <label class="field-block">
+          <span>Tháng</span>
+          <select v-model="filters.month">
+            <option value="">Tất cả</option>
+            <option v-for="month in filterOptions.months" :key="month" :value="String(month)">Tháng {{ month }}</option>
+          </select>
+        </label>
+        <label class="field-block">
+          <span>Tuần</span>
+          <select v-model="filters.week">
+            <option value="">Tất cả</option>
+            <option v-for="week in filterOptions.weeks" :key="week" :value="String(week)">Tuần {{ week }}</option>
+          </select>
+        </label>
       </div>
 
       <div class="panel-grid panel-grid-nested">
