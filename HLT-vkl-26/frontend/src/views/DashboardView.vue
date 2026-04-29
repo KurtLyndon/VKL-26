@@ -13,6 +13,22 @@
   <section class="panel-grid panel-grid-loose">
     <article class="panel panel-span-full">
       <div class="panel-head">
+        <h3>Thống kê tổng</h3>
+        <span class="badge">toàn thời gian</span>
+      </div>
+
+      <div class="stat-grid compact-grid stat-grid-horizontal">
+        <StatCard label="Target được dò quét" :value="totalSummary.scanned_targets" />
+        <StatCard label="IP phát hiện" :value="totalSummary.detected_ips" />
+        <StatCard label="Cổng mở" :value="totalSummary.open_ports" />
+        <StatCard label="Vuln phát hiện" :value="totalSummary.detected_vulns" />
+        <StatCard label="Target có nguy cơ" :value="totalSummary.targets_at_risk" />
+        <StatCard label="IP có nguy cơ" :value="totalSummary.ips_at_risk" />
+      </div>
+    </article>
+
+    <article class="panel panel-span-full">
+      <div class="panel-head">
         <h3>Tổng quan theo thời gian</h3>
         <span class="badge">lọc linh hoạt</span>
       </div>
@@ -73,22 +89,6 @@
 
           <TopListChart :items="topVulnerabilities" />
         </article>
-      </div>
-    </article>
-
-    <article class="panel">
-      <div class="panel-head">
-        <h3>Thống kê tổng</h3>
-        <span class="badge">toàn thời gian</span>
-      </div>
-
-      <div class="stat-grid compact-grid">
-        <StatCard label="Target được dò quét" :value="totalSummary.scanned_targets" />
-        <StatCard label="IP phát hiện" :value="totalSummary.detected_ips" />
-        <StatCard label="Cổng mở" :value="totalSummary.open_ports" />
-        <StatCard label="Vuln phát hiện" :value="totalSummary.detected_vulns" />
-        <StatCard label="Target có nguy cơ" :value="totalSummary.targets_at_risk" />
-        <StatCard label="IP có nguy cơ" :value="totalSummary.ips_at_risk" />
       </div>
     </article>
   </section>

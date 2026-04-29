@@ -321,6 +321,10 @@ select {
   margin-bottom: 24px;
 }
 
+.stat-grid-horizontal {
+  grid-template-columns: repeat(6, minmax(160px, 1fr));
+}
+
 .mini-stat {
   border: 1px solid var(--line);
   background: var(--bg-card-strong);
