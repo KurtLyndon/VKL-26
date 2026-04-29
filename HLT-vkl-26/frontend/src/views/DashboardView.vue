@@ -10,7 +10,7 @@
     <button class="ghost-button" @click="loadDashboard">Làm mới dashboard</button>
   </section>
 
-  <section class="panel-grid">
+  <section class="panel-grid panel-grid-loose">
     <article class="panel">
       <div class="panel-head">
         <h3>Thống kê tổng quan theo thời gian</h3>
@@ -75,7 +75,7 @@
     </article>
   </section>
 
-  <section class="panel-grid">
+  <section class="panel-grid panel-grid-loose">
     <article class="panel">
       <div class="panel-head">
         <h3>So sánh vuln của các mục tiêu theo quý</h3>
@@ -100,6 +100,7 @@
           button-label="Chọn target"
           search-placeholder="Tìm theo tên target hoặc ID..."
         />
+
         <div class="selected-chip-list">
           <span v-for="item in selectedTargetChips" :key="item.id" class="selected-chip">
             {{ item.name }}
@@ -123,10 +124,10 @@
     </article>
   </section>
 
-  <section class="panel-grid">
-    <article class="panel">
+  <section class="panel-grid panel-grid-loose">
+    <article class="panel panel-span-full">
       <div class="panel-head">
-        <h3>So sánh số lượng vuln của nhóm mục tiêu trọng điểm</h3>
+        <h3>Nhóm mục tiêu trọng điểm theo quý</h3>
         <span class="badge">A đến I và Khác</span>
       </div>
 
@@ -148,6 +149,7 @@
           button-label="Chọn nhóm trọng điểm"
           search-placeholder="Tìm theo mã nhóm..."
         />
+
         <div class="selected-chip-list">
           <span v-for="group in selectedCoreGroups" :key="group" class="selected-chip">
             {{ group }}
@@ -155,27 +157,36 @@
         </div>
       </div>
 
-      <GroupedBarChart
-        :quarters="coreGroupCountChart.quarters"
-        :series="coreGroupCountSeries"
-      />
-    </article>
+      <div class="panel-grid panel-grid-nested">
+        <article class="panel panel-inner">
+          <div class="panel-head">
+            <h3>So sánh số lượng vuln</h3>
+            <span class="badge">count</span>
+          </div>
 
-    <article class="panel">
-      <div class="panel-head">
-        <h3>Tỉ lệ tồn tại nguy cơ của nhóm mục tiêu trọng điểm</h3>
-        <span class="badge">%</span>
+          <GroupedBarChart
+            :quarters="coreGroupCountChart.quarters"
+            :series="coreGroupCountSeries"
+          />
+        </article>
+
+        <article class="panel panel-inner">
+          <div class="panel-head">
+            <h3>Tỉ lệ tồn tại nguy cơ</h3>
+            <span class="badge">%</span>
+          </div>
+
+          <GroupedBarChart
+            :quarters="coreGroupRiskChart.quarters"
+            :series="coreGroupRiskSeries"
+            :formatter="percentFormatter"
+          />
+        </article>
       </div>
-
-      <GroupedBarChart
-        :quarters="coreGroupRiskChart.quarters"
-        :series="coreGroupRiskSeries"
-        :formatter="percentFormatter"
-      />
     </article>
   </section>
 
-  <section class="panel-grid">
+  <section class="panel-grid panel-grid-loose">
     <article class="panel">
       <div class="panel-head">
         <h3>Xu hướng vuln theo quý</h3>
@@ -238,14 +249,14 @@ const filterOptions = reactive({
   weeks: [],
 });
 
-const targetOptions = reactive([]);
-const coreGroupOptions = reactive([]);
-const selectedTargetIds = reactive([]);
-const selectedCoreGroups = reactive([]);
+const targetOptions = ref([]);
+const coreGroupOptions = ref([]);
+const selectedTargetIds = ref([]);
+const selectedCoreGroups = ref([]);
 const targetChartYear = ref("");
 const groupChartYear = ref("");
 const targetQuarterly = reactive({ quarters: [], series: [] });
-const topVulnerabilities = reactive([]);
+const topVulnerabilities = ref([]);
 const coreGroupCountChart = reactive({ quarters: [], series: [] });
 const coreGroupRiskChart = reactive({ quarters: [], series: [] });
 const trend = reactive({ points: [] });
@@ -274,7 +285,7 @@ const targetQuarterlySeries = computed(() =>
 );
 
 const targetPickerOptions = computed(() =>
-  [...targetOptions].sort((left, right) => left.id - right.id).map((target) => ({
+  [...targetOptions.value].sort((left, right) => left.id - right.id).map((target) => ({
     value: target.id,
     label: target.name,
     description: `ID ${target.id}${target.ip_range ? ` • ${target.ip_range}` : ""}`,
@@ -282,14 +293,14 @@ const targetPickerOptions = computed(() =>
 );
 
 const selectedTargetChips = computed(() => {
-  const targetMap = new Map(targetOptions.map((item) => [item.id, item]));
-  return selectedTargetIds
+  const targetMap = new Map(targetOptions.value.map((item) => [item.id, item]));
+  return selectedTargetIds.value
     .map((id) => targetMap.get(id))
     .filter(Boolean);
 });
 
 const coreGroupPickerOptions = computed(() =>
-  [...coreGroupOptions].map((group) => ({
+  [...coreGroupOptions.value].map((group) => ({
     value: group,
     label: group,
     description: group === "Khác" ? "Các giá trị ngoài A đến I" : `Nhóm ĐV Cấp 1 ${group}`,
@@ -341,33 +352,34 @@ async function loadOverviewCards() {
 }
 
 async function loadTopVulnerabilities() {
-  const data = await getHistoricalTopVulnerabilities(currentFilterParams());
-  topVulnerabilities.splice(0, topVulnerabilities.length, ...(data || []));
+  topVulnerabilities.value = await getHistoricalTopVulnerabilities(currentFilterParams());
 }
 
 async function loadTargetQuarterlyChart() {
-  if (!targetChartYear.value || !selectedTargetIds.length) {
+  if (!targetChartYear.value || !selectedTargetIds.value.length) {
     targetQuarterly.quarters = [];
     targetQuarterly.series = [];
     return;
   }
-  const data = await getHistoricalTargetQuarterlyChart(Number(targetChartYear.value), [...selectedTargetIds]);
+  const data = await getHistoricalTargetQuarterlyChart(Number(targetChartYear.value), [...selectedTargetIds.value]);
   targetQuarterly.quarters = data.quarters || [];
   targetQuarterly.series = data.series || [];
 }
 
 async function loadCoreGroupCharts() {
-  if (!groupChartYear.value || !selectedCoreGroups.length) {
+  if (!groupChartYear.value || !selectedCoreGroups.value.length) {
     coreGroupCountChart.quarters = [];
     coreGroupCountChart.series = [];
     coreGroupRiskChart.quarters = [];
     coreGroupRiskChart.series = [];
     return;
   }
+
   const [countData, riskData] = await Promise.all([
-    getHistoricalCoreGroupQuarterlyChart(Number(groupChartYear.value), [...selectedCoreGroups], "count"),
-    getHistoricalCoreGroupQuarterlyChart(Number(groupChartYear.value), [...selectedCoreGroups], "risk_rate"),
+    getHistoricalCoreGroupQuarterlyChart(Number(groupChartYear.value), [...selectedCoreGroups.value], "count"),
+    getHistoricalCoreGroupQuarterlyChart(Number(groupChartYear.value), [...selectedCoreGroups.value], "risk_rate"),
   ]);
+
   coreGroupCountChart.quarters = countData.quarters || [];
   coreGroupCountChart.series = countData.series || [];
   coreGroupRiskChart.quarters = riskData.quarters || [];
@@ -383,21 +395,23 @@ async function loadStaticOptions() {
     getHistoricalDashboardTargetOptions(),
     getHistoricalCoreGroupOptions(),
   ]);
-  targetOptions.splice(0, targetOptions.length, ...(targets || []));
-  coreGroupOptions.splice(0, coreGroupOptions.length, ...(groups || []));
-  if (!selectedCoreGroups.length && coreGroupOptions.length) {
-    selectedCoreGroups.push(coreGroupOptions[0]);
+  targetOptions.value = targets || [];
+  coreGroupOptions.value = groups || [];
+  if (!selectedCoreGroups.value.length && coreGroupOptions.value.length) {
+    selectedCoreGroups.value = [coreGroupOptions.value[0]];
   }
 }
 
 async function loadDashboard() {
   await Promise.all([loadFilterOptions(), loadOverviewCards(), loadTopVulnerabilities(), loadTrend()]);
+
   if (!targetChartYear.value && filterOptions.years.length) {
     targetChartYear.value = String(filterOptions.years[filterOptions.years.length - 1]);
   }
   if (!groupChartYear.value && filterOptions.years.length) {
     groupChartYear.value = String(filterOptions.years[filterOptions.years.length - 1]);
   }
+
   await Promise.all([loadTargetQuarterlyChart(), loadCoreGroupCharts()]);
 }
 
@@ -410,19 +424,17 @@ watch(
 );
 
 watch(
-  () => [targetChartYear.value, [...selectedTargetIds]],
+  () => [targetChartYear.value, JSON.stringify(selectedTargetIds.value)],
   async () => {
     await loadTargetQuarterlyChart();
-  },
-  { deep: true }
+  }
 );
 
 watch(
-  () => [groupChartYear.value, [...selectedCoreGroups]],
+  () => [groupChartYear.value, JSON.stringify(selectedCoreGroups.value)],
   async () => {
     await loadCoreGroupCharts();
-  },
-  { deep: true }
+  }
 );
 
 onMounted(async () => {

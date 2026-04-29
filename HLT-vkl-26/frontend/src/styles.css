@@ -250,6 +250,10 @@ select {
   gap: 20px;
 }
 
+.panel-grid-loose {
+  margin-top: 8px;
+}
+
 .stat-grid {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   margin-bottom: 24px;
@@ -680,7 +684,6 @@ select {
 .selection-dialog {
   width: min(760px, 100%);
   max-height: min(80vh, 760px);
-  overflow: auto;
   border-radius: 24px;
   border: 1px solid var(--line);
   background: var(--bg-card);
@@ -688,13 +691,28 @@ select {
   padding: 24px;
   display: grid;
   gap: 18px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.selection-dialog-header {
+  display: grid;
+  gap: 16px;
 }
 
 .selection-dialog-list {
   display: grid;
   gap: 10px;
-  max-height: 420px;
   overflow: auto;
+  min-height: 0;
+  padding-right: 4px;
+}
+
+.selection-dialog-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-card);
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
 }
 
 .selection-dialog-item {
@@ -785,9 +803,11 @@ select {
 
 .grouped-chart-bar-wrap {
   flex: 1;
-  display: grid;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
   gap: 8px;
-  align-items: end;
   justify-items: center;
 }
 
@@ -798,8 +818,20 @@ select {
 
 .grouped-chart-bar {
   width: 100%;
-  min-height: 4px;
+  min-height: 2px;
   border-radius: 14px 14px 0 0;
+}
+
+.panel-span-full {
+  grid-column: 1 / -1;
+}
+
+.panel-grid-nested {
+  margin-top: 18px;
+}
+
+.panel-inner {
+  padding: 20px;
 }
 
 .grouped-chart-label {

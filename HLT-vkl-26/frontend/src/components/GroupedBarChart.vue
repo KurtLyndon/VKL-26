@@ -55,7 +55,7 @@ const maxValue = computed(() => {
 });
 
 function barHeight(value) {
-  return Math.max((Number(value || 0) / maxValue.value) * 100, value > 0 ? 2 : 0);
+  return Math.max((Number(value || 0) / maxValue.value) * 100, value > 0 ? 1 : 0);
 }
 
 function formatValue(value) {

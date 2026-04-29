@@ -133,3 +133,5 @@
   - thêm biểu đồ xu hướng vuln theo quý
   - tinh gọn UX bộ chọn target và nhóm trọng điểm bằng popup có tìm kiếm thay vì hiển thị toàn bộ option trực tiếp trên màn hình
   - giảm độ phồng tối thiểu của cột biểu đồ để cột có giá trị lớn nhất nổi bật đúng tỷ lệ hơn
+  - gom 2 biểu đồ nhóm trọng điểm vào cùng một thẻ lớn, đưa bộ lọc ra ngoài vùng biểu đồ
+  - chỉnh popup chọn nhiều mục với footer luôn nhìn thấy và nội dung cuộn riêng để không bị khuất nút thao tác

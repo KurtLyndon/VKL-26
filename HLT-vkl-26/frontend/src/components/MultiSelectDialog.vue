@@ -8,15 +8,17 @@
 
   <div v-if="isOpen" class="selection-dialog-overlay" @click.self="closeDialog">
     <div class="selection-dialog">
-      <div class="panel-head">
-        <h3>{{ title }}</h3>
-        <span class="badge">{{ draftSelection.length }}/{{ maxSelected }}</span>
-      </div>
+      <div class="selection-dialog-header">
+        <div class="panel-head">
+          <h3>{{ title }}</h3>
+          <span class="badge">{{ draftSelection.length }}/{{ maxSelected }}</span>
+        </div>
 
-      <label class="field-block">
-        <span>Tìm kiếm</span>
-        <input v-model="keyword" :placeholder="searchPlaceholder" />
-      </label>
+        <label class="field-block">
+          <span>Tìm kiếm</span>
+          <input v-model="keyword" :placeholder="searchPlaceholder" />
+        </label>
+      </div>
 
       <div class="selection-dialog-list">
         <button
@@ -35,7 +37,7 @@
         </button>
       </div>
 
-      <div class="form-actions">
+      <div class="form-actions selection-dialog-actions">
         <button class="ghost-button" type="button" @click="clearSelection">Bỏ chọn hết</button>
         <button class="ghost-button" type="button" @click="closeDialog">Đóng</button>
         <button class="primary-button" type="button" @click="applySelection">Áp dụng</button>
