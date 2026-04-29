@@ -98,16 +98,7 @@ def upsert_vulnerability_script(db, vulnerability_id: int, poc_source_file: Path
 
 
 def derive_title(code: str, threat: str | None) -> str:
-    if not threat:
-        return code
-
-    text = threat.strip()
-    text = re.sub(r"^[\-\u2022\s]+", "", text)
-    if text.lower().startswith(code.lower()):
-        text = text[len(code) :].lstrip(" :-")
-    first_sentence = re.split(r"(?<=[.!?])\s+", text, maxsplit=1)[0].strip()
-    title = first_sentence[:255].strip()
-    return title or code
+    return code
 
 
 HEADER_ALIASES = {

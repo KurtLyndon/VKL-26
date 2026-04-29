@@ -144,6 +144,27 @@ export async function updateTargetGroupMembers(groupId, targetIds) {
   return data;
 }
 
+export async function uploadFindingPocFile(findingId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await api.post(`/scan-findings/${findingId}/poc-file`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
+export async function downloadFindingPocFile(findingId) {
+  const response = await api.get(`/scan-findings/${findingId}/poc-file`, {
+    responseType: "blob",
+  });
+  return response;
+}
+
+export async function deleteFindingPocFile(findingId) {
+  const { data } = await api.delete(`/scan-findings/${findingId}/poc-file`);
+  return data;
+}
+
 export async function updateTaskExecutionStatus(taskExecutionId, payload) {
   const { data } = await api.post(`/task-executions/${taskExecutionId}/status`, payload);
   return data;

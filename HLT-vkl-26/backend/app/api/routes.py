@@ -2,6 +2,7 @@ import json
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -151,6 +152,7 @@ from app.services.historical_scan_imports import commit_services_vulns_import, p
 from app.services.result_exchange import export_operation_results, import_operation_results
 from app.services.scan_results import normalize_and_store_scan_result
 from app.services.scheduler import run_scheduler_cycle
+from app.services.poc_repository import delete_finding_poc_file, resolve_finding_poc_path, store_finding_poc_file
 from app.services.targets import (
     create_target,
     delete_target,
@@ -446,6 +448,72 @@ register_crud_routes(
     list_permission="scan_results.view",
     write_permission="scan_results.view",
 )
+
+
+@router.post("/scan-findings/{finding_id}/poc-file", response_model=ScanResultFindingRead)
+async def upload_scan_finding_poc_file(
+    finding_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    finding = db.get(ScanResultFinding, finding_id)
+    if not finding:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
+    if not file.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thiếu tên file POC.")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File POC đang trống.")
+
+    delete_finding_poc_file(finding.poc_file_path)
+    stored_info = store_finding_poc_file(finding.id, file.filename, content)
+    for field, value in stored_info.items():
+        setattr(finding, field, value)
+    db.commit()
+    db.refresh(finding)
+    return finding
+
+
+@router.get("/scan-findings/{finding_id}/poc-file")
+def download_scan_finding_poc_file(
+    finding_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    finding = db.get(ScanResultFinding, finding_id)
+    if not finding:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
+    file_path = resolve_finding_poc_path(finding.poc_file_path)
+    if file_path is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding chưa có file POC.")
+
+    return FileResponse(
+        file_path,
+        media_type=finding.poc_file_mime_type or "application/octet-stream",
+        filename=finding.poc_file_name or file_path.name,
+    )
+
+
+@router.delete("/scan-findings/{finding_id}/poc-file", response_model=ScanResultFindingRead)
+def delete_scan_finding_poc_file(
+    finding_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    finding = db.get(ScanResultFinding, finding_id)
+    if not finding:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
+
+    delete_finding_poc_file(finding.poc_file_path)
+    finding.poc_file_name = None
+    finding.poc_file_path = None
+    finding.poc_file_mime_type = None
+    finding.poc_file_size = None
+    db.commit()
+    db.refresh(finding)
+    return finding
 register_crud_routes(
     router,
     path="/generated-reports",

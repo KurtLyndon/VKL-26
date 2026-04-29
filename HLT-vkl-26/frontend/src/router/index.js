@@ -5,6 +5,7 @@ import AccountGroupPermissionsView from "../views/AccountGroupPermissionsView.vu
 import DashboardView from "../views/DashboardView.vue";
 import ExecutionMonitorView from "../views/ExecutionMonitorView.vue";
 import FindingExplorerView from "../views/FindingExplorerView.vue";
+import FindingManagementView from "../views/FindingManagementView.vue";
 import HistoricalScanImportView from "../views/HistoricalScanImportView.vue";
 import LoginView from "../views/LoginView.vue";
 import OperationControlView from "../views/OperationControlView.vue";
@@ -14,6 +15,7 @@ import ResultExchangeView from "../views/ResultExchangeView.vue";
 import TargetAttributesView from "../views/TargetAttributesView.vue";
 import TargetGroupsView from "../views/TargetGroupsView.vue";
 import TargetManagementView from "../views/TargetManagementView.vue";
+import VulnerabilityManagementView from "../views/VulnerabilityManagementView.vue";
 
 const routes = [
   { path: "/login", name: "login", component: LoginView, meta: { title: "Login", public: true } },
@@ -120,15 +122,8 @@ const routes = [
   },
   {
     path: "/vulnerabilities",
-    component: ResourceView,
+    component: VulnerabilityManagementView,
     meta: { title: "CVE", permission: "vulnerabilities.manage" },
-    props: {
-      title: "Quản lý CVE",
-      resource: "vulnerabilities",
-      fields: ["code", "title", "level", "poc_file_name"],
-      jsonFields: [],
-      longTextFields: ["threat", "proposal", "poc_text", "description"],
-    },
   },
   {
     path: "/scan-results",
@@ -144,15 +139,8 @@ const routes = [
   },
   {
     path: "/scan-findings",
-    component: ResourceView,
+    component: FindingManagementView,
     meta: { title: "Findings", permission: "scan_results.view" },
-    props: {
-      title: "Quản lý Finding",
-      resource: "scan-findings",
-      fields: ["scan_result_id", "finding_code", "title", "severity", "port", "service_name", "status"],
-      jsonFields: [],
-      longTextFields: ["description", "evidence"],
-    },
   },
   {
     path: "/report-templates",

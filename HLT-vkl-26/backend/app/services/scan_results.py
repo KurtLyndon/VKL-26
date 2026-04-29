@@ -11,6 +11,7 @@ def _find_vulnerability_id(db: Session, finding: dict) -> int | None:
     candidate_codes = [
         finding.get("finding_code"),
         finding.get("title"),
+        finding.get("note"),
         finding.get("evidence"),
     ]
     vulnerabilities = db.scalars(select(Vulnerability)).all()
@@ -53,11 +54,15 @@ def normalize_and_store_scan_result(
 
     findings: list[ScanResultFinding] = []
     for finding in parser.extract_findings(raw_output):
+        finding_payload = dict(finding)
+        finding_payload["title"] = finding_payload.get("finding_code") or finding_payload.get("title") or "Finding"
+        finding_payload["note"] = finding_payload.get("note") or finding_payload.get("evidence")
+        finding_payload["evidence"] = None
         vulnerability_id = _find_vulnerability_id(db, finding)
         finding_record = ScanResultFinding(
             scan_result_id=scan_result.id,
             vulnerability_id=vulnerability_id,
-            **finding,
+            **finding_payload,
         )
         db.add(finding_record)
         findings.append(finding_record)

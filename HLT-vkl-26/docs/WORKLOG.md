@@ -117,3 +117,10 @@
     - click tiêu đề cột để sắp xếp
     - click cả dòng để chọn hoặc bỏ chọn target
   - combobox mapping ở phần preview chỉ hiển thị đúng các target khớp với IP đó và sắp theo `ID` tăng dần
+- Làm lại cụm `CVE` và `Finding`:
+  - title của `CVE` và `Finding` đồng bộ theo `code` / `finding_code`
+  - thêm `note` cho finding và dời dữ liệu cũ từ `evidence` sang `note`
+  - giữ `evidence` trống để sau này dùng cho output hoặc đường dẫn kết quả PoC
+  - thêm upload / download / preview file PoC cho từng finding
+  - file script thực thi PoC tiếp tục lưu ở `data/poc_repository`
+  - file đính kèm / kết quả PoC của finding lưu riêng ở `data/finding_poc_files`

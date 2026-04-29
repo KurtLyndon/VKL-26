@@ -567,7 +567,12 @@ class ScanResultFindingBase(BaseModel):
     port: int | None = None
     protocol: str | None = None
     service_name: str | None = None
+    note: str | None = None
     evidence: str | None = None
+    poc_file_name: str | None = None
+    poc_file_path: str | None = None
+    poc_file_mime_type: str | None = None
+    poc_file_size: int | None = None
     confidence: int | None = None
     first_seen_at: datetime | None = None
     last_seen_at: datetime | None = None
@@ -586,7 +591,12 @@ class ScanResultFindingUpdate(BaseModel):
     port: int | None = None
     protocol: str | None = None
     service_name: str | None = None
+    note: str | None = None
     evidence: str | None = None
+    poc_file_name: str | None = None
+    poc_file_path: str | None = None
+    poc_file_mime_type: str | None = None
+    poc_file_size: int | None = None
     confidence: int | None = None
     first_seen_at: datetime | None = None
     last_seen_at: datetime | None = None
