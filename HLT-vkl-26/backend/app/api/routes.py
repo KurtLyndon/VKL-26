@@ -49,6 +49,7 @@ from app.schemas.resources import (
     AppPermissionUpdate,
     CurrentUserResponse,
     DashboardSummary,
+    DashboardFilterOptions,
     DemoMockFlowRequest,
     DemoMockFlowResponse,
     GeneratedReportCreate,
@@ -70,6 +71,11 @@ from app.schemas.resources import (
     OperationResultExportResponse,
     HistoricalImportCommitResponse,
     HistoricalImportPreviewResponse,
+    HistoricalCoreGroupQuarterComparison,
+    HistoricalOverviewSummary,
+    HistoricalTargetQuarterComparison,
+    HistoricalTopVulnerabilityItem,
+    HistoricalTrendResponse,
     OperationResultImportRequest,
     OperationResultImportResponse,
     OperationRuntimeOverviewItem,
@@ -133,6 +139,17 @@ from app.schemas.resources import (
     VulnerabilityScriptUpdate,
     VulnerabilityUpdate,
     WorkerRunResponse,
+)
+from app.services.dashboard_analytics import (
+    DashboardFilters,
+    get_core_group_options,
+    get_core_group_quarterly_chart,
+    get_dashboard_filter_options,
+    get_dashboard_overview,
+    get_dashboard_total_summary,
+    get_target_quarterly_comparison,
+    get_top_vulnerabilities,
+    get_vulnerability_trend_by_quarter,
 )
 from app.services.auth import (
     authenticate_user,
@@ -708,6 +725,122 @@ def dashboard_summary(
         report_templates=count_rows(ReportTemplate),
         generated_reports=count_rows(GeneratedReport),
     )
+
+
+@router.get("/dashboard/historical/filter-options", response_model=DashboardFilterOptions)
+def historical_dashboard_filter_options(
+    year: int | None = None,
+    quarter: int | None = None,
+    month: int | None = None,
+    week: int | None = None,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("dashboard.view")),
+):
+    return DashboardFilterOptions.model_validate(
+        get_dashboard_filter_options(
+            db,
+            DashboardFilters(year=year, quarter=quarter, month=month, week=week),
+        )
+    )
+
+
+@router.get("/dashboard/historical/overview", response_model=HistoricalOverviewSummary)
+def historical_dashboard_overview(
+    year: int | None = None,
+    quarter: int | None = None,
+    month: int | None = None,
+    week: int | None = None,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("dashboard.view")),
+):
+    return HistoricalOverviewSummary.model_validate(
+        get_dashboard_overview(
+            db,
+            DashboardFilters(year=year, quarter=quarter, month=month, week=week),
+        )
+    )
+
+
+@router.get("/dashboard/historical/total-summary", response_model=HistoricalOverviewSummary)
+def historical_dashboard_total_summary(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("dashboard.view")),
+):
+    return HistoricalOverviewSummary.model_validate(get_dashboard_total_summary(db))
+
+
+@router.get("/dashboard/historical/target-options", response_model=list[TargetRead])
+def historical_dashboard_target_options(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("dashboard.view")),
+):
+    return db.scalars(select(Target).order_by(Target.id.asc())).all()
+
+
+@router.get("/dashboard/historical/target-quarterly", response_model=HistoricalTargetQuarterComparison)
+def historical_dashboard_target_quarterly(
+    year: int,
+    target_ids: str,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("dashboard.view")),
+):
+    selected_target_ids = _parse_json_list(target_ids, "target_ids")
+    return HistoricalTargetQuarterComparison.model_validate(
+        get_target_quarterly_comparison(db, year=year, target_ids=selected_target_ids)
+    )
+
+
+@router.get("/dashboard/historical/top-vulnerabilities", response_model=list[HistoricalTopVulnerabilityItem])
+def historical_dashboard_top_vulnerabilities(
+    year: int | None = None,
+    quarter: int | None = None,
+    month: int | None = None,
+    week: int | None = None,
+    limit: int = 5,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("dashboard.view")),
+):
+    return [
+        HistoricalTopVulnerabilityItem.model_validate(item)
+        for item in get_top_vulnerabilities(
+            db,
+            DashboardFilters(year=year, quarter=quarter, month=month, week=week),
+            limit=limit,
+        )
+    ]
+
+
+@router.get("/dashboard/historical/core-group-options", response_model=list[str])
+def historical_dashboard_core_group_options(
+    _current_user=Depends(require_permissions("dashboard.view")),
+):
+    return get_core_group_options()
+
+
+@router.get("/dashboard/historical/core-group-quarterly", response_model=HistoricalCoreGroupQuarterComparison)
+def historical_dashboard_core_group_quarterly(
+    year: int,
+    groups: str,
+    metric: str = "count",
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("dashboard.view")),
+):
+    if metric not in {"count", "risk_rate"}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="metric phải là `count` hoặc `risk_rate`.")
+    selected_groups = json.loads(groups)
+    if not isinstance(selected_groups, list):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="groups phải là mảng JSON.")
+    return HistoricalCoreGroupQuarterComparison.model_validate(
+        get_core_group_quarterly_chart(db, year=year, groups=selected_groups, metric=metric)
+    )
+
+
+@router.get("/dashboard/historical/trend", response_model=HistoricalTrendResponse)
+def historical_dashboard_trend(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("dashboard.view")),
+):
+    return HistoricalTrendResponse.model_validate(get_vulnerability_trend_by_quarter(db))
 
 
 @router.get("/operations/{operation_id}/tasks", response_model=list[OperationTaskRead])

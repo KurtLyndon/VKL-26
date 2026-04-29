@@ -58,6 +58,62 @@ export async function getDashboardSummary() {
   return data;
 }
 
+export async function getHistoricalDashboardFilterOptions(filters = {}) {
+  const { data } = await api.get("/dashboard/historical/filter-options", { params: filters });
+  return data;
+}
+
+export async function getHistoricalDashboardOverview(filters = {}) {
+  const { data } = await api.get("/dashboard/historical/overview", { params: filters });
+  return data;
+}
+
+export async function getHistoricalDashboardTotalSummary() {
+  const { data } = await api.get("/dashboard/historical/total-summary");
+  return data;
+}
+
+export async function getHistoricalDashboardTargetOptions() {
+  const { data } = await api.get("/dashboard/historical/target-options");
+  return data;
+}
+
+export async function getHistoricalTargetQuarterlyChart(year, targetIds) {
+  const { data } = await api.get("/dashboard/historical/target-quarterly", {
+    params: {
+      year,
+      target_ids: JSON.stringify(targetIds),
+    },
+  });
+  return data;
+}
+
+export async function getHistoricalTopVulnerabilities(filters = {}) {
+  const { data } = await api.get("/dashboard/historical/top-vulnerabilities", { params: filters });
+  return data;
+}
+
+export async function getHistoricalCoreGroupOptions() {
+  const { data } = await api.get("/dashboard/historical/core-group-options");
+  return data;
+}
+
+export async function getHistoricalCoreGroupQuarterlyChart(year, groups, metric) {
+  const { data } = await api.get("/dashboard/historical/core-group-quarterly", {
+    params: {
+      year,
+      groups: JSON.stringify(groups),
+      metric,
+    },
+  });
+  return data;
+}
+
+export async function getHistoricalVulnerabilityTrend() {
+  const { data } = await api.get("/dashboard/historical/trend");
+  return data;
+}
+
 export async function getOperationsRuntimeOverview() {
   const { data } = await api.get("/operations/runtime/overview");
   return data;

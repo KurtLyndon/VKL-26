@@ -974,4 +974,67 @@ class DashboardSummary(BaseModel):
     generated_reports: int
 
 
+class DashboardFilterOptions(BaseModel):
+    years: list[int] = Field(default_factory=list)
+    quarters: list[int] = Field(default_factory=list)
+    months: list[int] = Field(default_factory=list)
+    weeks: list[int] = Field(default_factory=list)
+
+
+class HistoricalOverviewSummary(BaseModel):
+    scanned_targets: int
+    detected_ips: int
+    open_ports: int
+    detected_vulns: int
+    targets_at_risk: int
+    ips_at_risk: int
+
+
+class HistoricalQuarterLabel(BaseModel):
+    value: int
+    label: str
+
+
+class HistoricalTargetQuarterSeries(BaseModel):
+    target_id: int
+    target_name: str
+    quarters: dict[int, int] = Field(default_factory=dict)
+
+
+class HistoricalTargetQuarterComparison(BaseModel):
+    year: int
+    quarters: list[HistoricalQuarterLabel] = Field(default_factory=list)
+    series: list[HistoricalTargetQuarterSeries] = Field(default_factory=list)
+
+
+class HistoricalTopVulnerabilityItem(BaseModel):
+    code: str
+    title: str
+    count: int
+
+
+class HistoricalCoreGroupQuarterSeries(BaseModel):
+    group: str
+    quarters: dict[int, float] = Field(default_factory=dict)
+    total_targets: int
+
+
+class HistoricalCoreGroupQuarterComparison(BaseModel):
+    year: int
+    metric: str
+    quarters: list[HistoricalQuarterLabel] = Field(default_factory=list)
+    series: list[HistoricalCoreGroupQuarterSeries] = Field(default_factory=list)
+
+
+class HistoricalTrendPoint(BaseModel):
+    label: str
+    year: int
+    quarter: int
+    count: int
+
+
+class HistoricalTrendResponse(BaseModel):
+    points: list[HistoricalTrendPoint] = Field(default_factory=list)
+
+
 DemoMockFlowResponse.model_rebuild()

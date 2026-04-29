@@ -124,3 +124,10 @@
   - thêm upload / download / preview file PoC cho từng finding
   - file script thực thi PoC tiếp tục lưu ở `data/poc_repository`
   - file đính kèm / kết quả PoC của finding lưu riêng ở `data/finding_poc_files`
+- Khởi động Phase 2 của Dashboard:
+  - thêm API dashboard lịch sử scan theo bộ lọc tuần / tháng / quý / năm
+  - thêm thẻ tổng quan theo thời gian và thẻ tổng hợp toàn thời gian
+  - thêm biểu đồ so sánh vuln theo quý cho tối đa 5 target
+  - thêm biểu đồ top 5 vuln/CVE theo bộ lọc thời gian
+  - thêm biểu đồ nhóm trọng điểm `ĐV Cấp 1` cho số lượng vuln và tỉ lệ target có nguy cơ
+  - thêm biểu đồ xu hướng vuln theo quý
