@@ -144,3 +144,4 @@
   - Thu gọn phần trống phía dưới drawer trên desktop bằng cách cho panel cao theo nội dung, chỉ giữ cuộn ở danh sách option
   - Đổi tên thẻ con `Thống kê tổng quan theo thời gian` thành `Thống kê` và chuyển `Vuln phát hiện` xuống ô cuối cùng của hàng 2
   - Tô đỏ value của 3 ô cuối trong thẻ `Thống kê`: `Target có nguy cơ`, `IP có nguy cơ`, `Vuln phát hiện`
+  - Đổi tên màn `Dashboard lịch sử scan` thành `Dashboard` và cập nhật mô tả theo hướng tổng hợp cả dữ liệu import lẫn dữ liệu agent scan sẽ đổ về sau này

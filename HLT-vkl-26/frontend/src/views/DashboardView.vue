@@ -2,9 +2,9 @@
   <section class="page-header">
     <div>
       <p class="eyebrow">Dashboard phân tích</p>
-      <h2>Dashboard lịch sử scan</h2>
+      <h2>Dashboard</h2>
       <p class="page-copy">
-        Theo dõi số liệu scan đã import theo tuần, tháng, quý, năm; so sánh mục tiêu, nhóm trọng điểm và xu hướng vuln theo quý.
+        Theo dõi số liệu scan theo tuần, tháng, quý, năm; tổng hợp dữ liệu đã import và dữ liệu do agent scan đổ về trong tương lai để so sánh mục tiêu, nhóm trọng điểm và xu hướng vuln theo quý.
       </p>
     </div>
     <button class="ghost-button" @click="loadDashboard">Làm mới dashboard</button>
