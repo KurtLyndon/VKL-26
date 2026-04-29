@@ -22,13 +22,15 @@
               class="grouped-chart-bar-wrap"
             >
               <span class="grouped-chart-value">{{ formatValue(item.quarters[quarter.value] ?? 0) }}</span>
-              <div
-                class="grouped-chart-bar"
-                :style="{
-                  height: `${barHeight(item.quarters[quarter.value] ?? 0)}%`,
-                  backgroundColor: item.color,
-                }"
-              ></div>
+              <div class="grouped-chart-plot">
+                <div
+                  class="grouped-chart-bar"
+                  :style="{
+                    height: `${barHeight(item.quarters[quarter.value] ?? 0)}%`,
+                    backgroundColor: item.color,
+                  }"
+                ></div>
+              </div>
             </div>
           </div>
           <strong class="grouped-chart-label">{{ quarter.label }}</strong>
@@ -55,7 +57,7 @@ const maxValue = computed(() => {
 });
 
 function barHeight(value) {
-  return Math.max((Number(value || 0) / maxValue.value) * 100, value > 0 ? 1 : 0);
+  return Math.max((Number(value || 0) / maxValue.value) * 100, value > 0 ? 4 : 0);
 }
 
 function formatValue(value) {

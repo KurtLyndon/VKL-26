@@ -6,8 +6,8 @@
     <small class="selection-dialog-help">{{ selectedSummary }}</small>
   </div>
 
-  <div v-if="isOpen" class="selection-dialog-overlay" @click.self="closeDialog">
-    <div class="selection-dialog">
+  <div v-if="isOpen" class="selection-drawer-overlay" @click.self="closeDialog">
+    <aside class="selection-drawer">
       <div class="selection-dialog-header">
         <div class="panel-head">
           <h3>{{ title }}</h3>
@@ -42,7 +42,7 @@
         <button class="ghost-button" type="button" @click="closeDialog">Đóng</button>
         <button class="primary-button" type="button" @click="applySelection">Áp dụng</button>
       </div>
-    </div>
+    </aside>
   </div>
 </template>
 

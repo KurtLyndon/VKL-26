@@ -135,3 +135,6 @@
   - giảm độ phồng tối thiểu của cột biểu đồ để cột có giá trị lớn nhất nổi bật đúng tỷ lệ hơn
   - gom 2 biểu đồ nhóm trọng điểm vào cùng một thẻ lớn, đưa bộ lọc ra ngoài vùng biểu đồ
   - chỉnh popup chọn nhiều mục với footer luôn nhìn thấy và nội dung cuộn riêng để không bị khuất nút thao tác
+  - chuyển popup chọn nhiều mục thành sidebar trượt từ bên phải để tránh bị các thẻ phía dưới che khuất
+  - gộp `Thống kê tổng quan theo thời gian` và `Top 5 vuln/CVE` vào chung một thẻ lớn, bộ lọc nằm bên ngoài thẻ
+  - cho 2 biểu đồ nhóm trọng điểm hiển thị dọc toàn chiều rộng thẻ lớn: biểu đồ số lượng ở trên, biểu đồ tỉ lệ ở dưới

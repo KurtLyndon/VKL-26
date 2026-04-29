@@ -10,51 +10,69 @@
     <button class="ghost-button" @click="loadDashboard">Làm mới dashboard</button>
   </section>
 
+  <section class="filter-strip">
+    <label class="field-block">
+      <span>Năm</span>
+      <select v-model="filters.year">
+        <option value="">Tất cả</option>
+        <option v-for="year in filterOptions.years" :key="year" :value="String(year)">{{ year }}</option>
+      </select>
+    </label>
+    <label class="field-block">
+      <span>Quý</span>
+      <select v-model="filters.quarter">
+        <option value="">Tất cả</option>
+        <option v-for="quarter in filterOptions.quarters" :key="quarter" :value="String(quarter)">Quý {{ quarter }}</option>
+      </select>
+    </label>
+    <label class="field-block">
+      <span>Tháng</span>
+      <select v-model="filters.month">
+        <option value="">Tất cả</option>
+        <option v-for="month in filterOptions.months" :key="month" :value="String(month)">Tháng {{ month }}</option>
+      </select>
+    </label>
+    <label class="field-block">
+      <span>Tuần</span>
+      <select v-model="filters.week">
+        <option value="">Tất cả</option>
+        <option v-for="week in filterOptions.weeks" :key="week" :value="String(week)">Tuần {{ week }}</option>
+      </select>
+    </label>
+  </section>
+
   <section class="panel-grid panel-grid-loose">
-    <article class="panel">
+    <article class="panel panel-span-full">
       <div class="panel-head">
-        <h3>Thống kê tổng quan theo thời gian</h3>
+        <h3>Tổng quan theo thời gian và Top 5 vuln/CVE</h3>
         <span class="badge">lọc linh hoạt</span>
       </div>
 
-      <div class="filter-grid">
-        <label class="field-block">
-          <span>Năm</span>
-          <select v-model="filters.year">
-            <option value="">Tất cả</option>
-            <option v-for="year in filterOptions.years" :key="year" :value="String(year)">{{ year }}</option>
-          </select>
-        </label>
-        <label class="field-block">
-          <span>Quý</span>
-          <select v-model="filters.quarter">
-            <option value="">Tất cả</option>
-            <option v-for="quarter in filterOptions.quarters" :key="quarter" :value="String(quarter)">Quý {{ quarter }}</option>
-          </select>
-        </label>
-        <label class="field-block">
-          <span>Tháng</span>
-          <select v-model="filters.month">
-            <option value="">Tất cả</option>
-            <option v-for="month in filterOptions.months" :key="month" :value="String(month)">Tháng {{ month }}</option>
-          </select>
-        </label>
-        <label class="field-block">
-          <span>Tuần</span>
-          <select v-model="filters.week">
-            <option value="">Tất cả</option>
-            <option v-for="week in filterOptions.weeks" :key="week" :value="String(week)">Tuần {{ week }}</option>
-          </select>
-        </label>
-      </div>
+      <div class="panel-grid panel-grid-nested">
+        <article class="panel panel-inner">
+          <div class="panel-head">
+            <h3>Thống kê tổng quan theo thời gian</h3>
+            <span class="badge">overview</span>
+          </div>
 
-      <div class="stat-grid compact-grid">
-        <StatCard label="Target được dò quét" :value="overview.scanned_targets" />
-        <StatCard label="IP phát hiện" :value="overview.detected_ips" />
-        <StatCard label="Cổng mở" :value="overview.open_ports" />
-        <StatCard label="Vuln phát hiện" :value="overview.detected_vulns" />
-        <StatCard label="Target có nguy cơ" :value="overview.targets_at_risk" />
-        <StatCard label="IP có nguy cơ" :value="overview.ips_at_risk" />
+          <div class="stat-grid compact-grid">
+            <StatCard label="Target được dò quét" :value="overview.scanned_targets" />
+            <StatCard label="IP phát hiện" :value="overview.detected_ips" />
+            <StatCard label="Cổng mở" :value="overview.open_ports" />
+            <StatCard label="Vuln phát hiện" :value="overview.detected_vulns" />
+            <StatCard label="Target có nguy cơ" :value="overview.targets_at_risk" />
+            <StatCard label="IP có nguy cơ" :value="overview.ips_at_risk" />
+          </div>
+        </article>
+
+        <article class="panel panel-inner">
+          <div class="panel-head">
+            <h3>Top 5 vuln/CVE xuất hiện nhiều nhất</h3>
+            <span class="badge">theo bộ lọc thời gian</span>
+          </div>
+
+          <TopListChart :items="topVulnerabilities" />
+        </article>
       </div>
     </article>
 
@@ -114,14 +132,6 @@
       />
     </article>
 
-    <article class="panel">
-      <div class="panel-head">
-        <h3>Top 5 vuln/CVE xuất hiện nhiều nhất</h3>
-        <span class="badge">theo bộ lọc thời gian</span>
-      </div>
-
-      <TopListChart :items="topVulnerabilities" />
-    </article>
   </section>
 
   <section class="panel-grid panel-grid-loose">
@@ -157,8 +167,8 @@
         </div>
       </div>
 
-      <div class="panel-grid panel-grid-nested">
-        <article class="panel panel-inner">
+      <div class="panel-grid panel-grid-nested-single">
+        <article class="panel panel-inner panel-inner-wide">
           <div class="panel-head">
             <h3>So sánh số lượng vuln</h3>
             <span class="badge">count</span>
@@ -170,7 +180,7 @@
           />
         </article>
 
-        <article class="panel panel-inner">
+        <article class="panel panel-inner panel-inner-wide">
           <div class="panel-head">
             <h3>Tỉ lệ tồn tại nguy cơ</h3>
             <span class="badge">%</span>
