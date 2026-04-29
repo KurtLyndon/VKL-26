@@ -67,7 +67,7 @@
       <div class="panel-grid panel-grid-nested">
         <article class="panel panel-inner">
           <div class="panel-head">
-            <h3>Thống kê tổng quan theo thời gian</h3>
+            <h3>Thống kê</h3>
             <span class="badge">overview</span>
           </div>
 
@@ -75,9 +75,9 @@
             <StatCard label="Target được dò quét" :value="overview.scanned_targets" />
             <StatCard label="IP phát hiện" :value="overview.detected_ips" />
             <StatCard label="Cổng mở" :value="overview.open_ports" />
-            <StatCard label="Vuln phát hiện" :value="overview.detected_vulns" />
-            <StatCard label="Target có nguy cơ" :value="overview.targets_at_risk" />
-            <StatCard label="IP có nguy cơ" :value="overview.ips_at_risk" />
+            <StatCard label="Target có nguy cơ" :value="overview.targets_at_risk" value-class="text-danger" />
+            <StatCard label="IP có nguy cơ" :value="overview.ips_at_risk" value-class="text-danger" />
+            <StatCard label="Vuln phát hiện" :value="overview.detected_vulns" value-class="text-danger" />
           </div>
         </article>
 
@@ -91,47 +91,6 @@
         </article>
       </div>
     </article>
-  </section>
-
-  <section class="panel-grid panel-grid-loose">
-    <article class="panel">
-      <div class="panel-head">
-        <h3>So sánh vuln của các mục tiêu theo quý</h3>
-        <span class="badge">chọn tối đa 5 target</span>
-      </div>
-
-      <div class="filter-grid">
-        <label class="field-block">
-          <span>Năm</span>
-          <select v-model="targetChartYear">
-            <option value="">Chọn năm</option>
-            <option v-for="year in filterOptions.years" :key="year" :value="String(year)">{{ year }}</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="selection-toolbar">
-        <MultiSelectDialog
-          v-model="selectedTargetIds"
-          title="Chọn mục tiêu để so sánh"
-          :options="targetPickerOptions"
-          button-label="Chọn target"
-          search-placeholder="Tìm theo tên target hoặc ID..."
-        />
-
-        <div class="selected-chip-list">
-          <span v-for="item in selectedTargetChips" :key="item.id" class="selected-chip">
-            {{ item.name }}
-          </span>
-        </div>
-      </div>
-
-      <GroupedBarChart
-        :quarters="targetQuarterly.quarters"
-        :series="targetQuarterlySeries"
-      />
-    </article>
-
   </section>
 
   <section class="panel-grid panel-grid-loose">
@@ -197,6 +156,44 @@
   </section>
 
   <section class="panel-grid panel-grid-loose">
+    <article class="panel panel-span-full">
+      <div class="panel-head">
+        <h3>So sánh vuln của các mục tiêu theo quý</h3>
+        <span class="badge">chọn tối đa 5 target</span>
+      </div>
+
+      <div class="filter-grid">
+        <label class="field-block">
+          <span>Năm</span>
+          <select v-model="targetChartYear">
+            <option value="">Chọn năm</option>
+            <option v-for="year in filterOptions.years" :key="year" :value="String(year)">{{ year }}</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="selection-toolbar">
+        <MultiSelectDialog
+          v-model="selectedTargetIds"
+          title="Chọn mục tiêu để so sánh"
+          :options="targetPickerOptions"
+          button-label="Chọn target"
+          search-placeholder="Tìm theo tên target hoặc ID..."
+        />
+
+        <div class="selected-chip-list">
+          <span v-for="item in selectedTargetChips" :key="item.id" class="selected-chip">
+            {{ item.name }}
+          </span>
+        </div>
+      </div>
+
+      <GroupedBarChart
+        :quarters="targetQuarterly.quarters"
+        :series="targetQuarterlySeries"
+      />
+    </article>
+
     <article class="panel">
       <div class="panel-head">
         <h3>Xu hướng vuln theo quý</h3>
