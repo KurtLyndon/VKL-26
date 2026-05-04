@@ -152,3 +152,27 @@
   - Chuyển thẻ `Launch Operation` trong menu `Control` sang layout full-width để form chọn target và metadata không còn bị bó dọc
   - Thu gọn ô `trigger_type` trong `Launch Operation` để cùng cỡ với các ô metadata ngắn như `Năm / Quý / Tuần`
   - Đổi task import nội bộ sang `internal://historical_scan_importer`, đổi nhãn menu `Executions` thành `Operation Executions`, và thêm UI cấu hình riêng cho `interval`/`cron` trong `Launch Operation`
+  - Làm lại toàn bộ module `Finding` theo workflow analyst:
+    - severity và mô tả được derive từ `Vulnerability.level` / `Vulnerability.threat`, không còn coi là dữ liệu chỉnh sửa tự do trên UI
+    - importer scan cũ và parser normalize scan mới cùng dùng helper chung để đồng bộ `finding_code / title / severity / description` theo CVE
+    - thay CRUD generic `/scan-findings` bằng API chuyên dụng có:
+      - filter options theo `Operation` và `Target`
+      - list finding enrich kèm `IP`, `operation_label`, `target_label`
+      - rule chuyển trạng thái hợp lệ
+      - upload PoC tự chuyển `confirmed`
+      - xóa PoC tự chuyển `open`
+    - bổ sung bộ status analyst:
+      - `open`
+      - `confirmed`
+      - `in_progress`
+      - `resolved`
+      - `false_positive`
+      - `risk_accepted`
+      - `reopened`
+    - làm lại giao diện `Quản lý Finding` với các khối riêng cho:
+      - bộ lọc
+      - danh sách finding
+      - quản lý PoC
+      - preview PoC
+      - chỉnh sửa các thông tin còn lại của finding
+    - cho phép chuyển trạng thái trực tiếp ngay trên danh sách finding sau khi lọc

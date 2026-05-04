@@ -3,13 +3,63 @@
     <div>
       <p class="eyebrow">Kết quả lỗ hổng</p>
       <h2>Quản lý Finding</h2>
-      <p class="page-copy">Title của finding được lấy theo mã finding. Ghi chú vận hành dùng cột note, còn evidence để trống cho output hoặc đường dẫn PoC trong tương lai.</p>
+      <p class="page-copy">
+        Mô tả và mức độ của finding được đồng bộ từ CVE đã map. Analyst chỉ chỉnh trạng thái, ghi chú, thông tin kỹ thuật bổ sung và tệp PoC.
+      </p>
     </div>
-    <button class="ghost-button" @click="loadItems">Làm mới</button>
+    <button class="ghost-button" @click="refreshAll">Làm mới</button>
   </section>
 
-  <section class="panel-grid">
-    <article class="panel panel-table">
+  <section class="panel panel-accent finding-filter-panel">
+    <div class="panel-head">
+      <h3>Bộ lọc Finding</h3>
+      <span class="badge">{{ totalItems }} finding sau lọc</span>
+    </div>
+
+    <div class="filter-grid">
+      <label class="field-block">
+        <span>Operation</span>
+        <select v-model="filters.operationExecutionId">
+          <option value="">Tất cả</option>
+          <option v-for="option in filterOptions.operations" :key="option.id" :value="String(option.id)">
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+
+      <label class="field-block">
+        <span>Target</span>
+        <select v-model="filters.targetId">
+          <option value="">Tất cả</option>
+          <option v-for="option in filterOptions.targets" :key="option.id" :value="String(option.id)">
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+
+      <label class="field-block">
+        <span>Trạng thái</span>
+        <select v-model="filters.statusValue">
+          <option value="">Tất cả</option>
+          <option v-for="option in filterOptions.statuses" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </label>
+    </div>
+
+    <div class="finding-status-help-grid">
+      <article v-for="option in filterOptions.statuses" :key="option.value" class="finding-status-help-card">
+        <div class="finding-status-help-head">
+          <StatusPill :value="option.value" />
+        </div>
+        <p>{{ option.help_text }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="finding-layout">
+    <article class="panel finding-list-panel">
       <div class="panel-head">
         <h3>Danh sách Finding</h3>
         <span class="badge">{{ totalItems }} bản ghi</span>
@@ -20,13 +70,10 @@
           <thead>
             <tr>
               <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel("id") }}</th>
+              <th class="sortable-header" @click="toggleSort('ip_address')">IP{{ sortLabel("ip_address") }}</th>
               <th class="sortable-header" @click="toggleSort('finding_code')">Mã finding{{ sortLabel("finding_code") }}</th>
-              <th class="sortable-header" @click="toggleSort('title')">Title{{ sortLabel("title") }}</th>
               <th class="sortable-header" @click="toggleSort('severity')">Mức độ{{ sortLabel("severity") }}</th>
-              <th class="sortable-header" @click="toggleSort('port')">Port{{ sortLabel("port") }}</th>
-              <th class="sortable-header" @click="toggleSort('service_name')">Service{{ sortLabel("service_name") }}</th>
               <th class="sortable-header" @click="toggleSort('status')">Trạng thái{{ sortLabel("status") }}</th>
-              <th>Tác vụ</th>
             </tr>
           </thead>
           <tbody>
@@ -34,18 +81,30 @@
               v-for="item in paginatedItems"
               :key="item.id"
               class="row-selectable"
-              :class="{ 'row-selected': form.id === item.id }"
+              :class="{ 'row-selected': selectedFindingId === item.id }"
               @click="selectItem(item)"
             >
               <td>{{ item.id }}</td>
+              <td>{{ item.ip_address || "-" }}</td>
               <td>{{ item.finding_code }}</td>
-              <td>{{ item.finding_code }}</td>
-              <td>{{ item.severity || "-" }}</td>
-              <td>{{ item.port ?? "-" }}</td>
-              <td>{{ item.service_name || "-" }}</td>
-              <td>{{ item.status }}</td>
-              <td class="action-cell">
-                <button class="table-button danger" @click.stop="removeItem(item.id)">Xóa</button>
+              <td><StatusPill :value="item.severity || 'info'" /></td>
+              <td>
+                <div class="finding-status-cell" @click.stop>
+                  <select
+                    class="compact-select"
+                    :value="item.status"
+                    @change="updateListStatus(item, $event.target.value)"
+                  >
+                    <option
+                      v-for="statusOption in allowedStatusOptions(item)"
+                      :key="statusOption.value"
+                      :value="statusOption.value"
+                    >
+                      {{ statusOption.label }}
+                    </option>
+                  </select>
+                  <small>{{ statusHelpText(item.status) }}</small>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -63,137 +122,33 @@
       />
     </article>
 
-    <article class="panel panel-form">
+    <article class="panel finding-poc-panel">
       <div class="panel-head">
-        <h3>{{ form.id ? "Cập nhật Finding" : "Thêm Finding" }}</h3>
-        <span class="badge">{{ form.id ? `ID ${form.id}` : "tạo mới" }}</span>
-      </div>
-
-      <form class="resource-form" @submit.prevent="submitForm">
-        <div class="filter-grid">
-          <label class="field-block">
-            <span>Scan result ID</span>
-            <input v-model.number="form.scan_result_id" type="number" min="1" required />
-          </label>
-
-          <label class="field-block">
-            <span>Vulnerability ID</span>
-            <input v-model.number="form.vulnerability_id" type="number" min="1" />
-          </label>
-        </div>
-
-        <div class="filter-grid">
-          <label class="field-block">
-            <span>Mã finding</span>
-            <input v-model="form.finding_code" required />
-          </label>
-
-          <label class="field-block">
-            <span>Title</span>
-            <input :value="form.finding_code" disabled />
-            <small class="field-help">Title tự đồng bộ theo mã finding.</small>
-          </label>
-        </div>
-
-        <div class="filter-grid">
-          <label class="field-block">
-            <span>Mức độ</span>
-            <select v-model="form.severity">
-              <option value="">-</option>
-              <option value="info">info</option>
-              <option value="low">low</option>
-              <option value="medium">medium</option>
-              <option value="high">high</option>
-              <option value="critical">critical</option>
-            </select>
-          </label>
-
-          <label class="field-block">
-            <span>Trạng thái</span>
-            <select v-model="form.status">
-              <option value="open">open</option>
-              <option value="accepted">accepted</option>
-              <option value="mitigated">mitigated</option>
-              <option value="closed">closed</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="filter-grid">
-          <label class="field-block">
-            <span>Port</span>
-            <input v-model.number="form.port" type="number" min="0" />
-          </label>
-
-          <label class="field-block">
-            <span>Protocol</span>
-            <input v-model="form.protocol" />
-          </label>
-
-          <label class="field-block">
-            <span>Service</span>
-            <input v-model="form.service_name" />
-          </label>
-        </div>
-
-        <label class="field-block">
-          <span>Mô tả</span>
-          <textarea v-model="form.description" rows="4" />
-        </label>
-
-        <label class="field-block">
-          <span>Note</span>
-          <textarea v-model="form.note" rows="4" />
-        </label>
-
-        <label class="field-block">
-          <span>Evidence</span>
-          <textarea :value="form.evidence || ''" rows="3" disabled />
-          <small class="field-help">Cột này đang để trống để dành cho output hoặc đường dẫn file PoC về sau.</small>
-        </label>
-
-        <label class="field-block">
-          <span>Confidence</span>
-          <input v-model.number="form.confidence" type="number" min="0" max="100" />
-        </label>
-
-        <div class="form-actions">
-          <button class="primary-button" type="submit">{{ form.id ? "Lưu thay đổi" : "Tạo mới" }}</button>
-          <button v-if="form.id" class="ghost-button" type="button" @click="resetForm">Bỏ chọn</button>
-        </div>
-      </form>
-
-      <p v-if="message" class="inline-note">{{ message }}</p>
-    </article>
-  </section>
-
-  <section class="panel-grid">
-    <article class="panel">
-      <div class="panel-head">
-        <h3>File PoC của Finding</h3>
+        <h3>PoC của Finding</h3>
         <span class="badge">{{ selectedFileLabel }}</span>
       </div>
 
-      <div v-if="form.id" class="resource-form">
+      <div v-if="selectedFindingId" class="resource-form">
         <label class="field-block">
-          <span>Upload file PoC</span>
+          <span>Upload / thay thế PoC</span>
           <input type="file" accept=".txt,.log,.json,.csv,.md,.png,.jpg,.jpeg,.gif,.webp,.bmp,.rar,.zip,.7z" @change="handleFileChange" />
+          <small class="field-help">Khi upload hoặc thay thế PoC, trạng thái finding sẽ tự chuyển sang <code>confirmed</code>.</small>
         </label>
 
         <div class="form-actions">
-          <button class="primary-button" type="button" :disabled="!uploadFile" @click="uploadPoc">Upload / thay thế file</button>
-          <button class="ghost-button" type="button" :disabled="!form.poc_file_path" @click="downloadPoc">Tải file về</button>
+          <button class="primary-button" type="button" :disabled="!uploadFile" @click="uploadPoc">Upload PoC</button>
+          <button class="ghost-button" type="button" :disabled="!form.poc_file_path" @click="downloadPoc">Tải file</button>
           <button class="ghost-button" type="button" :disabled="!form.poc_file_path" @click="previewPoc">Preview</button>
-          <button class="table-button danger" type="button" :disabled="!form.poc_file_path" @click="removePoc">Xóa file</button>
+          <button class="table-button danger" type="button" :disabled="!form.poc_file_path" @click="removePoc">Xóa PoC</button>
         </div>
 
         <div class="insight-grid">
           <article class="insight-card">
-            <span>Tên file người dùng upload</span>
+            <span>Tên file</span>
             <strong>{{ form.poc_file_name || "-" }}</strong>
           </article>
           <article class="insight-card">
-            <span>Kiểu MIME</span>
+            <span>MIME</span>
             <strong>{{ form.poc_file_mime_type || "-" }}</strong>
           </article>
           <article class="insight-card">
@@ -202,17 +157,19 @@
           </article>
         </div>
 
-        <p class="inline-note">File PoC kết quả/đính kèm sẽ được lưu ở server trong thư mục dữ liệu riêng cho finding, không lưu ở frontend.</p>
+        <p class="inline-note">
+          Khi xóa PoC, trạng thái finding sẽ tự chuyển lại <code>open</code>. Tệp PoC được lưu ở server để phục vụ báo cáo và xác minh.
+        </p>
       </div>
 
-      <p v-else class="inline-note">Chọn một finding để upload, tải hoặc preview file PoC.</p>
+      <p v-else class="inline-note">Chọn một finding từ danh sách để quản lý PoC.</p>
       <p v-if="fileMessage" class="inline-note">{{ fileMessage }}</p>
       <p v-if="fileError" class="inline-note text-danger">{{ fileError }}</p>
     </article>
 
-    <article class="panel">
+    <article class="panel finding-preview-panel">
       <div class="panel-head">
-        <h3>Preview file PoC</h3>
+        <h3>Preview PoC</h3>
         <span class="badge">{{ previewState.kindLabel }}</span>
       </div>
 
@@ -223,21 +180,121 @@
       </div>
       <p v-else class="inline-note">{{ previewState.message }}</p>
     </article>
+
+    <article class="panel finding-edit-panel">
+      <div class="panel-head">
+        <h3>Thông tin Finding</h3>
+        <span class="badge">{{ selectedFindingId ? `ID ${selectedFindingId}` : "chưa chọn" }}</span>
+      </div>
+
+      <div v-if="selectedFindingId" class="resource-form">
+        <div class="filter-grid">
+          <label class="field-block">
+            <span>Operation</span>
+            <input :value="form.operation_label || '-'" disabled />
+          </label>
+          <label class="field-block">
+            <span>Target</span>
+            <input :value="form.target_label || '-'" disabled />
+          </label>
+          <label class="field-block">
+            <span>IP</span>
+            <input :value="form.ip_address || '-'" disabled />
+          </label>
+        </div>
+
+        <div class="filter-grid">
+          <label class="field-block">
+            <span>Mã finding</span>
+            <input :value="form.finding_code || '-'" disabled />
+          </label>
+          <label class="field-block">
+            <span>Mức độ</span>
+            <input :value="form.severity || '-'" disabled />
+          </label>
+          <label class="field-block">
+            <span>Trạng thái</span>
+            <select v-model="form.status">
+              <option v-for="statusOption in editableStatusOptions" :key="statusOption.value" :value="statusOption.value">
+                {{ statusOption.label }}
+              </option>
+            </select>
+            <small class="field-help">{{ currentStatusHelpText }}</small>
+          </label>
+        </div>
+
+        <label class="field-block">
+          <span>Mô tả từ CVE</span>
+          <textarea :value="form.description || ''" rows="4" disabled />
+        </label>
+
+        <div class="filter-grid">
+          <label class="field-block">
+            <span>Port</span>
+            <input v-model.number="form.port" type="number" min="0" />
+          </label>
+          <label class="field-block">
+            <span>Protocol</span>
+            <input v-model="form.protocol" />
+          </label>
+          <label class="field-block">
+            <span>Service</span>
+            <input v-model="form.service_name" />
+          </label>
+        </div>
+
+        <div class="filter-grid">
+          <label class="field-block">
+            <span>Confidence</span>
+            <input v-model.number="form.confidence" type="number" min="0" max="100" />
+          </label>
+          <label class="field-block">
+            <span>First seen</span>
+            <input :value="formatDateTime(form.first_seen_at)" disabled />
+          </label>
+          <label class="field-block">
+            <span>Last seen</span>
+            <input :value="formatDateTime(form.last_seen_at)" disabled />
+          </label>
+        </div>
+
+        <label class="field-block">
+          <span>Note</span>
+          <textarea v-model="form.note" rows="4" />
+        </label>
+
+        <label class="field-block">
+          <span>Evidence</span>
+          <textarea :value="form.evidence || ''" rows="3" disabled />
+          <small class="field-help">Evidence hiện để trống để dành cho output runtime hoặc đường dẫn tệp về sau.</small>
+        </label>
+
+        <div class="form-actions">
+          <button class="primary-button" type="button" @click="saveFinding">Lưu thay đổi</button>
+          <button class="ghost-button" type="button" @click="reloadSelectedFinding">Nạp lại</button>
+        </div>
+      </div>
+
+      <p v-else class="inline-note">Chọn một finding từ danh sách để xem chi tiết và cập nhật trạng thái hoặc ghi chú.</p>
+      <p v-if="message" class="inline-note">{{ message }}</p>
+    </article>
   </section>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import {
-  createItem,
   deleteFindingPocFile,
-  deleteItem,
   downloadFindingPocFile,
-  getList,
-  updateItem,
+  getFindingFilterOptions,
+  getManagedFinding,
+  getManagedFindings,
+  updateManagedFinding,
+  updateManagedFindingStatus,
   uploadFindingPocFile,
 } from "../api/client";
 import PaginationBar from "../components/PaginationBar.vue";
+import StatusPill from "../components/StatusPill.vue";
 import { usePagination } from "../composables/usePagination";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
@@ -246,7 +303,18 @@ const message = ref("");
 const fileMessage = ref("");
 const fileError = ref("");
 const uploadFile = ref(null);
+const selectedFindingId = ref(null);
 const sortState = ref({ key: "id", direction: "desc" });
+const filterOptions = reactive({
+  operations: [],
+  targets: [],
+  statuses: [],
+});
+const filters = reactive({
+  operationExecutionId: "",
+  targetId: "",
+  statusValue: "",
+});
 const previewState = reactive({
   type: "none",
   text: "",
@@ -255,11 +323,11 @@ const previewState = reactive({
   loading: false,
   kindLabel: "chưa có",
 });
-
 const form = reactive({
   id: null,
-  scan_result_id: null,
-  vulnerability_id: null,
+  operation_label: "",
+  target_label: "",
+  ip_address: "",
   finding_code: "",
   severity: "",
   description: "",
@@ -270,6 +338,8 @@ const form = reactive({
   evidence: "",
   confidence: null,
   status: "open",
+  first_seen_at: null,
+  last_seen_at: null,
   poc_file_name: "",
   poc_file_path: "",
   poc_file_mime_type: "",
@@ -281,6 +351,16 @@ const { currentPage, pageSize, paginatedItems, totalItems, totalPages, goToPrevi
   usePagination(sortedItems);
 
 const selectedFileLabel = computed(() => form.poc_file_name || "chưa có file");
+const statusOptionMap = computed(() =>
+  Object.fromEntries(filterOptions.statuses.map((option) => [option.value, option]))
+);
+const editableStatusOptions = computed(() => {
+  const current = form.status || "open";
+  const currentOption = statusOptionMap.value[current];
+  const allowed = new Set([current, ...(currentOption?.allowed_next_statuses || [])]);
+  return filterOptions.statuses.filter((option) => allowed.has(option.value));
+});
+const currentStatusHelpText = computed(() => statusHelpText(form.status));
 
 function resetPreview() {
   if (previewState.imageUrl) {
@@ -296,8 +376,9 @@ function resetPreview() {
 
 function resetForm() {
   form.id = null;
-  form.scan_result_id = null;
-  form.vulnerability_id = null;
+  form.operation_label = "";
+  form.target_label = "";
+  form.ip_address = "";
   form.finding_code = "";
   form.severity = "";
   form.description = "";
@@ -308,26 +389,23 @@ function resetForm() {
   form.evidence = "";
   form.confidence = null;
   form.status = "open";
+  form.first_seen_at = null;
+  form.last_seen_at = null;
   form.poc_file_name = "";
   form.poc_file_path = "";
   form.poc_file_mime_type = "";
   form.poc_file_size = null;
   uploadFile.value = null;
+  selectedFindingId.value = null;
   resetPreview();
 }
 
-function toggleSort(key) {
-  sortState.value = nextSortState(sortState.value, key);
-}
-
-function sortLabel(key) {
-  return sortIndicator(sortState.value, key);
-}
-
-function selectItem(item) {
+function applyFindingData(item) {
+  selectedFindingId.value = item.id;
   form.id = item.id;
-  form.scan_result_id = item.scan_result_id;
-  form.vulnerability_id = item.vulnerability_id;
+  form.operation_label = item.operation_label || "";
+  form.target_label = item.target_label || "";
+  form.ip_address = item.ip_address || "";
   form.finding_code = item.finding_code || "";
   form.severity = item.severity || "";
   form.description = item.description || "";
@@ -338,61 +416,110 @@ function selectItem(item) {
   form.evidence = item.evidence || "";
   form.confidence = item.confidence;
   form.status = item.status || "open";
+  form.first_seen_at = item.first_seen_at || null;
+  form.last_seen_at = item.last_seen_at || null;
   form.poc_file_name = item.poc_file_name || "";
   form.poc_file_path = item.poc_file_path || "";
   form.poc_file_mime_type = item.poc_file_mime_type || "";
   form.poc_file_size = item.poc_file_size;
   uploadFile.value = null;
-  fileError.value = "";
   fileMessage.value = "";
+  fileError.value = "";
   resetPreview();
 }
 
 function updateLocalItem(updatedItem) {
   items.value = items.value.map((item) => (item.id === updatedItem.id ? updatedItem : item));
-  if (form.id === updatedItem.id) {
-    selectItem(updatedItem);
+  if (selectedFindingId.value === updatedItem.id) {
+    applyFindingData(updatedItem);
+  }
+}
+
+function toggleSort(key) {
+  sortState.value = nextSortState(sortState.value, key);
+}
+
+function sortLabel(key) {
+  return sortIndicator(sortState.value, key);
+}
+
+function statusHelpText(statusValue) {
+  return statusOptionMap.value[statusValue]?.help_text || "Trạng thái hiện tại của finding.";
+}
+
+function allowedStatusOptions(item) {
+  const current = item.status || "open";
+  const currentOption = statusOptionMap.value[current];
+  const allowed = new Set([current, ...(currentOption?.allowed_next_statuses || [])]);
+  return filterOptions.statuses.filter((option) => allowed.has(option.value));
+}
+
+function selectItem(item) {
+  applyFindingData(item);
+}
+
+async function loadFilterOptions() {
+  const data = await getFindingFilterOptions(filters.operationExecutionId ? Number(filters.operationExecutionId) : null);
+  filterOptions.operations = data.operations || [];
+  filterOptions.targets = data.targets || [];
+  filterOptions.statuses = data.statuses || [];
+
+  if (filters.targetId && !filterOptions.targets.some((option) => String(option.id) === filters.targetId)) {
+    filters.targetId = "";
+  }
+  if (filters.statusValue && !filterOptions.statuses.some((option) => option.value === filters.statusValue)) {
+    filters.statusValue = "";
   }
 }
 
 async function loadItems() {
-  items.value = await getList("scan-findings");
+  items.value = await getManagedFindings({
+    operation_execution_id: filters.operationExecutionId ? Number(filters.operationExecutionId) : null,
+    target_id: filters.targetId ? Number(filters.targetId) : null,
+    status_value: filters.statusValue || null,
+  });
+
+  if (selectedFindingId.value) {
+    const selectedItem = items.value.find((item) => item.id === selectedFindingId.value);
+    if (selectedItem) {
+      applyFindingData(selectedItem);
+    } else {
+      resetForm();
+    }
+  }
 }
 
-async function submitForm() {
-  const payload = {
-    scan_result_id: Number(form.scan_result_id),
-    vulnerability_id: form.vulnerability_id ? Number(form.vulnerability_id) : null,
-    finding_code: form.finding_code.trim(),
-    title: form.finding_code.trim(),
-    severity: form.severity || null,
-    description: form.description || null,
+async function refreshAll() {
+  await loadFilterOptions();
+  await loadItems();
+}
+
+async function reloadSelectedFinding() {
+  if (!selectedFindingId.value) return;
+  const finding = await getManagedFinding(selectedFindingId.value);
+  updateLocalItem(finding);
+}
+
+async function saveFinding() {
+  if (!selectedFindingId.value) return;
+  const updated = await updateManagedFinding(selectedFindingId.value, {
     port: form.port === null || form.port === "" ? null : Number(form.port),
     protocol: form.protocol || null,
     service_name: form.service_name || null,
     note: form.note || null,
-    evidence: null,
     confidence: form.confidence === null || form.confidence === "" ? null : Number(form.confidence),
-    status: form.status || "open",
-  };
-  if (form.id) {
-    const updated = await updateItem("scan-findings", form.id, payload);
-    message.value = "Đã cập nhật finding.";
-    updateLocalItem(updated);
-  } else {
-    await createItem("scan-findings", payload);
-    message.value = "Đã tạo finding mới.";
-    resetForm();
-    await loadItems();
-  }
+    status: form.status || null,
+  });
+  message.value = "Đã cập nhật finding.";
+  updateLocalItem(updated);
+  await loadItems();
 }
 
-async function removeItem(id) {
-  await deleteItem("scan-findings", id);
-  if (form.id === id) {
-    resetForm();
-  }
-  message.value = "Đã xóa finding.";
+async function updateListStatus(item, nextStatus) {
+  if (!nextStatus || nextStatus === item.status) return;
+  const updated = await updateManagedFindingStatus(item.id, nextStatus);
+  message.value = `Đã chuyển trạng thái finding #${item.id} sang ${updated.status}.`;
+  updateLocalItem(updated);
   await loadItems();
 }
 
@@ -401,12 +528,13 @@ function handleFileChange(event) {
 }
 
 async function uploadPoc() {
-  if (!form.id || !uploadFile.value) return;
+  if (!selectedFindingId.value || !uploadFile.value) return;
   fileError.value = "";
-  const updated = await uploadFindingPocFile(form.id, uploadFile.value);
+  const updated = await uploadFindingPocFile(selectedFindingId.value, uploadFile.value);
   updateLocalItem(updated);
+  fileMessage.value = "Đã upload / thay thế file PoC. Trạng thái finding được chuyển sang confirmed.";
   uploadFile.value = null;
-  fileMessage.value = "Đã upload file PoC cho finding.";
+  await loadItems();
 }
 
 function parseDownloadFileName(response, fallbackName) {
@@ -425,13 +553,13 @@ function detectPreviewType(fileName, mimeType) {
 }
 
 async function previewPoc() {
-  if (!form.id || !form.poc_file_path) return;
+  if (!selectedFindingId.value || !form.poc_file_path) return;
   fileError.value = "";
   fileMessage.value = "";
   resetPreview();
   previewState.loading = true;
   try {
-    const response = await downloadFindingPocFile(form.id);
+    const response = await downloadFindingPocFile(selectedFindingId.value);
     const blob = response.data;
     const previewType = detectPreviewType(form.poc_file_name, form.poc_file_mime_type || blob.type);
     if (previewType === "image") {
@@ -447,7 +575,7 @@ async function previewPoc() {
     } else {
       previewState.type = "none";
       previewState.kindLabel = "không preview";
-      previewState.message = "File nén hoặc định dạng này hiện không có preview.";
+      previewState.message = "File nén hoặc định dạng này hiện chưa có preview.";
     }
   } catch (error) {
     previewState.type = "none";
@@ -459,10 +587,10 @@ async function previewPoc() {
 }
 
 async function downloadPoc() {
-  if (!form.id || !form.poc_file_path) return;
+  if (!selectedFindingId.value || !form.poc_file_path) return;
   fileError.value = "";
   try {
-    const response = await downloadFindingPocFile(form.id);
+    const response = await downloadFindingPocFile(selectedFindingId.value);
     const blobUrl = URL.createObjectURL(response.data);
     const anchor = document.createElement("a");
     anchor.href = blobUrl;
@@ -478,12 +606,13 @@ async function downloadPoc() {
 }
 
 async function removePoc() {
-  if (!form.id || !form.poc_file_path) return;
+  if (!selectedFindingId.value || !form.poc_file_path) return;
   fileError.value = "";
-  const updated = await deleteFindingPocFile(form.id);
+  const updated = await deleteFindingPocFile(selectedFindingId.value);
   updateLocalItem(updated);
+  fileMessage.value = "Đã xóa file PoC. Trạng thái finding được chuyển lại open.";
   resetPreview();
-  fileMessage.value = "Đã xóa file PoC khỏi server.";
+  await loadItems();
 }
 
 function formatFileSize(size) {
@@ -493,9 +622,29 @@ function formatFileSize(size) {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function formatDateTime(value) {
+  if (!value) return "-";
+  return new Date(value).toLocaleString("vi-VN");
+}
+
+watch(
+  () => filters.operationExecutionId,
+  async () => {
+    filters.targetId = "";
+    await loadFilterOptions();
+    await loadItems();
+  }
+);
+
+watch(
+  () => [filters.targetId, filters.statusValue],
+  async () => {
+    await loadItems();
+  }
+);
+
 onMounted(async () => {
-  resetForm();
-  await loadItems();
+  await refreshAll();
 });
 
 onBeforeUnmount(() => {

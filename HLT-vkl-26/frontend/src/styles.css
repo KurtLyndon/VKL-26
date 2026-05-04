@@ -263,6 +263,95 @@ select {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
+.finding-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr);
+  grid-template-areas:
+    "list poc"
+    "list preview"
+    "edit edit";
+  gap: 20px;
+}
+
+.finding-filter-panel {
+  margin-bottom: 20px;
+  background:
+    linear-gradient(135deg, rgba(214, 181, 55, 0.08), rgba(255, 250, 240, 0.95)),
+    var(--bg-card);
+}
+
+.finding-list-panel {
+  grid-area: list;
+  background:
+    linear-gradient(135deg, rgba(181, 48, 48, 0.06), rgba(255, 250, 240, 0.96)),
+    var(--bg-card);
+}
+
+.finding-poc-panel {
+  grid-area: poc;
+  background:
+    linear-gradient(135deg, rgba(52, 126, 74, 0.1), rgba(255, 250, 240, 0.96)),
+    var(--bg-card);
+}
+
+.finding-preview-panel {
+  grid-area: preview;
+  background:
+    linear-gradient(135deg, rgba(43, 111, 165, 0.08), rgba(255, 250, 240, 0.96)),
+    var(--bg-card);
+}
+
+.finding-edit-panel {
+  grid-area: edit;
+  background:
+    linear-gradient(135deg, rgba(127, 78, 163, 0.08), rgba(255, 250, 240, 0.96)),
+    var(--bg-card);
+}
+
+.finding-status-help-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.finding-status-help-card {
+  border: 1px solid var(--line);
+  background: rgba(255, 250, 240, 0.84);
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.finding-status-help-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.finding-status-help-head {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.finding-status-cell {
+  display: grid;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.finding-status-cell small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.compact-select {
+  min-width: 150px;
+  padding: 8px 10px;
+}
+
 .panel,
 .stat-card {
   border: 1px solid var(--line);
@@ -1095,5 +1184,14 @@ select {
     max-height: 100vh;
     height: 100vh;
     align-self: auto;
+  }
+
+  .finding-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "list"
+      "poc"
+      "preview"
+      "edit";
   }
 }

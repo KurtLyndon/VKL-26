@@ -221,6 +221,37 @@ export async function deleteFindingPocFile(findingId) {
   return data;
 }
 
+export async function getFindingFilterOptions(operationExecutionId = null) {
+  const { data } = await api.get("/scan-findings/filter-options", {
+    params: operationExecutionId ? { operation_execution_id: operationExecutionId } : {},
+  });
+  return data;
+}
+
+export async function getManagedFindings(filters = {}) {
+  const params = {};
+  if (filters.operation_execution_id) params.operation_execution_id = filters.operation_execution_id;
+  if (filters.target_id) params.target_id = filters.target_id;
+  if (filters.status_value) params.status_value = filters.status_value;
+  const { data } = await api.get("/scan-findings", { params });
+  return data;
+}
+
+export async function getManagedFinding(findingId) {
+  const { data } = await api.get(`/scan-findings/${findingId}`);
+  return data;
+}
+
+export async function updateManagedFinding(findingId, payload) {
+  const { data } = await api.put(`/scan-findings/${findingId}`, payload);
+  return data;
+}
+
+export async function updateManagedFindingStatus(findingId, statusValue) {
+  const { data } = await api.post(`/scan-findings/${findingId}/status`, { status: statusValue });
+  return data;
+}
+
 export async function updateTaskExecutionStatus(taskExecutionId, payload) {
   const { data } = await api.post(`/task-executions/${taskExecutionId}/status`, payload);
   return data;

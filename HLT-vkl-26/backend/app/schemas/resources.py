@@ -621,6 +621,74 @@ class ScanResultFindingRead(ScanResultFindingBase, ORMModel):
     updated_at: datetime
 
 
+class FindingStatusOption(BaseModel):
+    value: str
+    label: str
+    help_text: str
+    allowed_next_statuses: list[str] = Field(default_factory=list)
+
+
+class FindingOperationOption(BaseModel):
+    id: int
+    label: str
+
+
+class FindingTargetOption(BaseModel):
+    id: int
+    label: str
+
+
+class FindingFilterOptionsResponse(BaseModel):
+    operations: list[FindingOperationOption]
+    targets: list[FindingTargetOption]
+    statuses: list[FindingStatusOption]
+
+
+class FindingManagementRead(ORMModel):
+    id: int
+    scan_result_id: int
+    vulnerability_id: int | None = None
+    operation_execution_id: int | None = None
+    target_id: int | None = None
+    ip_address: str | None = None
+    finding_code: str
+    title: str
+    severity: str | None = None
+    description: str | None = None
+    port: int | None = None
+    protocol: str | None = None
+    service_name: str | None = None
+    note: str | None = None
+    evidence: str | None = None
+    confidence: int | None = None
+    status: str
+    status_help_text: str
+    allowed_next_statuses: list[str] = Field(default_factory=list)
+    operation_label: str | None = None
+    target_label: str | None = None
+    poc_file_name: str | None = None
+    poc_file_path: str | None = None
+    poc_file_mime_type: str | None = None
+    poc_file_size: int | None = None
+    first_seen_at: datetime | None = None
+    last_seen_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class FindingManagementUpdateRequest(BaseModel):
+    port: int | None = None
+    protocol: str | None = None
+    service_name: str | None = None
+    note: str | None = None
+    confidence: int | None = None
+    status: str | None = None
+
+
+class FindingStatusUpdateRequest(BaseModel):
+    status: str
+
+
 class ReportTemplateBase(BaseModel):
     code: str
     name: str

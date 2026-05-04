@@ -52,6 +52,10 @@ from app.schemas.resources import (
     DashboardFilterOptions,
     DemoMockFlowRequest,
     DemoMockFlowResponse,
+    FindingFilterOptionsResponse,
+    FindingManagementRead,
+    FindingManagementUpdateRequest,
+    FindingStatusUpdateRequest,
     GeneratedReportCreate,
     GeneratedReportRead,
     GeneratedReportUpdate,
@@ -165,6 +169,13 @@ from app.services.agent_runtime import (
     update_task_execution_heartbeat,
 )
 from app.services.execution import get_runtime_overview, launch_operation, update_task_execution_status
+from app.services.findings import (
+    apply_vulnerability_defaults,
+    ensure_status_transition,
+    get_finding_filter_options,
+    get_finding_record,
+    list_finding_records,
+)
 from app.services.historical_scan_imports import commit_services_vulns_import, preview_services_vulns_import
 from app.services.result_exchange import export_operation_results, import_operation_results
 from app.services.scan_results import normalize_and_store_scan_result
@@ -455,19 +466,114 @@ register_crud_routes(
     list_permission="scan_results.view",
     write_permission="runtime.control",
 )
-register_crud_routes(
-    router,
-    path="/scan-findings",
-    model=ScanResultFinding,
-    read_schema=ScanResultFindingRead,
-    create_schema=ScanResultFindingCreate,
-    update_schema=ScanResultFindingUpdate,
-    list_permission="scan_results.view",
-    write_permission="scan_results.view",
-)
 
 
-@router.post("/scan-findings/{finding_id}/poc-file", response_model=ScanResultFindingRead)
+@router.get("/scan-findings/filter-options", response_model=FindingFilterOptionsResponse)
+def scan_finding_filter_options(
+    operation_execution_id: int | None = None,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    return get_finding_filter_options(db, operation_execution_id=operation_execution_id)
+
+
+@router.get("/scan-findings", response_model=list[FindingManagementRead])
+def list_scan_findings(
+    operation_execution_id: int | None = None,
+    target_id: int | None = None,
+    status_value: str | None = None,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    return list_finding_records(
+        db,
+        operation_execution_id=operation_execution_id,
+        target_id=target_id,
+        status_value=status_value,
+    )
+
+
+@router.get("/scan-findings/{finding_id}", response_model=FindingManagementRead)
+def get_scan_finding(
+    finding_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    return get_finding_record(db, finding_id)
+
+
+@router.post("/scan-findings", response_model=FindingManagementRead, status_code=status.HTTP_201_CREATED)
+def create_scan_finding(
+    payload: ScanResultFindingCreate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    finding = ScanResultFinding(**_payload_dict(payload))
+    apply_vulnerability_defaults(db, finding)
+    db.add(finding)
+    db.commit()
+    return get_finding_record(db, finding.id)
+
+
+@router.put("/scan-findings/{finding_id}", response_model=FindingManagementRead)
+def update_scan_finding(
+    finding_id: int,
+    payload: FindingManagementUpdateRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    finding = db.get(ScanResultFinding, finding_id)
+    if not finding:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
+
+    if payload.port is not None:
+        finding.port = payload.port
+    finding.protocol = payload.protocol
+    finding.service_name = payload.service_name
+    finding.note = payload.note
+    finding.confidence = payload.confidence
+
+    if payload.status:
+        finding.status = ensure_status_transition(finding.status, payload.status)
+
+    apply_vulnerability_defaults(db, finding)
+    db.commit()
+    return get_finding_record(db, finding.id)
+
+
+@router.post("/scan-findings/{finding_id}/status", response_model=FindingManagementRead)
+def update_scan_finding_status(
+    finding_id: int,
+    payload: FindingStatusUpdateRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    finding = db.get(ScanResultFinding, finding_id)
+    if not finding:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
+
+    finding.status = ensure_status_transition(finding.status, payload.status)
+    db.commit()
+    return get_finding_record(db, finding.id)
+
+
+@router.delete("/scan-findings/{finding_id}")
+def delete_scan_finding(
+    finding_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    finding = db.get(ScanResultFinding, finding_id)
+    if not finding:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
+
+    delete_finding_poc_file(finding.poc_file_path)
+    db.delete(finding)
+    db.commit()
+    return {"success": True}
+
+
+@router.post("/scan-findings/{finding_id}/poc-file", response_model=FindingManagementRead)
 async def upload_scan_finding_poc_file(
     finding_id: int,
     file: UploadFile = File(...),
@@ -488,9 +594,9 @@ async def upload_scan_finding_poc_file(
     stored_info = store_finding_poc_file(finding.id, file.filename, content)
     for field, value in stored_info.items():
         setattr(finding, field, value)
+    finding.status = ensure_status_transition(finding.status, "confirmed", force=True)
     db.commit()
-    db.refresh(finding)
-    return finding
+    return get_finding_record(db, finding.id)
 
 
 @router.get("/scan-findings/{finding_id}/poc-file")
@@ -513,7 +619,7 @@ def download_scan_finding_poc_file(
     )
 
 
-@router.delete("/scan-findings/{finding_id}/poc-file", response_model=ScanResultFindingRead)
+@router.delete("/scan-findings/{finding_id}/poc-file", response_model=FindingManagementRead)
 def delete_scan_finding_poc_file(
     finding_id: int,
     db: Session = Depends(get_db),
@@ -528,9 +634,9 @@ def delete_scan_finding_poc_file(
     finding.poc_file_path = None
     finding.poc_file_mime_type = None
     finding.poc_file_size = None
+    finding.status = ensure_status_transition(finding.status, "open", force=True)
     db.commit()
-    db.refresh(finding)
-    return finding
+    return get_finding_record(db, finding.id)
 register_crud_routes(
     router,
     path="/generated-reports",

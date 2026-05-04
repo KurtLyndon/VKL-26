@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import ScanResult, ScanResultFinding, Vulnerability
+from app.services.findings import apply_vulnerability_defaults
 from app.services.agents.registry import get_parser
 
 
@@ -64,6 +65,7 @@ def normalize_and_store_scan_result(
             vulnerability_id=vulnerability_id,
             **finding_payload,
         )
+        apply_vulnerability_defaults(db, finding_record)
         db.add(finding_record)
         findings.append(finding_record)
 

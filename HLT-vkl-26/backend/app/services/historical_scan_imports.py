@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Agent, Operation, OperationExecution, OperationTask, ScanImportBatch, ScanResult, ScanResultFinding, Target, Task, TaskExecution, Vulnerability
 from app.schemas.resources import HistoricalImportCandidateTarget, HistoricalImportCommitResponse, HistoricalImportIpMappingItem, HistoricalImportPreviewResponse, OperationLaunchRequest, ScanImportBatchRead
+from app.services.findings import apply_vulnerability_defaults, level_to_severity
 from app.services.targets import normalize_target_ip_range, target_contains_ip
 
 
@@ -141,20 +142,6 @@ def _parse_iso_datetime(value: str | None) -> datetime | None:
         return datetime.fromisoformat(value)
     except ValueError as error:
         raise ValueError(f"Ngày không hợp lệ: {value}") from error
-
-
-def _level_to_severity(level: int | None) -> str:
-    if level is None:
-        return "info"
-    if level >= 4:
-        return "critical"
-    if level == 3:
-        return "high"
-    if level == 2:
-        return "medium"
-    if level == 1:
-        return "low"
-    return "info"
 
 
 def _resolve_ip_mappings(
@@ -524,7 +511,7 @@ def commit_services_vulns_import(
                 scan_result_id=scan_result.id,
                 vulnerability_id=vulnerability.id,
                 finding_code=vulnerability.code,
-                severity=_level_to_severity(vulnerability.level),
+                severity=level_to_severity(vulnerability.level),
                 title=vulnerability.code,
                 description=vulnerability.threat or vulnerability.description,
                 port=row.port,
@@ -537,6 +524,7 @@ def commit_services_vulns_import(
                 last_seen_at=finished_at or execution.finished_at,
                 status="open",
             )
+            apply_vulnerability_defaults(db, finding, vulnerability=vulnerability)
             db.add(finding)
             created_findings += 1
 
