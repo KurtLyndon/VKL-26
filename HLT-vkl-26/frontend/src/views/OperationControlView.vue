@@ -68,7 +68,7 @@
       </div>
     </article>
 
-    <article class="panel">
+    <article class="panel panel-span-full">
       <div class="panel-head">
         <h3>Launch Operation</h3>
         <span class="badge">{{ selectedOperation?.operation_code || "pick one" }}</span>

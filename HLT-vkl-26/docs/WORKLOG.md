@@ -149,3 +149,4 @@
   - Điều chỉnh luồng import scan history để coi đây là kết quả execution thật của `Agent System Import`, đồng thời tạo placeholder scan result cho target trùng dải IP hoặc không phát hiện IP public
   - Bổ sung giao diện chọn target và metadata cơ bản khi launch execution từ `Operation Control`
   - Thêm migration chuyển dữ liệu metadata lịch sử từ `scan_import_batch` sang `operation_execution`, kèm script dọn dữ liệu runtime/import cũ để import lại sạch
+  - Chuyển thẻ `Launch Operation` trong menu `Control` sang layout full-width để form chọn target và metadata không còn bị bó dọc
