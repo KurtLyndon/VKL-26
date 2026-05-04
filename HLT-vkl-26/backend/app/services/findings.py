@@ -38,7 +38,7 @@ FINDING_STATUS_HELP_TEXTS = {
 FINDING_STATUS_TRANSITIONS = {
     "open": {"confirmed", "false_positive", "risk_accepted"},
     "confirmed": {"in_progress", "false_positive", "risk_accepted"},
-    "in_progress": {"resolved", "false_positive", "risk_accepted"},
+    "in_progress": {"open", "resolved", "false_positive", "risk_accepted"},
     "resolved": {"reopened"},
     "false_positive": {"reopened"},
     "risk_accepted": {"reopened"},
