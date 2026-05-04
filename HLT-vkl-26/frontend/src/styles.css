@@ -440,6 +440,10 @@ select {
   gap: 8px;
 }
 
+.launch-trigger-field {
+  width: min(100%, 220px);
+}
+
 .field-block span {
   color: var(--muted);
   font-size: 14px;

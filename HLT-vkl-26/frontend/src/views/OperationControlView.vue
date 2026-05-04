@@ -75,7 +75,7 @@
       </div>
 
       <form class="resource-form" @submit.prevent="submitLaunch">
-        <label class="field-block">
+        <label class="field-block launch-trigger-field">
           <span>trigger_type</span>
           <select v-model="launchForm.trigger_type">
             <option value="manual">manual</option>
