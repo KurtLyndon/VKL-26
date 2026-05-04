@@ -21,7 +21,9 @@
   box-sizing: border-box;
 }
 
+html,
 body {
+  height: 100%;
   margin: 0;
   font-family: "Space Grotesk", sans-serif;
   color: var(--text);
@@ -30,7 +32,7 @@ body {
     radial-gradient(circle at top left, rgba(255, 250, 240, 0.08), transparent 26%),
     radial-gradient(circle at top right, rgba(140, 166, 111, 0.16), transparent 24%),
     linear-gradient(135deg, #053808, #064509 55%, #042e06);
-  min-height: 100vh;
+  overflow: hidden;
 }
 
 a {
@@ -46,13 +48,15 @@ select {
 }
 
 #app {
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
 }
 
 .app-shell {
   display: grid;
   grid-template-columns: 320px 1fr;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -65,7 +69,8 @@ select {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   color: var(--text-inverse);
 }
 
@@ -113,7 +118,6 @@ select {
   display: grid;
   gap: 12px;
   margin-top: 26px;
-  overflow: hidden;
 }
 
 .nav-section {
@@ -232,6 +236,7 @@ select {
   padding: 32px;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
   color: var(--text);
   background: #fffaf0;
 }
@@ -1160,6 +1165,14 @@ select {
 }
 
 @media (max-width: 980px) {
+  html,
+  body,
+  #app,
+  .app-shell {
+    height: auto;
+    overflow: auto;
+  }
+
   .app-shell {
     grid-template-columns: 1fr;
   }
@@ -1167,10 +1180,14 @@ select {
   .sidebar {
     border-right: none;
     border-bottom: 1px solid rgba(255, 250, 240, 0.12);
+    max-height: none;
+    overflow: visible;
   }
 
   .main-panel {
+    height: auto;
     padding: 20px;
+    overflow: visible;
   }
 
   .selection-drawer-overlay {
