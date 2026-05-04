@@ -271,6 +271,7 @@ select {
 .finding-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr);
+  grid-template-rows: minmax(220px, 1fr) minmax(440px, 2fr) auto;
   grid-template-areas:
     "list poc"
     "list preview"
@@ -387,10 +388,11 @@ select {
 
 .finding-status-cell {
   display: grid;
-  gap: 6px;
-  min-width: 180px;
-  padding: 10px 12px;
+  gap: 8px;
+  min-width: 170px;
+  padding: 8px 10px;
   border-radius: 16px;
+  justify-items: start;
 }
 
 .finding-status-cell small {
@@ -407,6 +409,8 @@ select {
 .finding-status-select {
   background: rgba(255, 255, 255, 0.9);
   border-width: 1px;
+  min-width: 156px;
+  padding: 7px 10px;
 }
 
 .panel,
@@ -499,19 +503,22 @@ select {
 .insight-card {
   border: 1px solid rgba(31, 77, 54, 0.14);
   border-radius: 20px;
-  padding: 18px;
+  padding: 12px 14px;
   background: var(--bg-card-strong);
   display: grid;
-  gap: 8px;
+  gap: 4px;
+  min-height: 72px;
 }
 
 .insight-card span,
 .insight-card small {
   color: var(--muted);
+  font-size: 12px;
 }
 
 .insight-card strong {
-  font-size: 24px;
+  font-size: 16px;
+  line-height: 1.35;
 }
 
 .runtime-list {

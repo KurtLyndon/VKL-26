@@ -49,7 +49,12 @@
     </div>
 
     <div class="finding-status-help-grid">
-      <article v-for="option in filterOptions.statuses" :key="option.value" class="finding-status-help-card">
+      <article
+        v-for="option in filterOptions.statuses"
+        :key="option.value"
+        class="finding-status-help-card"
+        :class="statusCardClass(option.value)"
+      >
         <div class="finding-status-help-head">
           <StatusPill :value="option.value" />
         </div>
@@ -89,9 +94,11 @@
               <td>{{ item.finding_code }}</td>
               <td><StatusPill :value="item.severity || 'info'" /></td>
               <td>
-                <div class="finding-status-cell" @click.stop>
+                <div class="finding-status-cell" :class="statusCardClass(item.status)" @click.stop>
+                  <StatusPill :value="item.status" />
                   <select
-                    class="compact-select"
+                    class="compact-select finding-status-select"
+                    :class="statusCardClass(item.status)"
                     :value="item.status"
                     @change="updateListStatus(item, $event.target.value)"
                   >
@@ -103,7 +110,6 @@
                       {{ statusOption.label }}
                     </option>
                   </select>
-                  <small>{{ statusHelpText(item.status) }}</small>
                 </div>
               </td>
             </tr>
@@ -445,6 +451,20 @@ function sortLabel(key) {
 
 function statusHelpText(statusValue) {
   return statusOptionMap.value[statusValue]?.help_text || "Trạng thái hiện tại của finding.";
+}
+
+function statusTone(statusValue) {
+  const value = (statusValue || "").toLowerCase();
+  if (["resolved"].includes(value)) return "success";
+  if (["in_progress"].includes(value)) return "info";
+  if (["confirmed", "reopened"].includes(value)) return "danger";
+  if (["open", "risk_accepted"].includes(value)) return "warning";
+  if (["false_positive"].includes(value)) return "neutral";
+  return "neutral";
+}
+
+function statusCardClass(statusValue) {
+  return `finding-status-tone--${statusTone(statusValue)}`;
 }
 
 function allowedStatusOptions(item) {
