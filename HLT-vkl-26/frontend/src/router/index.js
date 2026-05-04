@@ -84,9 +84,9 @@ const routes = [
   {
     path: "/operation-executions",
     component: ResourceView,
-    meta: { title: "Executions", permission: "runtime.control" },
+    meta: { title: "Operation Executions", permission: "runtime.control" },
     props: {
-      title: "Quản lý Operation Execution",
+      title: "Quản lý Operation Executions",
       resource: "operation-executions",
       fields: ["operation_id", "execution_code", "trigger_type", "status"],
       jsonFields: ["summary_json"],

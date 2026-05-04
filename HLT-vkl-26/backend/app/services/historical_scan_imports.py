@@ -223,8 +223,8 @@ def _ensure_import_runtime_entities(db: Session) -> tuple[Agent, Task, Operation
             code=HISTORICAL_IMPORT_TASK_CODE,
             name="Historical services_vulns.csv Import",
             agent_type="historical_import",
-            script_name="services_vulns_importer",
-            script_path="internal://services_vulns_importer",
+            script_name="historical_scan_importer",
+            script_path="internal://historical_scan_importer",
             description="Import dữ liệu scan lịch sử từ file services_vulns.csv.",
             version="1.0.0",
             is_active=True,
@@ -233,6 +233,14 @@ def _ensure_import_runtime_entities(db: Session) -> tuple[Agent, Task, Operation
         )
         db.add(task)
         db.flush()
+    else:
+        task.name = "Historical services_vulns.csv Import"
+        task.agent_type = "historical_import"
+        task.script_name = "historical_scan_importer"
+        task.script_path = "internal://historical_scan_importer"
+        task.description = "Import dữ liệu scan lịch sử từ file services_vulns.csv."
+        task.version = "1.0.0"
+        task.is_active = True
 
     operation = db.scalar(select(Operation).where(Operation.code == HISTORICAL_IMPORT_OPERATION_CODE))
     if operation is None:

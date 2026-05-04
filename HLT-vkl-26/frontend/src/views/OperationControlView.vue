@@ -84,6 +84,117 @@
           </select>
         </label>
 
+        <div v-if="launchForm.trigger_type === 'interval'" class="panel panel-accent launch-trigger-config">
+          <div class="panel-head">
+            <h3>Cấu hình Interval</h3>
+            <span class="badge">chu kỳ lặp</span>
+          </div>
+
+          <div class="filter-grid">
+            <label class="field-block">
+              <span>Chu kỳ</span>
+              <select v-model="launchIntervalForm.unit">
+                <option value="daily">daily</option>
+                <option value="weekly">weekly</option>
+                <option value="monthly">monthly</option>
+              </select>
+            </label>
+
+            <label class="field-block">
+              <span>Ngày bắt đầu</span>
+              <input v-model="launchIntervalForm.start_date" type="date" />
+            </label>
+
+            <label class="field-block">
+              <span>Giờ bắt đầu</span>
+              <input v-model="launchIntervalForm.start_time" type="time" />
+            </label>
+          </div>
+
+          <label v-if="launchIntervalForm.unit === 'weekly'" class="field-block launch-inline-field">
+            <span>Thứ trong tuần</span>
+            <select v-model="launchIntervalForm.weekday">
+              <option value="monday">Monday</option>
+              <option value="tuesday">Tuesday</option>
+              <option value="wednesday">Wednesday</option>
+              <option value="thursday">Thursday</option>
+              <option value="friday">Friday</option>
+              <option value="saturday">Saturday</option>
+              <option value="sunday">Sunday</option>
+            </select>
+          </label>
+
+          <label v-if="launchIntervalForm.unit === 'monthly'" class="field-block launch-inline-field">
+            <span>Ngày trong tháng</span>
+            <input v-model.number="launchIntervalForm.month_day" type="number" min="1" max="31" />
+          </label>
+
+          <p class="inline-note">
+            Interval phù hợp khi muốn biểu diễn chu kỳ dễ hiểu như chạy hằng ngày, hằng tuần hoặc hằng tháng.
+          </p>
+        </div>
+
+        <div v-if="launchForm.trigger_type === 'cron'" class="panel panel-accent launch-trigger-config">
+          <div class="panel-head">
+            <h3>Cấu hình Cron</h3>
+            <span class="badge">biểu thức lịch</span>
+          </div>
+
+          <div class="filter-grid">
+            <label class="field-block">
+              <span>Mẫu cron</span>
+              <select v-model="launchCronForm.mode">
+                <option value="daily">daily</option>
+                <option value="weekly">weekly</option>
+                <option value="monthly">monthly</option>
+                <option value="custom">custom</option>
+              </select>
+            </label>
+
+            <label class="field-block">
+              <span>Giờ</span>
+              <input v-model.number="launchCronForm.hour" type="number" min="0" max="23" />
+            </label>
+
+            <label class="field-block">
+              <span>Phút</span>
+              <input v-model.number="launchCronForm.minute" type="number" min="0" max="59" />
+            </label>
+          </div>
+
+          <div v-if="launchCronForm.mode === 'weekly'" class="filter-grid">
+            <label class="field-block">
+              <span>Thứ trong tuần</span>
+              <select v-model="launchCronForm.weekday">
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+                <option value="0">Sunday</option>
+              </select>
+            </label>
+          </div>
+
+          <div v-if="launchCronForm.mode === 'monthly'" class="filter-grid">
+            <label class="field-block">
+              <span>Ngày trong tháng</span>
+              <input v-model.number="launchCronForm.month_day" type="number" min="1" max="31" />
+            </label>
+          </div>
+
+          <label v-if="launchCronForm.mode === 'custom'" class="field-block">
+            <span>Custom cron expression</span>
+            <input v-model="launchCronForm.custom_expression" placeholder="0 1 * * 1" />
+          </label>
+
+          <p class="inline-note">
+            Cron là biểu thức lịch dạng <code>phút giờ ngày-tháng tháng thứ</code>. Ví dụ <code>0 1 * * 1</code> là chạy 01:00 mỗi thứ Hai.
+          </p>
+          <p class="inline-note"><strong>Cron preview:</strong> {{ cronPreview }}</p>
+        </div>
+
         <div class="filter-grid">
           <label class="field-block">
             <span>Năm</span>
@@ -288,6 +399,21 @@ const launchForm = reactive({
   source_root_path: "",
   shared_input: "{}",
 });
+const launchIntervalForm = reactive({
+  unit: "daily",
+  start_date: "",
+  start_time: "01:00",
+  weekday: "monday",
+  month_day: 1,
+});
+const launchCronForm = reactive({
+  mode: "weekly",
+  hour: 1,
+  minute: 0,
+  weekday: "1",
+  month_day: 1,
+  custom_expression: "0 1 * * 1",
+});
 
 const selectedOperation = computed(
   () => runtimeItems.value.find((item) => item.operation_id === selectedOperationId.value) || null
@@ -311,6 +437,20 @@ const targetPickerOptions = computed(() =>
 const selectedTargetChips = computed(() => {
   const targetMap = new Map(targets.value.map((item) => [item.id, item]));
   return selectedTargetIds.value.map((id) => targetMap.get(id)).filter(Boolean);
+});
+const cronPreview = computed(() => {
+  if (launchCronForm.mode === "custom") {
+    return launchCronForm.custom_expression || "-";
+  }
+  const minute = Number.isFinite(Number(launchCronForm.minute)) ? launchCronForm.minute : 0;
+  const hour = Number.isFinite(Number(launchCronForm.hour)) ? launchCronForm.hour : 1;
+  if (launchCronForm.mode === "daily") {
+    return `${minute} ${hour} * * *`;
+  }
+  if (launchCronForm.mode === "monthly") {
+    return `${minute} ${hour} ${launchCronForm.month_day || 1} * *`;
+  }
+  return `${minute} ${hour} * * ${launchCronForm.weekday || 1}`;
 });
 
 const {
@@ -351,7 +491,29 @@ function toggleTaskSort(key) {
 
 function parseSharedInput() {
   try {
-    return JSON.parse(launchForm.shared_input || "{}");
+    const parsed = JSON.parse(launchForm.shared_input || "{}");
+    if (launchForm.trigger_type === "interval") {
+      parsed.trigger_schedule = {
+        type: "interval",
+        unit: launchIntervalForm.unit,
+        start_date: launchIntervalForm.start_date || null,
+        start_time: launchIntervalForm.start_time || null,
+        weekday: launchIntervalForm.unit === "weekly" ? launchIntervalForm.weekday : null,
+        month_day: launchIntervalForm.unit === "monthly" ? launchIntervalForm.month_day || null : null,
+      };
+    }
+    if (launchForm.trigger_type === "cron") {
+      parsed.trigger_schedule = {
+        type: "cron",
+        mode: launchCronForm.mode,
+        expression: cronPreview.value,
+        hour: launchCronForm.hour,
+        minute: launchCronForm.minute,
+        weekday: launchCronForm.mode === "weekly" ? launchCronForm.weekday : null,
+        month_day: launchCronForm.mode === "monthly" ? launchCronForm.month_day || null : null,
+      };
+    }
+    return parsed;
   } catch {
     throw new Error("shared_input phải là JSON hợp lệ.");
   }

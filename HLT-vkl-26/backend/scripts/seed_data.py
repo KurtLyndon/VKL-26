@@ -114,8 +114,8 @@ def ensure_core_seed_data() -> None:
             {
                 "name": "Historical services_vulns.csv Import",
                 "agent_type": "historical_import",
-                "script_name": "services_vulns_importer",
-                "script_path": "internal://services_vulns_importer",
+                "script_name": "historical_scan_importer",
+                "script_path": "internal://historical_scan_importer",
                 "description": "Import dữ liệu scan lịch sử từ services_vulns.csv.",
                 "version": "1.0.0",
                 "is_active": True,

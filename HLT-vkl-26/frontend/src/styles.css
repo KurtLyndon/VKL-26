@@ -444,6 +444,14 @@ select {
   width: min(100%, 220px);
 }
 
+.launch-trigger-config {
+  margin-top: 6px;
+}
+
+.launch-inline-field {
+  width: min(100%, 220px);
+}
+
 .field-block span {
   color: var(--muted);
   font-size: 14px;

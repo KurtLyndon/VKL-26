@@ -151,3 +151,4 @@
   - Thêm migration chuyển dữ liệu metadata lịch sử từ `scan_import_batch` sang `operation_execution`, kèm script dọn dữ liệu runtime/import cũ để import lại sạch
   - Chuyển thẻ `Launch Operation` trong menu `Control` sang layout full-width để form chọn target và metadata không còn bị bó dọc
   - Thu gọn ô `trigger_type` trong `Launch Operation` để cùng cỡ với các ô metadata ngắn như `Năm / Quý / Tuần`
+  - Đổi task import nội bộ sang `internal://historical_scan_importer`, đổi nhãn menu `Executions` thành `Operation Executions`, và thêm UI cấu hình riêng cho `interval`/`cron` trong `Launch Operation`

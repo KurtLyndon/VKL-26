@@ -71,7 +71,7 @@ const sections = [
       { to: "/agents", label: "Agents", caption: "Trạng thái và version", permission: "agents.manage" },
       { to: "/tasks", label: "Tasks", caption: "Script và schema", permission: "tasks.manage" },
       { to: "/operations", label: "Operations", caption: "Workflow và lịch chạy", permission: "operations.manage" },
-      { to: "/operation-executions", label: "Executions", caption: "Tiến trình operation", permission: "runtime.control" },
+      { to: "/operation-executions", label: "Operation Executions", caption: "Tiến trình operation", permission: "runtime.control" },
       { to: "/task-executions", label: "Task Executions", caption: "Tiến trình task", permission: "runtime.control" },
       { to: "/vulnerabilities", label: "CVE", caption: "Threat, proposal, PoC", permission: "vulnerabilities.manage" },
       { to: "/scan-results", label: "Scan Results", caption: "Dữ liệu chuẩn hóa", permission: "scan_results.view" },
