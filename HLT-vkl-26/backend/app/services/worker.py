@@ -8,6 +8,7 @@ from app.db.session import SessionLocal
 from app.models import OperationExecution, OperationTask, Target, TaskExecution
 from app.schemas.resources import WorkerRunResponse
 from app.services.agents.dispatch import dispatch_task_to_agent
+from app.services.agents.registry import has_parser
 from app.services.execution import refresh_operation_execution_summary
 from app.services.scan_results import normalize_and_store_scan_result
 
@@ -104,7 +105,7 @@ def process_task_execution(db: Session, task_execution: TaskExecution) -> str:
         task_execution.status = "completed"
         task_execution.finished_at = datetime.utcnow()
 
-        if target is not None and raw_output is not None:
+        if target is not None and raw_output is not None and has_parser(task_execution.task.agent_type):
             normalize_and_store_scan_result(
                 db,
                 agent_type=task_execution.task.agent_type,

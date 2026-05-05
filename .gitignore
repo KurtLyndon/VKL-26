@@ -8,3 +8,7 @@ node_modules/
 dist/
 .env
 .DS_Store
+*.log
+.vscode/
+HLT-vkl-26/backend/data/verifier_runs/
+HLT-vkl-26/backend/data/finding_poc_files/

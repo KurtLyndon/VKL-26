@@ -12,6 +12,10 @@ PARSER_REGISTRY: dict[str, AgentParser] = {
 }
 
 
+def has_parser(agent_type: str) -> bool:
+    return agent_type.lower() in PARSER_REGISTRY
+
+
 def get_parser(agent_type: str) -> AgentParser:
     parser = PARSER_REGISTRY.get(agent_type.lower())
     if not parser:

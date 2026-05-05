@@ -5,174 +5,196 @@
 ### Đã hoàn thành
 
 - Tạo skeleton project full-stack `HLT-vkl-26`.
-- Dựng backend `FastAPI + SQLAlchemy + MySQL config`.
-- Khai báo model/schema theo ERD cho nhóm Agent, Task, Operation, Target, Vulnerability, Scan Result, Report.
-- Tạo CRUD API ban đầu và dashboard summary.
+- Dựng backend `FastAPI + SQLAlchemy + MySQL`.
+- Khai báo model và schema theo ERD cho Agent, Task, Operation, Target, Vulnerability, Scan Result, Report.
+- Dựng CRUD API ban đầu và dashboard summary.
 - Dựng frontend `Vue 3 + Vite` với dashboard và các màn quản trị resource.
 - Thêm `backend/database/001_init_schema.sql` để khởi tạo schema MySQL.
-- Thêm `backend/database/002_seed_sample_data.sql` và `backend/scripts/seed_data.py` để tạo dữ liệu mẫu.
+- Thêm `backend/database/002_seed_sample_data.sql` và `backend/scripts/seed_data.py` để seed dữ liệu.
 - Thêm execution flow cơ bản: `operation_execution`, `task_execution`, launch operation.
-- Tách parser service theo từng agent trong `backend/app/services/agents/nmap` và `backend/app/services/agents/nuclei`.
-- Thêm API normalize scan result thành `scan_result` + `scan_result_finding`.
+- Tách parser service theo từng agent trong `backend/app/services/agents/nmap`, `nuclei`, `acunetix`.
+- Thêm API normalize scan result thành `scan_result` và `scan_result_finding`.
 - Thêm runtime control: launch operation từ UI, cập nhật task execution status và runtime overview.
-- Thêm scheduler runner cho operation với `cron`/`interval`, có API run-now và background loop qua env.
-- Nâng parser `nmap` đọc XML, `nuclei` đọc JSONL, và thêm khung parser riêng cho `acunetix`.
+- Thêm scheduler runner cho operation với `cron` và `interval`, có API run-now và background loop qua env.
+- Nâng parser `nmap` đọc XML, `nuclei` đọc JSONL và bổ sung parser riêng cho `acunetix`.
 - Thêm worker runner mock cho `nmap`, `nuclei`, `acunetix`; xử lý task theo thứ tự và tự sinh scan result/finding.
-- Thêm import/export kết quả operation qua `JSON`, `CSV`, `XLSX`, và UI quản lý lịch sử import/export.
-- Thêm UI `Operation Designer`, `Execution Monitor`, `Finding Explorer` để sắp task và lọc execution/finding.
-- Worker hỗ trợ dispatch HTTP tới agent thật theo `host/ip_address + port`, và fallback mock runner khi chưa có agent service.
-- Thêm migration versioned local trong `backend/migrations/versions` và CLI `python scripts\migrate.py`.
-- Thay `Base.metadata.create_all(...)` bằng migration check/apply có điều khiển bởi `AUTO_APPLY_MIGRATIONS`.
-- Bổ sung baseline stamping cho database cũ đã tạo bằng SQL snapshot hoặc `create_all`, tránh xung đột seed mẫu.
-- Bổ sung giao thức runtime cho agent thật: discovery contract, agent heartbeat, task heartbeat, và callback hoàn tất task.
-- Worker/dispatch đã hỗ trợ cả 2 luồng sync và async:
-  - sync: agent trả `raw_output` ngay trong `/execute`
-  - async: agent trả `accepted/running`, sau đó gửi heartbeat và callback status về backend
-- Thêm tài liệu `docs/AGENT_RUNTIME_CONTRACT.md` để dev agent riêng và debug dễ hơn.
-- Thêm project agent mẫu tách riêng tại `agents/nmap-agent-demo` để có thể copy sang máy Kali/VM khác.
+- Thêm import/export kết quả operation qua `JSON`, `CSV`, `XLSX`, cùng UI quản lý lịch sử import/export.
+- Thêm UI `Operation Designer`, `Execution Monitor`, `Finding Explorer`.
+- Worker hỗ trợ dispatch HTTP tới agent thật theo `host/ip_address + port` và fallback mock runner.
+- Thêm migration versioned local trong `backend/migrations/versions` và CLI `python scripts\\migrate.py`.
+- Thay `Base.metadata.create_all(...)` bằng migration check/apply điều khiển bởi `AUTO_APPLY_MIGRATIONS`.
+- Bổ sung baseline stamping cho database cũ để tránh xung đột seed mẫu.
+- Bổ sung giao thức runtime cho agent thật: discovery contract, heartbeat, task heartbeat, callback hoàn tất task.
+- Hỗ trợ cả 2 luồng sync và async cho agent runtime.
+- Thêm tài liệu `docs/AGENT_RUNTIME_CONTRACT.md`.
+- Thêm agent mẫu tách riêng tại `agents/nmap-agent-demo`.
 - Agent mẫu hỗ trợ `mock` mode và `real` mode, callback heartbeat/status/normalize ngược về backend.
-- Thêm mẫu `systemd` service và hướng dẫn deploy riêng cho agent Nmap demo.
-- Bổ sung auth RBAC cơ bản theo nhóm tài khoản: login, token, nhóm tài khoản, tài khoản và phân quyền theo nhóm.
-- Frontend đã có màn đăng nhập, màn quản lý quyền theo nhóm, và menu cấp 1/cấp 2 lọc theo permission.
-- Bổ sung `mock demo flow` để launch operation + worker tự động trong 1 bước cho demo nội bộ.
-- Tinh gọn sidebar thành menu accordion: chỉ mở 1 menu cấp 1 tại một thời điểm, menu cấp 2 tự động thu gọn/expand tương ứng.
-- Khi chuyển menu và đổi view, panel bên phải tự focus/scroll lên đầu để thao tác nhanh hơn.
-- Bổ sung luồng import CVE từ file Excel STMNC, hỗ trợ map `Mã`, `Mức độ`, `Nguy cơ mất ATTT`, `Kiến nghị, đề xuất`, `Kiểm chứng`.
-- Mở rộng `vulnerability` để lưu được cả `poc_text` và `poc_file_name`.
-- Thêm kho lưu trữ POC script tại `backend/data/poc_repository` để giữ bản sao script xác minh phục vụ đẩy xuống agent thực thi.
-- Script import sẽ tự copy file POC vào kho lưu trữ này và tạo/cập nhật `vulnerability_script` tương ứng.
-- Mở rộng cụm quản lý `Mục tiêu`:
-  - thêm UI riêng cho `Target`, `Target Attribute`, `Target Group`
-  - hỗ trợ gán thuộc tính động cho từng target, cho phép value `null`
-  - hỗ trợ gán target vào nhiều nhóm
-  - hỗ trợ import `Excel/CSV`, tự sinh attribute mới theo cột mới
-  - nhóm lại menu sidebar để `Mục tiêu` có 3 menu con riêng
-- Bổ sung sort cho các bảng danh sách trên UI:
-  - mặc định load theo `ID` giảm dần nếu bảng có cột `ID`
-  - click tiêu đề cột để đổi qua lại `giảm dần <-> tăng dần`
-- Bổ sung chuẩn hóa và phân giải `Dải IP` cho target:
-  - hỗ trợ nhiều dải/IP cách nhau bằng dấu phẩy
-  - tự chuẩn hóa các pattern lỗi như `[1 - 3]`, `[1_3]` về `[1-3]`
-  - thêm hàm phân giải để mở rộng `192.168.[1-3].0/24` thành 3 dải con phục vụ khớp scan result
-- Đổi theme UI sang xanh lá cây đậm làm chủ đạo, vùng làm việc kem xương, chữ đen trên nền sáng và chữ trắng trên nền xanh đậm.
-- Tinh chỉnh lại trạng thái menu sidebar:
-  - hover đổi nền và màu chữ rồi trả về bình thường khi leave
-  - active có màu riêng khác hover
-  - sidebar dùng nền `#064509`
-  - vùng nội dung chính chuyển sang nền trắng kem sáng hơn
-- Nhập dữ liệu STMNC vào database:
-  - seed CVE từ `1-Codes-v1.8-19-03-2026.xlsx`
-  - seed Target từ `2-Targets-basing.xlsx`
-  - toàn bộ target từ workbook này được gán vào `Target Group` tên `TRTA2`
-  - copy nguồn seed vào `backend/database/seed_sources`
-  - cập nhật `seed_data.py` để bootstrap mới sẽ import lại đúng bộ CVE/Target này
-  - loại bỏ seed demo cũ khỏi dataset hiện tại và khỏi `002_seed_sample_data.sql`
+- Thêm mẫu `systemd` service và hướng dẫn deploy cho agent Nmap demo.
+- Bổ sung auth RBAC cơ bản theo nhóm tài khoản: login, token, nhóm tài khoản, tài khoản, phân quyền theo nhóm.
+- Frontend có màn đăng nhập, quản lý quyền theo nhóm, menu cấp 1/cấp 2 lọc theo permission.
+- Bổ sung `mock demo flow` để launch operation + worker trong một bước.
 
 ### Trạng thái tạm thời
 
-- Có thể dev tiếp từ local, không phụ thuộc ngay vào internet.
-- Chưa push GitHub vì môi trường hiện tại không gọi được `git` trong terminal tool, nhưng user vẫn có thể commit/push thủ công.
-- Chưa chạy `npm install` / `pip install` trong mọi lượt xác minh, nên frontend/backend chưa phải lúc nào cũng được boot runtime thực tế trong workspace này.
+- Có thể dev tiếp từ local, chưa phụ thuộc bắt buộc vào internet.
+- Chưa phải mọi lượt đều có verify runtime đầy đủ frontend/backend.
 
-### Bước tiếp theo để làm tiếp
+### Bước tiếp theo lúc đó
 
-1. Thử nghiệm `mock demo flow` trực tiếp trong browser và rà lại các lỗi UI/encoding còn sót.
-2. Thử `agents/nmap-agent-demo` trên máy Kali/VM và nối với backend thật khi máy đủ tài nguyên.
+1. Chạy mock demo flow trực tiếp trong browser.
+2. Test `agents/nmap-agent-demo` trên Kali/VM khi máy đủ tài nguyên.
 3. Thêm export PDF.
-4. Rà soát lại UI/encoding trong browser và build frontend.
-5. Cân nhắc Alembic nếu sau này cần autogenerate/revision phức tạp hơn.
 
 ## 2026-04-28
 
-### Cập nhật UI danh sách và bố cục quản trị
+### Cập nhật UI, dữ liệu nền và historical import
 
-- Chuyển `Target Group` sang dạng quản trị bằng bảng:
-  - danh sách nhóm target hiển thị theo bảng
-  - thành viên nhóm hiển thị theo bảng với `ID target`, `Tên target`, `Dải IP`, `checkbox`
-- Thêm phân trang `10 / 20 / 50 / toàn bộ` cho các view danh sách chính:
-  - `ResourceView`
+- Tinh gọn sidebar thành menu accordion, chỉ mở một menu cấp 1 tại một thời điểm.
+- Khi đổi menu và đổi view, panel bên phải tự focus lên đầu.
+- Thêm import CVE từ file Excel STMNC, map:
+  - `Mã`
+  - `Mức độ`
+  - `Nguy cơ mất ATTT`
+  - `Kiến nghị, đề xuất`
+  - `Kiểm chứng`
+- Mở rộng `vulnerability` để lưu `poc_text` và `poc_file_name`.
+- Thêm kho script PoC tại `backend/data/poc_repository`.
+- Mở rộng cụm `Mục tiêu`:
   - `Target`
   - `Target Attribute`
   - `Target Group`
-  - `Execution Monitor`
-  - `Finding Explorer`
-  - `Operation Control`
-  - `Result Exchange`
-  - `Quyền theo Nhóm`
-- Sắp lại bố cục các màn có form quản trị theo hướng:
-  - danh sách bên trái
-  - thêm hoặc chỉnh sửa bên phải
-  - các panel phụ ở hàng dưới nếu có
-- Chuẩn hóa thao tác chỉnh sửa trên các bảng CRUD:
-  - bỏ nút `Edit`
-  - click trực tiếp vào dòng để đẩy dữ liệu sang form cập nhật
-  - giữ nút `Delete` riêng và highlight dòng đang được chọn
-- Khởi động Phase 1 của kế hoạch import scan cũ:
-  - thêm backend import `services_vulns.csv` với 2 bước `preview` và `commit`
+  - import `Excel/CSV`, tự sinh attribute mới theo cột mới
+- Bổ sung sort cho các bảng danh sách UI.
+- Chuẩn hóa `Dải IP`:
+  - hỗ trợ nhiều dải/IP cách nhau bởi dấu phẩy
+  - tự chuẩn hóa pattern `[1 - 3]`, `[1_3]` về `[1-3]`
+  - thêm hàm phân giải dải IP để phục vụ map scan result
+- Đổi theme UI sang xanh lá cây đậm, nội dung nền kem xương.
+- Nhập dữ liệu STMNC vào database:
+  - seed CVE từ workbook mã lỗi
+  - seed Target từ workbook target
+  - gán toàn bộ target vào `Target Group` tên `TRTA2`
+- Khởi động Phase 1 import scan cũ:
+  - thêm backend import `services_vulns.csv` với `preview` và `commit`
   - hỗ trợ carry forward IP, tách nhiều vuln code bằng `;`, lookup theo `Vulnerability.code`
-  - map IP vào tập `Target` đã chọn, cho phép manual override hoặc đánh dấu `unmapped`
-  - lưu metadata đợt import vào `scan_import_batch` và tạo `operation_execution` / `task_execution` lịch sử tương ứng
-  - thêm màn UI `Import Scan Cũ` để upload file, nhập metadata, chọn target, xem preview và xác nhận import
-  - bảng chọn Target trong màn `Import Scan Cũ` hỗ trợ:
-    - click tiêu đề cột để sắp xếp
-    - click cả dòng để chọn hoặc bỏ chọn target
-  - combobox mapping ở phần preview chỉ hiển thị đúng các target khớp với IP đó và sắp theo `ID` tăng dần
+  - map IP vào tập target đã chọn, cho phép manual override hoặc `unmapped`
+  - lưu metadata đợt import và tạo `operation_execution` / `task_execution` tương ứng
+  - thêm UI `Import Scan Cũ`
 - Làm lại cụm `CVE` và `Finding`:
   - title của `CVE` và `Finding` đồng bộ theo `code` / `finding_code`
   - thêm `note` cho finding và dời dữ liệu cũ từ `evidence` sang `note`
-  - giữ `evidence` trống để sau này dùng cho output hoặc đường dẫn kết quả PoC
+  - giữ `evidence` trống cho output hoặc file PoC tương lai
   - thêm upload / download / preview file PoC cho từng finding
-  - file script thực thi PoC tiếp tục lưu ở `data/poc_repository`
-  - file đính kèm / kết quả PoC của finding lưu riêng ở `data/finding_poc_files`
-- Khởi động Phase 2 của Dashboard:
-  - thêm API dashboard lịch sử scan theo bộ lọc tuần / tháng / quý / năm
-  - thêm thẻ tổng quan theo thời gian và thẻ tổng hợp toàn thời gian
-  - thêm biểu đồ so sánh vuln theo quý cho tối đa 5 target
-  - thêm biểu đồ top 5 vuln/CVE theo bộ lọc thời gian
-  - thêm biểu đồ nhóm trọng điểm `ĐV Cấp 1` cho số lượng vuln và tỉ lệ target có nguy cơ
-  - thêm biểu đồ xu hướng vuln theo quý
-  - tinh gọn UX bộ chọn target và nhóm trọng điểm bằng popup có tìm kiếm thay vì hiển thị toàn bộ option trực tiếp trên màn hình
-  - giảm độ phồng tối thiểu của cột biểu đồ để cột có giá trị lớn nhất nổi bật đúng tỷ lệ hơn
-  - gom 2 biểu đồ nhóm trọng điểm vào cùng một thẻ lớn, đưa bộ lọc ra ngoài vùng biểu đồ
-  - chỉnh popup chọn nhiều mục với footer luôn nhìn thấy và nội dung cuộn riêng để không bị khuất nút thao tác
-  - chuyển popup chọn nhiều mục thành sidebar trượt từ bên phải để tránh bị các thẻ phía dưới che khuất
-  - gộp `Thống kê tổng quan theo thời gian` và `Top 5 vuln/CVE` vào chung một thẻ lớn, bộ lọc nằm bên ngoài thẻ
-  - cho 2 biểu đồ nhóm trọng điểm hiển thị dọc toàn chiều rộng thẻ lớn: biểu đồ số lượng ở trên, biểu đồ tỉ lệ ở dưới
-  - giữ sidebar trái vẫn nhìn thấy khi mở drawer chọn nhiều mục trên desktop
-  - thu nhỏ option trong drawer và đổi thứ tự để biểu đồ so sánh target nằm dưới cụm nhóm mục tiêu trọng điểm
-  - Đưa các nút `Bỏ chọn hết / Đóng / Áp dụng` lên ngay dưới tiêu đề drawer, giới hạn danh sách hiển thị khoảng 5 option rồi cuộn, và cho lớp overlay phủ toàn màn hình
-  - Thu gọn phần trống phía dưới drawer trên desktop bằng cách cho panel cao theo nội dung, chỉ giữ cuộn ở danh sách option
-  - Đổi tên thẻ con `Thống kê tổng quan theo thời gian` thành `Thống kê` và chuyển `Vuln phát hiện` xuống ô cuối cùng của hàng 2
-  - Tô đỏ value của 3 ô cuối trong thẻ `Thống kê`: `Target có nguy cơ`, `IP có nguy cơ`, `Vuln phát hiện`
-  - Đổi tên màn `Dashboard lịch sử scan` thành `Dashboard` và cập nhật mô tả theo hướng tổng hợp cả dữ liệu import lẫn dữ liệu agent scan sẽ đổ về sau này
-  - Chuyển metadata `year / quarter / week / note / source_root_path / selected_target_ids` sang `operation_execution` để execution trở thành thực thể trung tâm cho dashboard và runtime
-  - Điều chỉnh luồng import scan history để coi đây là kết quả execution thật của `Agent System Import`, đồng thời tạo placeholder scan result cho target trùng dải IP hoặc không phát hiện IP public
-  - Bổ sung giao diện chọn target và metadata cơ bản khi launch execution từ `Operation Control`
-  - Thêm migration chuyển dữ liệu metadata lịch sử từ `scan_import_batch` sang `operation_execution`, kèm script dọn dữ liệu runtime/import cũ để import lại sạch
-  - Chuyển thẻ `Launch Operation` trong menu `Control` sang layout full-width để form chọn target và metadata không còn bị bó dọc
-  - Thu gọn ô `trigger_type` trong `Launch Operation` để cùng cỡ với các ô metadata ngắn như `Năm / Quý / Tuần`
-  - Đổi task import nội bộ sang `internal://historical_scan_importer`, đổi nhãn menu `Executions` thành `Operation Executions`, và thêm UI cấu hình riêng cho `interval`/`cron` trong `Launch Operation`
-  - Làm lại toàn bộ module `Finding` theo workflow analyst:
-    - severity và mô tả được derive từ `Vulnerability.level` / `Vulnerability.threat`, không còn coi là dữ liệu chỉnh sửa tự do trên UI
-    - importer scan cũ và parser normalize scan mới cùng dùng helper chung để đồng bộ `finding_code / title / severity / description` theo CVE
-    - thay CRUD generic `/scan-findings` bằng API chuyên dụng có:
-      - filter options theo `Operation` và `Target`
-      - list finding enrich kèm `IP`, `operation_label`, `target_label`
-      - rule chuyển trạng thái hợp lệ
-      - upload PoC tự chuyển `confirmed`
-      - xóa PoC tự chuyển `open`
-    - bổ sung bộ status analyst:
-      - `open`
-      - `confirmed`
-      - `in_progress`
-      - `resolved`
-      - `false_positive`
-      - `risk_accepted`
-      - `reopened`
-    - làm lại giao diện `Quản lý Finding` với các khối riêng cho:
-      - bộ lọc
-      - danh sách finding
-      - quản lý PoC
-      - preview PoC
-      - chỉnh sửa các thông tin còn lại của finding
-    - cho phép chuyển trạng thái trực tiếp ngay trên danh sách finding sau khi lọc
+  - file script thực thi PoC lưu ở `data/poc_repository`
+  - file đính kèm / kết quả PoC của finding lưu ở `data/finding_poc_files`
+- Khởi động Phase 2 dashboard:
+  - API dashboard theo tuần / tháng / quý / năm
+  - thẻ tổng quan theo thời gian và tổng hợp toàn thời gian
+  - biểu đồ so sánh vuln theo quý cho tối đa 5 target
+  - top 5 vuln/CVE theo bộ lọc thời gian
+  - nhóm trọng điểm `ĐV Cấp 1` cho số lượng vuln và tỷ lệ target có nguy cơ
+  - xu hướng vuln theo quý
+- Cải thiện UX dashboard:
+  - popup và drawer chọn target/nhóm trọng điểm
+  - footer cố định cho drawer chọn nhiều mục
+  - overlay toàn màn hình
+  - gom nhóm thẻ biểu đồ, đổi bố cục nhiều lần để phù hợp demo
+- Chuyển metadata `year / quarter / week / note / source_root_path / selected_target_ids` sang `operation_execution`.
+- Điều chỉnh historical import để coi đây là kết quả execution thật của agent import.
+- Bổ sung giao diện chọn target và metadata khi launch execution.
+- Đổi task import nội bộ sang `internal://historical_scan_importer`.
+- Đổi nhãn menu `Executions` thành `Operation Executions`.
+- Làm lại module `Finding` theo workflow analyst:
+  - severity và mô tả derive từ `Vulnerability.level` / `Vulnerability.threat`
+  - thay CRUD generic `/scan-findings` bằng API chuyên dụng
+  - upload PoC tự chuyển `confirmed`
+  - xóa PoC tự chuyển `open`
+  - bộ status analyst:
+    - `open`
+    - `confirmed`
+    - `in_progress`
+    - `resolved`
+    - `false_positive`
+    - `risk_accepted`
+    - `reopened`
+  - cho phép đổi trạng thái trực tiếp ngay trên danh sách finding
+- Tách scroll sidebar và main panel độc lập trên desktop để tránh kéo lệch màn hình.
+
+## 2026-05-05
+
+### Cập nhật agent hệ thống và task xác minh vuln
+
+- Đổi `System Import Agent` thành `System Agent`:
+  - `code`: `AG-SYSTEM-01`
+  - `name`: `System Agent`
+  - `agent_type`: `system`
+- Đổi task import scan lịch sử:
+  - từ `Historical services_vulns.csv Import`
+  - thành `P.K.T Scanner Result Import`
+- Chuẩn hóa internal path của task import:
+  - từ `internal://services_vulns_importer`
+  - thành `internal://historical_scan_importer`
+- Đồng bộ luồng historical import sang agent type `system`, không còn dùng `historical_import`.
+- Bổ sung migration `009__rename_system_agent_and_add_verifier_agent.sql`.
+
+### Bổ sung Vulnerability Verifier Agent
+
+- Thêm agent mới:
+  - `code`: `AG-VULN-VERIFY-01`
+  - `name`: `Vulnerability Verifier Agent`
+  - `agent_type`: `vulnerability_verifier`
+- Thêm task mới:
+  - `code`: `TASK-VULNERABILITY-VERIFY`
+  - `name`: `Vulnerability Verifying`
+- Gắn task xác minh vào cuối operation mẫu `OP-INTERNAL-WEEKLY`.
+- Khóa logic `agent_type` của task theo agent ở backend:
+  - task không còn coi `agent_type` là dữ liệu nhập tự do
+  - create/update task sẽ map `agent_type` từ agent được chọn
+- Điều chỉnh lại đúng mô hình nghiệp vụ của `Task`:
+  - UI không còn chọn `agent_id`
+  - UI chọn `agent_type` từ danh sách type agent hiện có trong hệ thống
+  - một task có thể được nhiều agent cùng loại thực thi ở các máy khác nhau
+
+### Runtime xác minh finding bằng PoC
+
+- Thêm service `backend/app/services/vulnerability_verifier.py` để:
+  - tìm finding thuộc `operation_execution_id` có trạng thái `open` hoặc `in_progress`
+  - tạo thư mục chạy tạm trong `backend/data/verifier_runs`
+  - copy script PoC của CVE vào thư mục tạm rồi thực thi
+  - xóa script PoC sau khi chạy xong, nhưng giữ file PoC sinh ra
+- Logic xử lý:
+  - có script PoC:
+    - mã `200`: upload file PoC sinh ra và chuyển finding sang `confirmed`
+    - mã `201`: chuyển sang `false_positive`
+    - mã `500/501/502`: giữ nguyên trạng thái finding
+  - không có script nhưng có `PoC dạng text/ghi chú`:
+    - tạo file `.txt` từ nội dung text PoC
+    - gắn file này vào finding
+    - chuyển finding sang `risk_accepted`
+  - không có script và cũng không có text PoC:
+    - chuyển finding sang `in_progress`
+- Thêm runner `backend/app/services/agents/vulnerability_verifier/runner.py`.
+- Worker chỉ normalize scan result với agent có parser; task verifier không còn bị ép parse như scan task.
+
+### Chuẩn hóa script PoC mẫu
+
+- Viết lại `backend/database/seed_sources/snmp-info-poc.py` theo chuẩn mới:
+  - input: tên file PoC cần sinh ra
+  - input môi trường: `HLT_TARGET_IP`
+  - output code:
+    - `200`: thành công và có file PoC
+    - `201`: cảnh báo giả
+    - `500`: lỗi không xác định hoặc thiếu input cần thiết
+    - `501`: thiếu thư viện
+    - `502`: thiếu công cụ
+- Đồng bộ script này sang file nguồn STMNC để user tiếp tục sử dụng ngoài hệ thống.
+
+### Dữ liệu thực và seed runtime
+
+- Chạy lại `seed_data.py` trên MySQL thật để cập nhật:
+  - `AG-SYSTEM-01`
+  - `AG-VULN-VERIFY-01`
+  - `P.K.T Scanner Result Import`
+  - `Vulnerability Verifying`
+  - nội dung script PoC `snmp-info`
+- Backend compile pass sau toàn bộ thay đổi.

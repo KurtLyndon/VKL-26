@@ -39,6 +39,11 @@ export async function getList(resource) {
   return data;
 }
 
+export async function getTaskAgentTypeOptions() {
+  const { data } = await api.get("/tasks/agent-types");
+  return data;
+}
+
 export async function createItem(resource, payload) {
   const { data } = await api.post(`/${resource}`, payload);
   return data;

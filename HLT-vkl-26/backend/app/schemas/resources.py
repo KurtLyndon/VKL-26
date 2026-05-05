@@ -201,6 +201,12 @@ class TaskRead(TaskBase, ORMModel):
     updated_at: datetime
 
 
+class TaskAgentTypeOption(BaseModel):
+    agent_type: str
+    agent_count: int
+    agent_codes: list[str]
+
+
 class OperationBase(BaseModel):
     code: str
     name: str

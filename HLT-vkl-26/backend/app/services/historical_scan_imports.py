@@ -14,7 +14,7 @@ from app.services.findings import apply_vulnerability_defaults, level_to_severit
 from app.services.targets import normalize_target_ip_range, target_contains_ip
 
 
-HISTORICAL_IMPORT_AGENT_CODE = "AG-SYSTEM-IMPORT"
+HISTORICAL_IMPORT_AGENT_CODE = "AG-SYSTEM-01"
 HISTORICAL_IMPORT_TASK_CODE = "TASK-HIST-SERVICES-VULNS-IMPORT"
 HISTORICAL_IMPORT_OPERATION_CODE = "OP-HIST-SCAN-IMPORT"
 UNMAPPED_TARGET_CODE = "target_unmapped_historical"
@@ -193,8 +193,8 @@ def _ensure_import_runtime_entities(db: Session) -> tuple[Agent, Task, Operation
     if agent is None:
         agent = Agent(
             code=HISTORICAL_IMPORT_AGENT_CODE,
-            name="System Import Agent",
-            agent_type="historical_import",
+            name="System Agent",
+            agent_type="system",
             host="localhost",
             ip_address="127.0.0.1",
             port=0,
@@ -208,8 +208,8 @@ def _ensure_import_runtime_entities(db: Session) -> tuple[Agent, Task, Operation
     if task is None:
         task = Task(
             code=HISTORICAL_IMPORT_TASK_CODE,
-            name="Historical services_vulns.csv Import",
-            agent_type="historical_import",
+            name="P.K.T Scanner Result Import",
+            agent_type="system",
             script_name="historical_scan_importer",
             script_path="internal://historical_scan_importer",
             description="Import dữ liệu scan lịch sử từ file services_vulns.csv.",
@@ -221,8 +221,8 @@ def _ensure_import_runtime_entities(db: Session) -> tuple[Agent, Task, Operation
         db.add(task)
         db.flush()
     else:
-        task.name = "Historical services_vulns.csv Import"
-        task.agent_type = "historical_import"
+        task.name = "P.K.T Scanner Result Import"
+        task.agent_type = "system"
         task.script_name = "historical_scan_importer"
         task.script_path = "internal://historical_scan_importer"
         task.description = "Import dữ liệu scan lịch sử từ file services_vulns.csv."
@@ -451,7 +451,7 @@ def commit_services_vulns_import(
             "service_rows": preview.service_rows,
             "finding_count": preview.finding_count,
         },
-        raw_log="Historical services_vulns.csv import completed.",
+        raw_log="P.K.T scanner result import completed.",
         started_at=execution.started_at,
         finished_at=execution.finished_at,
     )
@@ -475,7 +475,7 @@ def commit_services_vulns_import(
             operation_execution_id=execution.id,
             task_execution_id=task_execution.id,
             target_id=target.id,
-            agent_type="historical_import",
+            agent_type="system",
             source_tool="services_vulns.csv",
             raw_output=json.dumps(
                 {
@@ -537,7 +537,7 @@ def commit_services_vulns_import(
             operation_execution_id=execution.id,
             task_execution_id=task_execution.id,
             target_id=target.id,
-            agent_type="historical_import",
+            agent_type="system",
             source_tool="services_vulns.csv",
             raw_output=json.dumps(
                 {

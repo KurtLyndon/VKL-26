@@ -63,13 +63,27 @@ def ensure_core_seed_data() -> None:
         agent_importer, _ = get_or_create(
             db,
             Agent,
-            {"code": "AG-SYSTEM-IMPORT"},
+            {"code": "AG-SYSTEM-01"},
             {
-                "name": "System Import Agent",
-                "agent_type": "historical_import",
+                "name": "System Agent",
+                "agent_type": "system",
                 "host": "localhost",
                 "ip_address": "127.0.0.1",
                 "port": 0,
+                "version": "1.0.0",
+                "status": "online",
+            },
+        )
+        agent_verifier, _ = get_or_create(
+            db,
+            Agent,
+            {"code": "AG-VULN-VERIFY-01"},
+            {
+                "name": "Vulnerability Verifier Agent",
+                "agent_type": "vulnerability_verifier",
+                "host": "localhost",
+                "ip_address": "127.0.0.1",
+                "port": 8091,
                 "version": "1.0.0",
                 "status": "online",
             },
@@ -112,8 +126,8 @@ def ensure_core_seed_data() -> None:
             Task,
             {"code": "TASK-HIST-SERVICES-VULNS-IMPORT"},
             {
-                "name": "Historical services_vulns.csv Import",
-                "agent_type": "historical_import",
+                "name": "P.K.T Scanner Result Import",
+                "agent_type": "system",
                 "script_name": "historical_scan_importer",
                 "script_path": "internal://historical_scan_importer",
                 "description": "Import dữ liệu scan lịch sử từ services_vulns.csv.",
@@ -121,6 +135,22 @@ def ensure_core_seed_data() -> None:
                 "is_active": True,
                 "input_schema_json": {"file": "csv", "metadata": "object", "target_ids": "array"},
                 "output_schema_json": {"scan_results": "array", "findings": "array"},
+            },
+        )
+        task_vulnerability_verifying, _ = get_or_create(
+            db,
+            Task,
+            {"code": "TASK-VULNERABILITY-VERIFY"},
+            {
+                "name": "Vulnerability Verifying",
+                "agent_type": "vulnerability_verifier",
+                "script_name": "verify_findings.py",
+                "script_path": "/opt/hlt/tasks/verify_findings.py",
+                "description": "Xac minh finding bang script PoC hoac text PoC cua CVE.",
+                "version": "1.0.0",
+                "is_active": True,
+                "input_schema_json": {"operation_execution_id": "integer"},
+                "output_schema_json": {"verified_count": "integer", "items": "array"},
             },
         )
 
@@ -197,6 +227,24 @@ def ensure_core_seed_data() -> None:
                 )
             )
 
+        operation_task_3 = db.scalar(
+            select(OperationTask).where(
+                OperationTask.operation_id == operation.id,
+                OperationTask.task_id == task_vulnerability_verifying.id,
+                OperationTask.order_index == 3,
+            )
+        )
+        if operation_task_3 is None:
+            db.add(
+                OperationTask(
+                    operation_id=operation.id,
+                    task_id=task_vulnerability_verifying.id,
+                    order_index=3,
+                    input_override_json={"mode": "verify-findings"},
+                    continue_on_error=True,
+                )
+            )
+
         operation_task_historical = db.scalar(
             select(OperationTask).where(
                 OperationTask.operation_id == operation_historical_import.id,
@@ -221,9 +269,11 @@ def ensure_core_seed_data() -> None:
             agent_nmap.code,
             agent_nuclei.code,
             agent_importer.code,
+            agent_verifier.code,
             task_nmap.code,
             task_nuclei.code,
             task_historical_import.code,
+            task_vulnerability_verifying.code,
             operation.code,
             operation_historical_import.code,
             report_template.code,

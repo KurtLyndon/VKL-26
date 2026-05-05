@@ -124,6 +124,7 @@ from app.schemas.resources import (
     TargetUpdate,
     TaskExecutionHeartbeatRequest,
     TaskExecutionHeartbeatResponse,
+    TaskAgentTypeOption,
     TaskCreate,
     TaskExecutionCreate,
     TaskExecutionRead,
@@ -326,16 +327,125 @@ register_crud_routes(
     list_permission="auth.manage",
     write_permission="auth.manage",
 )
-register_crud_routes(
-    router,
-    path="/tasks",
-    model=Task,
-    read_schema=TaskRead,
-    create_schema=TaskCreate,
-    update_schema=TaskUpdate,
-    list_permission="tasks.manage",
-    write_permission="tasks.manage",
-)
+
+
+def _serialize_task_with_agent(task: Task) -> TaskRead:
+    return TaskRead(
+        id=task.id,
+        code=task.code,
+        name=task.name,
+        agent_type=task.agent_type,
+        script_name=task.script_name,
+        script_path=task.script_path,
+        script_content=task.script_content,
+        input_schema_json=task.input_schema_json,
+        output_schema_json=task.output_schema_json,
+        description=task.description,
+        version=task.version,
+        is_active=task.is_active,
+        created_at=task.created_at,
+        updated_at=task.updated_at,
+    )
+
+
+def _validate_task_agent_type(db: Session, agent_type: str) -> str:
+    normalized = (agent_type or "").strip()
+    if not normalized:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Task phải gắn với một agent type hợp lệ.")
+
+    exists = db.scalar(select(func.count()).select_from(Agent).where(Agent.agent_type == normalized))
+    if not exists:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Agent type không tồn tại trong hệ thống.")
+    return normalized
+
+
+@router.get("/tasks/agent-types", response_model=list[TaskAgentTypeOption])
+def list_task_agent_types(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("tasks.manage")),
+):
+    agents = db.scalars(select(Agent).order_by(Agent.agent_type.asc(), Agent.id.asc())).all()
+    grouped: dict[str, list[str]] = {}
+    for agent in agents:
+        grouped.setdefault(agent.agent_type, []).append(agent.code)
+
+    return [
+        TaskAgentTypeOption(agent_type=agent_type, agent_count=len(agent_codes), agent_codes=agent_codes)
+        for agent_type, agent_codes in grouped.items()
+    ]
+
+
+@router.get("/tasks", response_model=list[TaskRead])
+def list_tasks(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("tasks.manage")),
+):
+    tasks = db.scalars(select(Task).order_by(Task.id.desc())).all()
+    return [_serialize_task_with_agent(task) for task in tasks]
+
+
+@router.get("/tasks/{item_id}", response_model=TaskRead)
+def get_task(
+    item_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("tasks.manage")),
+):
+    task = db.get(Task, item_id)
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    return _serialize_task_with_agent(task)
+
+
+@router.post("/tasks", response_model=TaskRead, status_code=status.HTTP_201_CREATED)
+def create_task(
+    payload: TaskCreate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("tasks.manage")),
+):
+    payload_data = _payload_dict(payload)
+    payload_data["agent_type"] = _validate_task_agent_type(db, payload_data.get("agent_type", ""))
+    task = Task(**payload_data)
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    return _serialize_task_with_agent(task)
+
+
+@router.put("/tasks/{item_id}", response_model=TaskRead)
+def update_task(
+    item_id: int,
+    payload: TaskUpdate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("tasks.manage")),
+):
+    task = db.get(Task, item_id)
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    payload_data = _payload_dict(payload)
+    if "agent_type" in payload_data:
+        task.agent_type = _validate_task_agent_type(db, payload_data.pop("agent_type"))
+    for field, value in payload_data.items():
+        setattr(task, field, value)
+
+    db.commit()
+    db.refresh(task)
+    return _serialize_task_with_agent(task)
+
+
+@router.delete("/tasks/{item_id}")
+def delete_task(
+    item_id: int,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("tasks.manage")),
+):
+    task = db.get(Task, item_id)
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    db.delete(task)
+    db.commit()
+    return {"success": True}
+
 register_crud_routes(
     router,
     path="/operations",

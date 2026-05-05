@@ -1,42 +1,49 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
+import os
+import shutil
 import subprocess
 import sys
-from typing import List, Tuple
+from pathlib import Path
 
-# ==========================================================
-# SNMP Community String List
-# Anh có thể thêm/bớt community string tại đây.
-# Ví dụ: COMMUNITY_STRINGS = ["public", "private", "cisco"]
-# ==========================================================
 COMMUNITY_STRINGS = [
     "cisco",
     "public",
     "private",
 ]
 
-# SNMP OIDs cần lấy
 OID_SYSTEM_INFO = ".1.3.6.1.2.1.1.1"
 OID_INTERFACE_NAME = ".1.3.6.1.2.1.2.2.1.2"
 OID_IP_ADDRESS = ".1.3.6.1.2.1.4.20.1.1"
 OID_ALIAS = ".1.3.6.1.2.1.31.1.1.1.18"
-
-# Timeout cho mỗi lệnh snmpwalk, tính bằng giây
 COMMAND_TIMEOUT = 8
 
 
-def run_snmpwalk(target: str, community: str, oid: str) -> Tuple[bool, List[str], str]:
-    """
-    Chạy snmpwalk an toàn bằng subprocess.
+def _target_ip() -> str | None:
+    return (os.getenv("HLT_TARGET_IP") or "").strip() or None
 
-    Return:
-        success: True nếu lệnh chạy thành công và có dữ liệu stdout
-        lines: danh sách dòng kết quả
-        error: thông báo lỗi nếu có
-    """
-    cmd = [
-        "snmpwalk",
-        "-v", "2c",
-        "-c", community,
+
+def _output_file_path() -> Path:
+    if len(sys.argv) != 2:
+        raise ValueError("Thiếu tên file PoC đầu ra.")
+    output_name = sys.argv[1].strip()
+    if not output_name:
+        raise ValueError("Tên file PoC đầu ra đang trống.")
+    return Path.cwd() / output_name
+
+
+def run_snmpwalk(target: str, community: str, oid: str) -> tuple[bool, list[str], str]:
+    snmpwalk_bin = shutil.which("snmpwalk")
+    if snmpwalk_bin is None:
+        return False, [], "missing-snmpwalk"
+
+    command = [
+        snmpwalk_bin,
+        "-v",
+        "2c",
+        "-c",
+        community,
         "-Oqv",
         target,
         oid,
@@ -44,47 +51,40 @@ def run_snmpwalk(target: str, community: str, oid: str) -> Tuple[bool, List[str]
 
     try:
         result = subprocess.run(
-            cmd,
+            command,
             capture_output=True,
             text=True,
             timeout=COMMAND_TIMEOUT,
         )
     except subprocess.TimeoutExpired:
-        return False, [], "Timeout khi truy vấn SNMP"
-    except FileNotFoundError:
-        return False, [], "Không tìm thấy lệnh snmpwalk. Cần cài net-snmp/snmpwalk trước"
-    except Exception as exc:
-        return False, [], f"Lỗi khi chạy snmpwalk: {exc}"
+        return False, [], "timeout"
+    except Exception as exc:  # noqa: BLE001
+        return False, [], f"exception:{exc}"
 
     stdout_lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-    stderr_text = result.stderr.strip()
-
     if result.returncode != 0:
-        return False, stdout_lines, stderr_text or f"snmpwalk trả về mã lỗi {result.returncode}"
-
+        return False, stdout_lines, result.stderr.strip() or f"return-code:{result.returncode}"
     if not stdout_lines:
-        return False, [], stderr_text or "Không có dữ liệu trả về"
-
+        return False, [], "no-data"
     return True, stdout_lines, ""
 
 
 def collect_snmp_data(target: str, community: str) -> dict:
-    """
-    Thu thập dữ liệu SNMP với một community string.
-    """
     sys_ok, sys_info_raw, sys_err = run_snmpwalk(target, community, OID_SYSTEM_INFO)
     names_ok, names, names_err = run_snmpwalk(target, community, OID_INTERFACE_NAME)
     ips_ok, ips, ips_err = run_snmpwalk(target, community, OID_IP_ADDRESS)
     aliases_ok, aliases, aliases_err = run_snmpwalk(target, community, OID_ALIAS)
 
-    has_data = any([
-        sys_ok and bool(sys_info_raw),
-        names_ok and bool(names),
-        ips_ok and bool(ips),
-        aliases_ok and bool(aliases),
-    ])
+    has_data = any(
+        [
+            sys_ok and bool(sys_info_raw),
+            names_ok and bool(names),
+            ips_ok and bool(ips),
+            aliases_ok and bool(aliases),
+        ]
+    )
 
-    errors = []
+    errors: list[str] = []
     for label, ok, err in [
         ("System Info", sys_ok, sys_err),
         ("Interface Name", names_ok, names_err),
@@ -105,96 +105,85 @@ def collect_snmp_data(target: str, community: str) -> dict:
     }
 
 
-def print_result(target: str, result: dict) -> None:
-    """
-    In kết quả theo từng community string.
-    """
-    community = result["community"]
+def render_report(target: str, results: list[dict]) -> str:
+    lines = []
+    lines.append("=" * 100)
+    lines.append("SNMP VULNERABILITY VERIFICATION REPORT")
+    lines.append("=" * 100)
+    lines.append(f"Target: {target}")
+    lines.append(f"Community strings checked: {len(COMMUNITY_STRINGS)}")
 
-    print("\n" + "=" * 100)
-    print(f"TARGET: {target}")
-    print(f"COMMUNITY STRING: {community}")
-    print("=" * 100)
+    for result in results:
+        lines.append("")
+        lines.append("=" * 100)
+        lines.append(f"COMMUNITY STRING: {result['community']}")
+        lines.append("=" * 100)
 
-    if not result["has_data"]:
-        print(f"[KHÔNG CÓ KẾT QUẢ] Community string '{community}' không trả về dữ liệu.")
+        if not result["has_data"]:
+            lines.append(f"[NO DATA] Community '{result['community']}' did not return SNMP data.")
+            for error_message in result["errors"]:
+                lines.append(f"- {error_message}")
+            continue
+
+        lines.append(f"[DATA FOUND] Community '{result['community']}' returned SNMP data.")
+        lines.append(f"System: {result['system_info']}")
+        lines.append("-" * 100)
+        lines.append(f"{'Interface':<35} | {'IP Address':<20} | {'Alias':<35}")
+        lines.append("-" * 100)
+
+        names = result["names"]
+        ips = result["ips"]
+        aliases = result["aliases"]
+        max_len = max(len(names), len(ips), len(aliases))
+        if max_len == 0:
+            lines.append("No interface/ip/alias rows returned, but SNMP system data is accessible.")
+        else:
+            for index in range(max_len):
+                name = names[index] if index < len(names) else "N/A"
+                ip = ips[index] if index < len(ips) else "N/A"
+                alias = aliases[index] if index < len(aliases) else ""
+                lines.append(f"{name:<35} | {ip:<20} | {alias:<35}")
+
         if result["errors"]:
-            print("Chi tiết:")
-            for err in result["errors"]:
-                print(f"- {err}")
-        print("=" * 100)
-        return
+            lines.append("-" * 100)
+            lines.append("Partial OID failures:")
+            for error_message in result["errors"]:
+                lines.append(f"- {error_message}")
 
-    print(f"[CÓ KẾT QUẢ] Community string '{community}' trả về dữ liệu SNMP.")
-    print(f"System: {result['system_info']}")
-    print("-" * 100)
-    print(f"{'Interface':<35} | {'IP Address':<20} | {'Ghi chú Alias':<35}")
-    print("-" * 100)
-
-    names = result["names"]
-    ips = result["ips"]
-    aliases = result["aliases"]
-    max_len = max(len(names), len(ips), len(aliases))
-
-    if max_len == 0:
-        print("Không có dữ liệu bảng interface/ip/alias, chỉ thu được thông tin system hoặc dữ liệu SNMP khác.")
-    else:
-        for i in range(max_len):
-            name = names[i] if i < len(names) else "N/A"
-            ip = ips[i] if i < len(ips) else "N/A"
-            alias = aliases[i] if i < len(aliases) else ""
-            print(f"{name:<35} | {ip:<20} | {alias:<35}")
-
-    if result["errors"]:
-        print("-" * 100)
-        print("Một số OID không trả về dữ liệu:")
-        for err in result["errors"]:
-            print(f"- {err}")
-
-    print("=" * 100)
-
-
-def print_usage() -> None:
-    print("Lỗi: Thiếu tham số IP.", file=sys.stderr)
-    print("Cách dùng: python3 table2.py <ip>", file=sys.stderr)
-    print("Ví dụ: python3 table2.py 192.168.1.1", file=sys.stderr)
+    lines.append("")
+    lines.append("=" * 100)
+    lines.append("END OF REPORT")
+    lines.append("=" * 100)
+    return "\n".join(lines) + "\n"
 
 
 def main() -> int:
-    if len(sys.argv) != 2:
-        print_usage()
-        return 2
+    try:
+        output_file_path = _output_file_path()
+    except ValueError:
+        return 500
 
-    target = sys.argv[1].strip()
+    target = _target_ip()
     if not target:
-        print_usage()
-        return 2
+        return 500
 
-    print("=" * 100)
-    print("SNMP COMMUNITY STRING CHECK")
-    print("=" * 100)
-    print(f"Target: {target}")
-    print(f"Số community string sẽ kiểm tra: {len(COMMUNITY_STRINGS)}")
+    if shutil.which("snmpwalk") is None:
+        return 502
 
-    any_success = False
+    try:
+        results = [collect_snmp_data(target, community) for community in COMMUNITY_STRINGS]
+        any_success = any(item["has_data"] for item in results)
 
-    for community in COMMUNITY_STRINGS:
-        result = collect_snmp_data(target, community)
-        print_result(target, result)
-        if result["has_data"]:
-            any_success = True
+        if not any_success:
+            return 201
 
-    print("\n" + "=" * 100)
-    print("KẾT LUẬN")
-    print("=" * 100)
-
-    if any_success:
-        print("TRUE - Có ít nhất một community string trả về dữ liệu SNMP.")
-        return 0
-
-    print("FALSE - Không có community string nào trả về dữ liệu SNMP.")
-    return 1
+        output_file_path.write_text(render_report(target, results), encoding="utf-8")
+        return 200
+    except ImportError:
+        return 501
+    except Exception:
+        return 500
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

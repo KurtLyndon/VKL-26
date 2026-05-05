@@ -12,6 +12,7 @@ import OperationControlView from "../views/OperationControlView.vue";
 import OperationDesignerView from "../views/OperationDesignerView.vue";
 import ResourceView from "../views/ResourceView.vue";
 import ResultExchangeView from "../views/ResultExchangeView.vue";
+import TaskManagementView from "../views/TaskManagementView.vue";
 import TargetAttributesView from "../views/TargetAttributesView.vue";
 import TargetGroupsView from "../views/TargetGroupsView.vue";
 import TargetManagementView from "../views/TargetManagementView.vue";
@@ -59,15 +60,8 @@ const routes = [
   },
   {
     path: "/tasks",
-    component: ResourceView,
+    component: TaskManagementView,
     meta: { title: "Tasks", permission: "tasks.manage" },
-    props: {
-      title: "Quản lý Task",
-      resource: "tasks",
-      fields: ["code", "name", "agent_type", "script_name", "script_path", "version", "is_active"],
-      jsonFields: ["input_schema_json", "output_schema_json"],
-      longTextFields: ["description", "script_content"],
-    },
   },
   {
     path: "/operations",
