@@ -164,7 +164,7 @@ Import CVE từ Excel:
 
 ```powershell
 cd D:\Projects\VKL-26\HLT\HLT-vkl-26\backend
-python -m scripts.import_vulnerabilities_from_xlsx "D:\Projects\VKL-26\STMNC\1-Codes-v1.8-19-03-2026.xlsx"
+python -m scripts.import_vulnerabilities_from_xlsx "D:\Projects\VKL-26\STMNC\1-Codes-basing.xlsx"
 ```
 
 ## Đề xuất bước tiếp theo

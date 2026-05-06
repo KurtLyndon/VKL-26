@@ -11,7 +11,7 @@ from scripts.import_vulnerabilities_from_xlsx import import_workbook as import_v
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 SEED_SOURCE_DIR = ROOT_DIR / "database" / "seed_sources"
-VULNERABILITY_WORKBOOK = SEED_SOURCE_DIR / "1-Codes-v1.8-19-03-2026.xlsx"
+VULNERABILITY_WORKBOOK = SEED_SOURCE_DIR / "1-Codes-basing.xlsx"
 TARGET_WORKBOOK = SEED_SOURCE_DIR / "2-Targets-basing.xlsx"
 PKT_SCANNER_SCRIPT = ROOT_DIR / "data" / "agent_task_scripts" / "nmap" / "pkt_scannerv1.py"
 
