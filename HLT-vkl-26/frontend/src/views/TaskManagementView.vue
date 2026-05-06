@@ -26,6 +26,7 @@
               <th class="sortable-header" @click="toggleSort('script_name')">script_name{{ sortLabel("script_name") }}</th>
               <th class="sortable-header" @click="toggleSort('script_path')">script_path{{ sortLabel("script_path") }}</th>
               <th class="sortable-header" @click="toggleSort('version')">version{{ sortLabel("version") }}</th>
+              <th class="sortable-header" @click="toggleSort('max_concurrency_per_agent')">max_concurrency{{ sortLabel("max_concurrency_per_agent") }}</th>
               <th class="sortable-header" @click="toggleSort('is_active')">is_active{{ sortLabel("is_active") }}</th>
               <th>Tác vụ</th>
             </tr>
@@ -45,6 +46,7 @@
               <td>{{ item.script_name || "-" }}</td>
               <td>{{ item.script_path || "-" }}</td>
               <td>{{ item.version || "-" }}</td>
+              <td>{{ item.max_concurrency_per_agent ?? 0 }}</td>
               <td>{{ item.is_active ? "true" : "false" }}</td>
               <td class="action-cell">
                 <button class="table-button danger" @click.stop="removeItem(item.id)">Delete</button>
@@ -105,6 +107,12 @@
         <label class="field-block">
           <span>version</span>
           <input v-model="form.version" type="text" />
+        </label>
+
+        <label class="field-block">
+          <span>max_concurrency_per_agent</span>
+          <input v-model="form.max_concurrency_per_agent" type="number" min="0" />
+          <small class="field-help">`0` nghĩa là không giới hạn theo agent.</small>
         </label>
 
         <label class="field-block">
@@ -173,6 +181,7 @@ function resetForm() {
   form.output_schema_json = "{}";
   form.description = "";
   form.version = "";
+  form.max_concurrency_per_agent = "0";
   form.is_active = "true";
 }
 
@@ -193,6 +202,7 @@ function editItem(item) {
   form.output_schema_json = displayJson(item.output_schema_json);
   form.description = item.description ?? "";
   form.version = item.version ?? "";
+  form.max_concurrency_per_agent = String(item.max_concurrency_per_agent ?? 0);
   form.is_active = item.is_active ? "true" : "false";
 }
 
@@ -216,6 +226,7 @@ function buildPayload() {
     output_schema_json: JSON.parse(form.output_schema_json || "{}"),
     description: form.description || null,
     version: form.version || null,
+    max_concurrency_per_agent: Number(form.max_concurrency_per_agent || 0),
     is_active: form.is_active === "true",
   };
 }

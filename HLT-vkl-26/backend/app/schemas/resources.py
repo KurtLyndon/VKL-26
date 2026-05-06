@@ -175,6 +175,7 @@ class TaskBase(BaseModel):
     output_schema_json: dict | None = None
     description: str | None = None
     version: str | None = None
+    max_concurrency_per_agent: int = 0
     is_active: bool = True
 
 
@@ -192,6 +193,7 @@ class TaskUpdate(BaseModel):
     output_schema_json: dict | None = None
     description: str | None = None
     version: str | None = None
+    max_concurrency_per_agent: int | None = None
     is_active: bool | None = None
 
 

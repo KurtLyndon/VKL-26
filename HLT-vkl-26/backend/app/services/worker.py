@@ -1,7 +1,8 @@
+import json
 import threading
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
@@ -10,6 +11,7 @@ from app.schemas.resources import WorkerRunResponse
 from app.services.agents.dispatch import dispatch_task_to_agent
 from app.services.agents.registry import has_parser
 from app.services.execution import refresh_operation_execution_summary
+from app.services.pkt_scanner_results import ingest_pkt_scan_output
 from app.services.scan_results import normalize_and_store_scan_result
 
 
@@ -61,6 +63,21 @@ def _previous_gate_allows_run(db: Session, task_execution: TaskExecution) -> boo
     return True
 
 
+def _task_concurrency_allows_run(db: Session, task_execution: TaskExecution) -> bool:
+    max_concurrency = getattr(task_execution.task, "max_concurrency_per_agent", 0) or 0
+    if max_concurrency <= 0:
+        return True
+
+    running_count = db.scalar(
+        select(func.count(TaskExecution.id))
+        .where(TaskExecution.agent_id == task_execution.agent_id)
+        .where(TaskExecution.task_id == task_execution.task_id)
+        .where(TaskExecution.status == "running")
+        .where(TaskExecution.id != task_execution.id)
+    )
+    return (running_count or 0) < max_concurrency
+
+
 def _cancel_blocked_followups(db: Session, failed_task_execution: TaskExecution) -> int:
     failed_operation_task = db.get(OperationTask, failed_task_execution.operation_task_id)
     if not failed_operation_task or failed_operation_task.continue_on_error:
@@ -102,6 +119,17 @@ def process_task_execution(db: Session, task_execution: TaskExecution) -> str:
             return "running"
 
         task_execution.raw_log = f"Executed task via {execution_meta.get('mode')} for {task_execution.task.agent_type}."
+        if task_execution.task.code == "TASK-PKT-SCANNING" and raw_output is not None:
+            parsed_output = json.loads(raw_output)
+            result_code = int(parsed_output.get("result_code") or 500)
+            if result_code != 200:
+                message = parsed_output.get("message") or f"PKT Scanning failed with code {result_code}"
+                raise RuntimeError(message)
+
+            pkt_payload = ingest_pkt_scan_output(db, task_execution, raw_output)
+            task_execution.output_data_json = {"target": target_value, **execution_meta, **pkt_payload}
+            task_execution.raw_log = pkt_payload.get("warnings") and "\n".join(pkt_payload["warnings"]) or task_execution.raw_log
+
         task_execution.status = "completed"
         task_execution.finished_at = datetime.utcnow()
 
@@ -138,6 +166,8 @@ def run_worker_cycle(db: Session) -> WorkerRunResponse:
 
     for task_execution in queued_tasks:
         if not _previous_gate_allows_run(db, task_execution):
+            continue
+        if not _task_concurrency_allows_run(db, task_execution):
             continue
         result = process_task_execution(db, task_execution)
         processed_tasks += 1

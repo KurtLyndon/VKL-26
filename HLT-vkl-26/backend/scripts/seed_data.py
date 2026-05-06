@@ -13,6 +13,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 SEED_SOURCE_DIR = ROOT_DIR / "database" / "seed_sources"
 VULNERABILITY_WORKBOOK = SEED_SOURCE_DIR / "1-Codes-v1.8-19-03-2026.xlsx"
 TARGET_WORKBOOK = SEED_SOURCE_DIR / "2-Targets-basing.xlsx"
+PKT_SCANNER_SCRIPT = ROOT_DIR / "data" / "agent_task_scripts" / "nmap" / "pkt_scannerv1.py"
 
 
 def get_or_create(db, model, lookup: dict, defaults: dict):
@@ -103,6 +104,31 @@ def ensure_core_seed_data() -> None:
                 "is_active": True,
                 "input_schema_json": {"target": "cidr", "ports": "string"},
                 "output_schema_json": {"hosts": "array", "ports": "array"},
+                "max_concurrency_per_agent": 0,
+            },
+        )
+        task_pkt_scanning, _ = get_or_create(
+            db,
+            Task,
+            {"code": "TASK-PKT-SCANNING"},
+            {
+                "name": "PKT Scanning",
+                "agent_type": "nmap",
+                "script_name": "pkt_scannerv1.py",
+                "script_path": "data/agent_task_scripts/nmap/pkt_scannerv1.py",
+                "script_content": PKT_SCANNER_SCRIPT.read_text(encoding="utf-8") if PKT_SCANNER_SCRIPT.exists() else None,
+                "description": "Chay P.K.T scanner, tong hop ket qua Nmap va nap truc tiep vao scan_result/finding.",
+                "version": "1.0.0",
+                "max_concurrency_per_agent": 1,
+                "is_active": True,
+                "input_schema_json": {"scan_entries": "array", "folder_name": "string", "selected_target_ids": "array"},
+                "output_schema_json": {
+                    "result_code": "integer",
+                    "folder_name": "string",
+                    "output_dir": "string",
+                    "scan_results": "array",
+                    "warnings": "array",
+                },
             },
         )
         task_nuclei, _ = get_or_create(
@@ -119,6 +145,7 @@ def ensure_core_seed_data() -> None:
                 "is_active": True,
                 "input_schema_json": {"target": "url", "templates": "array"},
                 "output_schema_json": {"findings": "array"},
+                "max_concurrency_per_agent": 0,
             },
         )
         task_historical_import, _ = get_or_create(
@@ -135,6 +162,7 @@ def ensure_core_seed_data() -> None:
                 "is_active": True,
                 "input_schema_json": {"file": "csv", "metadata": "object", "target_ids": "array"},
                 "output_schema_json": {"scan_results": "array", "findings": "array"},
+                "max_concurrency_per_agent": 0,
             },
         )
         task_vulnerability_verifying, _ = get_or_create(
@@ -151,6 +179,7 @@ def ensure_core_seed_data() -> None:
                 "is_active": True,
                 "input_schema_json": {"operation_execution_id": "integer"},
                 "output_schema_json": {"verified_count": "integer", "items": "array"},
+                "max_concurrency_per_agent": 0,
             },
         )
 
@@ -173,6 +202,18 @@ def ensure_core_seed_data() -> None:
             {
                 "name": "Historical Scan Import",
                 "description": "Operation hệ thống dùng để import kết quả scan lịch sử.",
+                "schedule_type": "none",
+                "schedule_config_json": None,
+                "is_active": True,
+            },
+        )
+        operation_pkt_hunting, _ = get_or_create(
+            db,
+            Operation,
+            {"code": "OP-PKT-THREAT-HUNTING"},
+            {
+                "name": "PKT Threat Hunting",
+                "description": "Operation P.K.T gom buoc scan va xac minh finding.",
                 "schedule_type": "none",
                 "schedule_config_json": None,
                 "is_active": True,
@@ -263,6 +304,42 @@ def ensure_core_seed_data() -> None:
                 )
             )
 
+        operation_task_pkt_1 = db.scalar(
+            select(OperationTask).where(
+                OperationTask.operation_id == operation_pkt_hunting.id,
+                OperationTask.task_id == task_pkt_scanning.id,
+                OperationTask.order_index == 1,
+            )
+        )
+        if operation_task_pkt_1 is None:
+            db.add(
+                OperationTask(
+                    operation_id=operation_pkt_hunting.id,
+                    task_id=task_pkt_scanning.id,
+                    order_index=1,
+                    input_override_json={"mode": "pkt-scan"},
+                    continue_on_error=False,
+                )
+            )
+
+        operation_task_pkt_2 = db.scalar(
+            select(OperationTask).where(
+                OperationTask.operation_id == operation_pkt_hunting.id,
+                OperationTask.task_id == task_vulnerability_verifying.id,
+                OperationTask.order_index == 2,
+            )
+        )
+        if operation_task_pkt_2 is None:
+            db.add(
+                OperationTask(
+                    operation_id=operation_pkt_hunting.id,
+                    task_id=task_vulnerability_verifying.id,
+                    order_index=2,
+                    input_override_json={"mode": "verify-findings"},
+                    continue_on_error=True,
+                )
+            )
+
         db.commit()
         print(
             "Core seed completed:",
@@ -271,11 +348,13 @@ def ensure_core_seed_data() -> None:
             agent_importer.code,
             agent_verifier.code,
             task_nmap.code,
+            task_pkt_scanning.code,
             task_nuclei.code,
             task_historical_import.code,
             task_vulnerability_verifying.code,
             operation.code,
             operation_historical_import.code,
+            operation_pkt_hunting.code,
             report_template.code,
         )
     finally:

@@ -128,6 +128,7 @@ class Task(Base, TimestampMixin):
     output_schema_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     version: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    max_concurrency_per_agent: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 

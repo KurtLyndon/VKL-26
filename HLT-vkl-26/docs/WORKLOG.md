@@ -198,3 +198,65 @@
   - `Vulnerability Verifying`
   - nội dung script PoC `snmp-info`
 - Backend compile pass sau toàn bộ thay đổi.
+
+## 2026-05-06
+
+### Bổ sung PKT Scanning cho agent Nmap
+
+- Phân tích và gộp logic từ `scannerv2.sh` và `extractv2.py` thành script Python mới:
+  - `data/agent_task_scripts/nmap/pkt_scannerv1.py`
+- Script mới nhận:
+  - danh sách IP / dải IP
+  - tên thư mục lưu kết quả
+  - thư mục gốc để ghi output
+- Script mới:
+  - tự khử trùng lặp đầu vào trước khi quét
+  - tạo và giữ lại toàn bộ file trung gian phục vụ đối soát
+  - xuất JSON kết quả scan trực tiếp thay vì sinh `services_vulns.csv`
+  - trả về `result_code` và `message` để backend ghi nhận vào `task execution`
+- Chuẩn mã kết quả bước scan:
+  - `200`: thành công
+  - `400`: đầu vào không hợp lệ
+  - `404`: thiếu `nmap`
+  - `501`: không tạo được thư mục output
+  - `502`: lệnh quét thất bại
+  - `503`: parse kết quả thất bại
+  - `500`: lỗi không xác định
+
+### Thêm task và operation cho luồng threat hunting
+
+- Thêm trường `max_concurrency_per_agent` cho `Task`.
+- Tạo task mới:
+  - `TASK-PKT-SCANNING`
+  - tên hiển thị: `PKT Scanning`
+  - `agent_type`: `nmap`
+  - `max_concurrency_per_agent = 1`
+- Tạo operation mới:
+  - `OP-PKT-THREAT-HUNTING`
+  - tên hiển thị: `PKT Threat Hunting`
+- Thứ tự task trong operation:
+  1. `PKT Scanning`
+  2. `Vulnerability Verifying`
+
+### Nạp trực tiếp kết quả scan vào runtime
+
+- Thêm service `backend/app/services/pkt_scanner_results.py` để:
+  - sinh tên thư mục scan từ operation + metadata execution
+  - mở rộng danh sách target thành danh sách IP / dải IP cần quét
+  - nạp JSON output của `pkt_scannerv1.py` vào `scan_result`
+  - tạo `scan_result_finding` tương ứng theo `Vulnerability.code`
+  - tạo placeholder cho target được chọn nhưng không phát hiện IP public
+  - giữ ghi chú cho trường hợp target trùng dải IP
+- Điều chỉnh worker để:
+  - tôn trọng giới hạn concurrency theo agent cho `PKT Scanning`
+  - ingest trực tiếp output scan khi task `TASK-PKT-SCANNING` hoàn tất
+
+### Điều chỉnh seed và UI quản lý task
+
+- Cập nhật `seed_data.py` để seed:
+  - task `PKT Scanning`
+  - operation `PKT Threat Hunting`
+  - script `pkt_scannerv1.py`
+- Màn `Quản lý Task` hiển thị và cho sửa `max_concurrency_per_agent`.
+- `.gitignore` được mở rộng thêm thư mục runtime:
+  - `HLT-vkl-26/data/agent_runs/`

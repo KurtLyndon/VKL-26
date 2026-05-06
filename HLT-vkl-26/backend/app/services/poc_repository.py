@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
 DATA_DIR = ROOT_DIR / "data"
+AGENT_TASK_SCRIPTS_DIR = DATA_DIR / "agent_task_scripts"
 POC_REPOSITORY_DIR = DATA_DIR / "poc_repository"
 FINDING_POC_FILES_DIR = DATA_DIR / "finding_poc_files"
 
@@ -15,6 +16,12 @@ FINDING_POC_FILES_DIR = DATA_DIR / "finding_poc_files"
 def ensure_poc_repository() -> Path:
     POC_REPOSITORY_DIR.mkdir(parents=True, exist_ok=True)
     return POC_REPOSITORY_DIR
+
+
+def ensure_agent_task_script_repository(agent_type: str) -> Path:
+    target_dir = AGENT_TASK_SCRIPTS_DIR / agent_type
+    target_dir.mkdir(parents=True, exist_ok=True)
+    return target_dir
 
 
 def ensure_finding_poc_repository() -> Path:

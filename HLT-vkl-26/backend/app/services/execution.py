@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Agent, Operation, OperationExecution, OperationTask, TaskExecution
 from app.schemas.resources import OperationLaunchRequest, OperationRuntimeOverviewItem, TaskExecutionStatusRequest
+from app.services.pkt_scanner_results import build_pkt_scan_entries, build_pkt_scan_folder_name
 
 
 def _build_execution_code(operation_code: str) -> str:
@@ -46,6 +47,8 @@ def launch_operation(db: Session, operation_id: int, payload: OperationLaunchReq
 
     task_executions: list[TaskExecution] = []
     shared_input = payload.shared_input or {}
+    scan_entries, selected_targets = build_pkt_scan_entries(db, payload.target_ids or [])
+    folder_name = build_pkt_scan_folder_name(operation, execution)
 
     for operation_task in operation_tasks:
         assigned_agent = db.scalar(
@@ -65,6 +68,18 @@ def launch_operation(db: Session, operation_id: int, payload: OperationLaunchReq
         if payload.target_ids:
             input_payload["target_ids"] = payload.target_ids
             input_payload.setdefault("target_id", payload.target_ids[0])
+            input_payload["selected_target_ids"] = payload.target_ids
+            input_payload["selected_targets"] = [
+                {
+                    "id": target.id,
+                    "code": target.code,
+                    "name": target.name,
+                    "ip_range": target.ip_range,
+                }
+                for target in selected_targets
+            ]
+            input_payload["scan_entries"] = scan_entries
+            input_payload["folder_name"] = folder_name
         if operation_task.input_override_json:
             input_payload.update(operation_task.input_override_json)
 
