@@ -43,7 +43,7 @@
             <option value="high">high</option>
             <option value="medium">medium</option>
             <option value="low">low</option>
-            <option value="info">info</option>
+            <option value="unknown">chưa xác định</option>
           </select>
         </label>
 

@@ -9,6 +9,7 @@ dist/
 .env
 .DS_Store
 *.log
+~$*.xlsx
 .vscode/
 HLT-vkl-26/backend/data/verifier_runs/
 HLT-vkl-26/backend/data/finding_poc_files/

@@ -16,7 +16,7 @@ const tone = computed(() => {
   if (["failed", "offline", "critical", "high", "confirmed", "reopened"].includes(value)) return "danger";
   if (["medium", "warning", "paused", "risk_accepted", "open"].includes(value)) return "warning";
   if (["in_progress"].includes(value)) return "info";
-  if (["false_positive", "low", "info"].includes(value)) return "neutral";
+  if (["false_positive", "low", "unknown"].includes(value)) return "neutral";
   return "neutral";
 });
 

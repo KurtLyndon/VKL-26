@@ -43,6 +43,7 @@ def parse_level(value: object) -> int:
     lowered = normalize_header(text)
     mapping = {
         "thong tin": 0,
+        "chuaxacdinh": 0,
         "thap": 1,
         "trung binh": 2,
         "cao": 3,

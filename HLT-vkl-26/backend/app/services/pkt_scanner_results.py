@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Operation, OperationExecution, ScanResult, ScanResultFinding, Target, TaskExecution, Vulnerability
-from app.services.findings import apply_vulnerability_defaults, level_to_severity
+from app.services.findings import apply_vulnerability_defaults, ensure_vulnerability_stub, level_to_severity
 from app.services.targets import normalize_target_ip_range, resolve_target_ip_entries, target_contains_ip
 
 
@@ -118,8 +118,9 @@ def ingest_pkt_scan_output(db: Session, task_execution: TaskExecution, raw_outpu
         for vuln_code in record.get("vuln_codes") or []:
             vulnerability = vulnerability_by_code.get(vuln_code)
             if vulnerability is None:
+                vulnerability = ensure_vulnerability_stub(db, vuln_code)
+                vulnerability_by_code[vuln_code] = vulnerability
                 unmatched_vuln_codes.add(vuln_code)
-                continue
 
             finding = ScanResultFinding(
                 scan_result_id=scan_result.id,

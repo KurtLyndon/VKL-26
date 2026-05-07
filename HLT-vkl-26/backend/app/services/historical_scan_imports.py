@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Agent, Operation, OperationExecution, OperationTask, ScanImportBatch, ScanResult, ScanResultFinding, Target, Task, TaskExecution, Vulnerability
 from app.schemas.resources import HistoricalImportCandidateTarget, HistoricalImportCommitResponse, HistoricalImportIpMappingItem, HistoricalImportPreviewResponse, OperationLaunchRequest, ScanImportBatchRead
-from app.services.findings import apply_vulnerability_defaults, level_to_severity
+from app.services.findings import apply_vulnerability_defaults, ensure_vulnerability_stub, level_to_severity
 from app.services.targets import normalize_target_ip_range, target_contains_ip
 
 
@@ -306,6 +306,11 @@ def _build_preview_payload(
     vulnerability_rows = db.scalars(select(Vulnerability).where(Vulnerability.code.in_(set(all_vuln_codes)))).all() if all_vuln_codes else []
     vulnerability_by_code = {item.code: item for item in vulnerability_rows}
     unmatched_codes = sorted({code for code in all_vuln_codes if code not in vulnerability_by_code})
+    if unmatched_codes:
+        warnings.append(
+            "Các mã vuln/CVE mới sẽ được tự tạo trong danh mục CVE với mức 0 - Chưa xác định: "
+            + ", ".join(unmatched_codes[:20])
+        )
 
     preview = HistoricalImportPreviewResponse(
         source_file_name=file_name,
@@ -389,11 +394,6 @@ def commit_services_vulns_import(
         selected_target_ids=selected_target_ids,
         manual_mapping=manual_mapping,
     )
-    if preview.unmatched_vulnerability_count > 0:
-        raise ValueError(
-            "Còn vuln code chưa match với bảng Vulnerability. Cần xử lý trước khi commit: "
-            + ", ".join(preview.unmatched_vulnerability_codes)
-        )
 
     unresolved_ips = [item.ip for item in mapping_items if item.status == "ambiguous"]
     if unresolved_ips:
@@ -459,6 +459,8 @@ def commit_services_vulns_import(
     db.flush()
 
     mapping_by_ip = {item.ip: item for item in mapping_items}
+    for vuln_code in preview.unmatched_vulnerability_codes:
+        vulnerability_by_code[vuln_code] = ensure_vulnerability_stub(db, vuln_code)
     selected_targets = db.scalars(select(Target).where(Target.id.in_(selected_target_ids)).order_by(Target.id.asc())).all()
     duplicate_target_notes = _build_duplicate_target_notes(selected_targets)
     created_target_ids: set[int] = set()

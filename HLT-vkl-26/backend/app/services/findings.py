@@ -58,7 +58,7 @@ class FindingJoinedRow:
 
 def level_to_severity(level: int | None) -> str:
     if level is None:
-        return "info"
+        return "unknown"
     if level >= 4:
         return "critical"
     if level == 3:
@@ -67,7 +67,31 @@ def level_to_severity(level: int | None) -> str:
         return "medium"
     if level == 1:
         return "low"
-    return "info"
+    return "unknown"
+
+
+def ensure_vulnerability_stub(db: Session, code: str) -> Vulnerability:
+    normalized_code = (code or "").strip()
+    if not normalized_code:
+        raise ValueError("Thiếu mã CVE/vulnerability để tạo record mặc định.")
+
+    vulnerability = db.scalar(select(Vulnerability).where(Vulnerability.code == normalized_code))
+    if vulnerability is not None:
+        return vulnerability
+
+    vulnerability = Vulnerability(
+        code=normalized_code,
+        title=normalized_code,
+        level=0,
+        threat=None,
+        proposal=None,
+        poc_file_name=None,
+        poc_text=None,
+        description=None,
+    )
+    db.add(vulnerability)
+    db.flush()
+    return vulnerability
 
 
 def get_status_options() -> list[FindingStatusOption]:

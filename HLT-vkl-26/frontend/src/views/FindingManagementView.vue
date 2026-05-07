@@ -92,7 +92,7 @@
               <td>{{ item.id }}</td>
               <td>{{ item.ip_address || "-" }}</td>
               <td>{{ item.finding_code }}</td>
-              <td><StatusPill :value="item.severity || 'info'" /></td>
+              <td><StatusPill :value="item.severity || 'unknown'" /></td>
               <td>
                 <div class="finding-status-cell" :class="statusCardClass(item.status)" @click.stop>
                   <StatusPill :value="item.status" />

@@ -260,3 +260,16 @@
 - Màn `Quản lý Task` hiển thị và cho sửa `max_concurrency_per_agent`.
 - `.gitignore` được mở rộng thêm thư mục runtime:
   - `HLT-vkl-26/data/agent_runs/`
+
+### Tự tạo CVE stub khi kết quả scan có mã mới
+
+- Bổ sung hành vi tự tạo `Vulnerability` khi:
+  - import `services_vulns.csv`
+  - ingest kết quả `PKT Scanning`
+  - normalize kết quả scan từ agent khác
+- Record CVE mới được tạo theo chuẩn:
+  - `code = mã vuln/CVE mới`
+  - `title = mã vuln/CVE mới`
+  - `level = 0`
+  - các trường khác để trống
+- Chuẩn mức `0` được đổi ý nghĩa từ `Thông tin` sang `Chưa xác định`.

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import ScanResult, ScanResultFinding, Vulnerability
-from app.services.findings import apply_vulnerability_defaults
+from app.services.findings import apply_vulnerability_defaults, ensure_vulnerability_stub
 from app.services.agents.registry import get_parser
 
 
@@ -60,6 +60,15 @@ def normalize_and_store_scan_result(
         finding_payload["note"] = finding_payload.get("note") or finding_payload.get("evidence")
         finding_payload["evidence"] = None
         vulnerability_id = _find_vulnerability_id(db, finding)
+        if vulnerability_id is None:
+            fallback_code = (
+                finding_payload.get("finding_code")
+                or finding_payload.get("title")
+                or finding_payload.get("note")
+            )
+            if fallback_code:
+                vulnerability = ensure_vulnerability_stub(db, str(fallback_code))
+                vulnerability_id = vulnerability.id
         finding_record = ScanResultFinding(
             scan_result_id=scan_result.id,
             vulnerability_id=vulnerability_id,
