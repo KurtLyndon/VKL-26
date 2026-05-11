@@ -5,9 +5,14 @@
       <h2>Quản lý Agent</h2>
       <p class="page-copy">Quản lý và giám sát tình trạng agent.</p>
     </div>
-    <div class="form-actions">
-      <button class="ghost-button" type="button" @click="refreshAll">Làm mới</button>
-      <button class="primary-button" type="button" @click="runMonitor">Kiểm tra trạng thái ngay</button>
+    <div class="agent-header-actions">
+      <div class="form-actions">
+        <button class="ghost-button" type="button" @click="refreshAll">Làm mới</button>
+        <button class="primary-button" type="button" @click="runMonitor">Kiểm tra trạng thái ngay</button>
+      </div>
+      <small class="agent-countdown-note">
+        Đợt kiểm tra trạng thái tiếp theo sau: <strong>{{ countdownLabel }}</strong>
+      </small>
     </div>
   </section>
 
@@ -229,6 +234,8 @@ const message = ref("");
 const runtimeMessage = ref("");
 const sortState = ref({ key: "code", direction: "asc" });
 const refreshTimer = ref(null);
+const countdownTimer = ref(null);
+const countdownSeconds = ref(60);
 const form = reactive({
   id: null,
   code: "",
@@ -250,6 +257,7 @@ const form = reactive({
 const sortedAgents = computed(() => sortRows(overview.agents, sortState.value));
 const { currentPage, pageSize, paginatedItems, totalItems, totalPages, goToPreviousPage, goToNextPage } =
   usePagination(sortedAgents);
+const countdownLabel = computed(() => `${Math.max(countdownSeconds.value, 0)}s`);
 
 function resetForm() {
   form.id = null;
@@ -335,6 +343,7 @@ async function loadOverview() {
       selectAgent(current);
     }
   }
+  syncCountdown();
 }
 
 async function refreshAll() {
@@ -344,6 +353,8 @@ async function refreshAll() {
 async function runMonitor() {
   const data = await runAgentMonitorNow();
   runtimeMessage.value = `Đã kiểm tra ${data.checked_agents} agent | Ready ${data.ready_agents} | Working ${data.working_agents} | Error ${data.error_agents} | Offline ${data.offline_agents}.`;
+  overview.next_run_at = data.next_run_at || null;
+  syncCountdown();
   await loadOverview();
 }
 
@@ -393,13 +404,42 @@ function stopAutoRefresh() {
   }
 }
 
+function syncCountdown() {
+  if (!overview.next_run_at) {
+    countdownSeconds.value = overview.poll_seconds || 60;
+    return;
+  }
+  const remaining = Math.ceil((new Date(overview.next_run_at).getTime() - Date.now()) / 1000);
+  countdownSeconds.value = remaining > 0 ? remaining : 0;
+}
+
+function startCountdown() {
+  stopCountdown();
+  countdownTimer.value = window.setInterval(() => {
+    if (countdownSeconds.value > 0) {
+      countdownSeconds.value -= 1;
+    } else {
+      countdownSeconds.value = overview.poll_seconds || 60;
+    }
+  }, 1000);
+}
+
+function stopCountdown() {
+  if (countdownTimer.value) {
+    window.clearInterval(countdownTimer.value);
+    countdownTimer.value = null;
+  }
+}
+
 onMounted(async () => {
   resetForm();
   await loadOverview();
   startAutoRefresh();
+  startCountdown();
 });
 
 onBeforeUnmount(() => {
   stopAutoRefresh();
+  stopCountdown();
 });
 </script>

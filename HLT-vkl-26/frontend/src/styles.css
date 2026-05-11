@@ -272,6 +272,23 @@ select {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
+.agent-header-actions {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.agent-countdown-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.agent-countdown-note strong {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
 .agent-card-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1392,5 +1409,9 @@ select {
 
   .agent-card-grid {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .agent-header-actions {
+    justify-items: stretch;
   }
 }
