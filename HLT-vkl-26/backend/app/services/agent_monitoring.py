@@ -224,12 +224,22 @@ def list_agent_cards(db: Session) -> list[AgentMonitorCardRead]:
 def get_agent_monitor_overview(db: Session) -> AgentMonitorOverviewResponse:
     cards = list_agent_cards(db)
     type_counts: dict[str, int] = {}
+    online_counts: dict[str, int] = {}
     for card in cards:
         type_counts[card.agent_type] = type_counts.get(card.agent_type, 0) + 1
+        if card.status in {READY_STATUS, WORKING_STATUS, ERROR_STATUS}:
+            online_counts[card.agent_type] = online_counts.get(card.agent_type, 0) + 1
     next_run_at = _last_run_at + timedelta(seconds=settings.agent_monitor_poll_seconds) if _last_run_at else None
     return AgentMonitorOverviewResponse(
         total_agents=len(cards),
-        type_summaries=[AgentTypeSummary(agent_type=agent_type, count=count) for agent_type, count in sorted(type_counts.items())],
+        type_summaries=[
+            AgentTypeSummary(
+                agent_type=agent_type,
+                count=count,
+                online_count=online_counts.get(agent_type, 0),
+            )
+            for agent_type, count in sorted(type_counts.items())
+        ],
         agents=cards,
         last_run_at=_last_run_at,
         next_run_at=next_run_at,

@@ -176,6 +176,7 @@ class AgentRead(AgentBase, ORMModel):
 class AgentTypeSummary(BaseModel):
     agent_type: str
     count: int
+    online_count: int = 0
 
 
 class AgentMonitorCardRead(ORMModel):

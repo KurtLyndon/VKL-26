@@ -23,9 +23,9 @@
       <small class="inline-note">Chu kỳ kiểm tra: {{ overview.poll_seconds || 60 }} giây</small>
     </article>
     <article v-for="item in overview.type_summaries" :key="item.agent_type" class="stat-card">
-      <span class="stat-label">{{ item.agent_type }}</span>
+      <span class="stat-label">Loại Agent: {{ item.agent_type }}</span>
       <strong class="stat-value">{{ item.count }}</strong>
-      <small class="inline-note">Số lượng theo loại agent</small>
+      <small class="inline-note">Online: {{ item.online_count || 0 }}</small>
     </article>
   </section>
 
@@ -79,7 +79,7 @@
     <p v-if="runtimeMessage" class="inline-note">{{ runtimeMessage }}</p>
   </section>
 
-  <section class="panel-grid">
+  <section class="panel-grid panel-grid-loose">
     <article class="panel agent-table-panel">
       <div class="panel-head">
         <h3>Danh sách Agent</h3>
