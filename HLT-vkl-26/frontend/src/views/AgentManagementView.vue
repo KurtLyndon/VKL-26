@@ -222,6 +222,8 @@ import PaginationBar from "../components/PaginationBar.vue";
 import { usePagination } from "../composables/usePagination";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
+const AGENT_OVERVIEW_CACHE_KEY = "hlt-agent-monitor-overview";
+
 const overview = reactive({
   total_agents: 0,
   type_summaries: [],
@@ -258,6 +260,48 @@ const sortedAgents = computed(() => sortRows(overview.agents, sortState.value));
 const { currentPage, pageSize, paginatedItems, totalItems, totalPages, goToPreviousPage, goToNextPage } =
   usePagination(sortedAgents);
 const countdownLabel = computed(() => `${Math.max(countdownSeconds.value, 0)}s`);
+
+function applyOverview(data) {
+  overview.total_agents = data.total_agents || 0;
+  overview.type_summaries = data.type_summaries || [];
+  overview.agents = data.agents || [];
+  overview.last_run_at = data.last_run_at || null;
+  overview.next_run_at = data.next_run_at || null;
+  overview.poll_seconds = data.poll_seconds || 60;
+}
+
+function hydrateOverviewFromCache() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    const raw = window.localStorage.getItem(AGENT_OVERVIEW_CACHE_KEY);
+    if (!raw) {
+      return;
+    }
+    const cached = JSON.parse(raw);
+    applyOverview(cached);
+  } catch (_error) {
+    window.localStorage.removeItem(AGENT_OVERVIEW_CACHE_KEY);
+  }
+}
+
+function persistOverviewToCache() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.setItem(
+    AGENT_OVERVIEW_CACHE_KEY,
+    JSON.stringify({
+      total_agents: overview.total_agents,
+      type_summaries: overview.type_summaries,
+      agents: overview.agents,
+      last_run_at: overview.last_run_at,
+      next_run_at: overview.next_run_at,
+      poll_seconds: overview.poll_seconds,
+    }),
+  );
+}
 
 function resetForm() {
   form.id = null;
@@ -330,12 +374,8 @@ function selectAgent(agent) {
 
 async function loadOverview() {
   const data = await getAgentMonitorOverview();
-  overview.total_agents = data.total_agents || 0;
-  overview.type_summaries = data.type_summaries || [];
-  overview.agents = data.agents || [];
-  overview.last_run_at = data.last_run_at || null;
-  overview.next_run_at = data.next_run_at || null;
-  overview.poll_seconds = data.poll_seconds || 60;
+  applyOverview(data);
+  persistOverviewToCache();
 
   if (form.id) {
     const current = overview.agents.find((item) => item.id === form.id);
@@ -433,6 +473,8 @@ function stopCountdown() {
 
 onMounted(async () => {
   resetForm();
+  hydrateOverviewFromCache();
+  syncCountdown();
   await loadOverview();
   startAutoRefresh();
   startCountdown();
