@@ -273,3 +273,40 @@
   - `level = 0`
   - các trường khác để trống
 - Chuẩn mức `0` được đổi ý nghĩa từ `Thông tin` sang `Chưa xác định`.
+
+## 2026-05-11
+
+### Nâng cấp quản lý và giám sát Agent
+
+- Mở rộng dữ liệu `Agent` với các trường:
+  - `duration`
+  - `old_time`
+  - `old_status`
+  - `status_note`
+- Bổ sung migration `011__extend_agent_monitoring.sql`.
+- Đồng bộ schema API để trả thêm thông tin thời lượng và trạng thái runtime của agent.
+
+### Module kiểm tra trạng thái Agent theo chu kỳ 1 phút
+
+- Thêm service `backend/app/services/agent_monitoring.py`.
+- Bổ sung vòng lặp nền `AgentMonitorLoop` chạy theo `AGENT_MONITOR_POLL_SECONDS`.
+- Logic trạng thái:
+  - `offline`: không kết nối được, ghi chú `Đang thử kết nối lại...`
+  - `ready`: agent sẵn sàng, ghi chú `Sẵn sàng`
+  - `working`: agent đang thực thi, ghi chú tên operation và task
+  - `error`: agent đang có lỗi, giữ lại ghi chú lỗi
+- Trạng thái agent được tính tiếp từ `old_time` và `old_status`, nên không mất mạch duration khi server restart.
+
+### UI giám sát Agent mới
+
+- Tách menu `Agents` sang màn riêng `AgentManagementView.vue`.
+- Bổ sung:
+  - thẻ tổng quan số lượng agent và số lượng theo từng loại agent
+  - grid card cho từng agent
+  - bảng danh sách rút gọn phía dưới
+  - thẻ `Thông tin Agent` không cho sửa `status`
+- Các card agent:
+  - sắp xếp theo `Ready`, `Working`, `Error`, `Offline`
+  - cùng trạng thái thì ưu tiên `system` trước
+  - cùng loại agent dùng cùng một tông màu nền
+- Khi lưu thông tin agent, backend sẽ chủ động kích hoạt monitor nếu chưa sát chu kỳ kế tiếp.

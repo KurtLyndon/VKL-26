@@ -68,7 +68,7 @@ const sections = [
   {
     label: "Danh mục",
     items: [
-      { to: "/agents", label: "Agents", caption: "Trạng thái và version", permission: "agents.manage" },
+      { to: "/agents", label: "Agents", caption: "Quản lý và giám sát", permission: "agents.manage" },
       { to: "/tasks", label: "Tasks", caption: "Script và schema", permission: "tasks.manage" },
       { to: "/operations", label: "Operations", caption: "Workflow và lịch chạy", permission: "operations.manage" },
       { to: "/operation-executions", label: "Operation Executions", caption: "Tiến trình operation", permission: "runtime.control" },

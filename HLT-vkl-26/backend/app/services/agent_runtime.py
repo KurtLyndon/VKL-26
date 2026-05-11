@@ -15,6 +15,7 @@ from app.schemas.resources import (
     AgentHeartbeatRequest,
     TaskExecutionHeartbeatRequest,
 )
+from app.services.agent_monitoring import DEFAULT_READY_NOTE, ERROR_STATUS, READY_STATUS, WORKING_STATUS, mark_agent_status, normalize_agent_status
 from app.services.execution import refresh_operation_execution_summary
 
 AGENT_EXECUTE_CONTRACT_VERSION = "2026-04-21"
@@ -42,7 +43,17 @@ def update_agent_heartbeat(db: Session, payload: AgentHeartbeatRequest) -> tuple
     if payload.version is not None:
         agent.version = payload.version
 
-    agent.status = payload.status or "online"
+    heartbeat_status = normalize_agent_status(payload.status or READY_STATUS)
+    status_note = payload.status_note
+    if status_note is None and payload.metadata_json:
+        status_note = payload.metadata_json.get("status_note") or payload.metadata_json.get("error")
+    if heartbeat_status == READY_STATUS:
+        status_note = status_note or DEFAULT_READY_NOTE
+    elif heartbeat_status == WORKING_STATUS:
+        status_note = status_note or "Đang thực thi nhiệm vụ."
+    elif heartbeat_status == ERROR_STATUS:
+        status_note = status_note or "Agent đang gặp lỗi."
+    mark_agent_status(agent, heartbeat_status, status_note, acknowledged_at)
     agent.last_seen_at = acknowledged_at
 
     db.commit()
@@ -75,7 +86,7 @@ def update_task_execution_heartbeat(
 
     agent = db.get(Agent, task_execution.agent_id)
     if agent:
-        agent.status = "online"
+        mark_agent_status(agent, WORKING_STATUS, agent.status_note or "Đang thực thi nhiệm vụ.", acknowledged_at)
         agent.last_seen_at = acknowledged_at
 
     next_status = payload.status or "running"

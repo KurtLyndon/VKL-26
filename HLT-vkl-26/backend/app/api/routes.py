@@ -40,6 +40,10 @@ from app.schemas.resources import (
     AccountGroupUpdate,
     AgentExecuteContractDocument,
     AgentCreate,
+    AgentManageCreate,
+    AgentManageUpdate,
+    AgentMonitorOverviewResponse,
+    AgentMonitorRunResponse,
     AgentHeartbeatRequest,
     AgentHeartbeatResponse,
     AgentRead,
@@ -156,6 +160,7 @@ from app.services.dashboard_analytics import (
     get_top_vulnerabilities,
     get_vulnerability_trend_by_quarter,
 )
+from app.services.agent_monitoring import get_agent_monitor_overview, run_agent_monitor_cycle, should_trigger_manual_agent_monitor
 from app.services.auth import (
     authenticate_user,
     create_access_token,
@@ -307,6 +312,71 @@ register_crud_routes(
     list_permission="agents.manage",
     write_permission="agents.manage",
 )
+
+
+@router.get("/agents/monitor/overview", response_model=AgentMonitorOverviewResponse)
+def agent_monitor_overview(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("agents.manage")),
+):
+    return get_agent_monitor_overview(db)
+
+
+@router.post("/agents/monitor/run", response_model=AgentMonitorRunResponse)
+def run_agent_monitor_now(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("agents.manage")),
+):
+    return run_agent_monitor_cycle(db)
+
+
+@router.post("/agents/manage", response_model=AgentRead, status_code=status.HTTP_201_CREATED)
+def create_agent_managed(
+    payload: AgentManageCreate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("agents.manage")),
+):
+    agent = Agent(
+        code=payload.code,
+        name=payload.name,
+        agent_type=payload.agent_type,
+        host=payload.host,
+        ip_address=payload.ip_address,
+        port=payload.port,
+        version=payload.version,
+        status_note=payload.status_note,
+    )
+    db.add(agent)
+    db.commit()
+    db.refresh(agent)
+    if should_trigger_manual_agent_monitor():
+        run_agent_monitor_cycle(db)
+        db.refresh(agent)
+    return agent
+
+
+@router.put("/agents/manage/{agent_id}", response_model=AgentRead)
+def update_agent_managed(
+    agent_id: int,
+    payload: AgentManageUpdate,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("agents.manage")),
+):
+    agent = db.get(Agent, agent_id)
+    if not agent:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found")
+
+    payload_data = payload.model_dump(exclude_unset=True)
+    for field in ("code", "name", "agent_type", "host", "ip_address", "port", "version", "status_note"):
+        if field in payload_data:
+            setattr(agent, field, payload_data[field])
+
+    db.commit()
+    db.refresh(agent)
+    if should_trigger_manual_agent_monitor():
+        run_agent_monitor_cycle(db)
+        db.refresh(agent)
+    return agent
 register_crud_routes(
     router,
     path="/account-groups",
@@ -342,6 +412,7 @@ def _serialize_task_with_agent(task: Task) -> TaskRead:
         output_schema_json=task.output_schema_json,
         description=task.description,
         version=task.version,
+        max_concurrency_per_agent=task.max_concurrency_per_agent,
         is_active=task.is_active,
         created_at=task.created_at,
         updated_at=task.updated_at,

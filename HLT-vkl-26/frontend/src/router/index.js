@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import { getCurrentUser } from "../api/client";
 import { useAuthStore } from "../stores/auth";
 import AccountGroupPermissionsView from "../views/AccountGroupPermissionsView.vue";
+import AgentManagementView from "../views/AgentManagementView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import ExecutionMonitorView from "../views/ExecutionMonitorView.vue";
 import FindingExplorerView from "../views/FindingExplorerView.vue";
@@ -49,14 +50,8 @@ const routes = [
   },
   {
     path: "/agents",
-    component: ResourceView,
+    component: AgentManagementView,
     meta: { title: "Agents", permission: "agents.manage" },
-    props: {
-      title: "Quản lý Agent",
-      resource: "agents",
-      fields: ["code", "name", "agent_type", "ip_address", "port", "version", "status"],
-      jsonFields: [],
-    },
   },
   {
     path: "/tasks",

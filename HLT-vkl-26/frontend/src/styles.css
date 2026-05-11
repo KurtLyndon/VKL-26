@@ -268,6 +268,125 @@ select {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
+.agent-overview-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.agent-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.agent-monitor-card {
+  border: 1px solid rgba(31, 77, 54, 0.14);
+  background:
+    linear-gradient(135deg, var(--agent-type-fill, rgba(47, 107, 73, 0.12)), rgba(255, 250, 240, 0.94)),
+    var(--bg-card-strong);
+  border-radius: 20px;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  box-shadow: 0 10px 26px rgba(20, 40, 28, 0.1);
+}
+
+.agent-monitor-card--selected,
+.agent-monitor-card:hover {
+  border-color: var(--agent-type-accent, var(--accent));
+  transform: translateY(-1px);
+}
+
+.agent-monitor-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.agent-monitor-card-head div {
+  display: grid;
+  gap: 4px;
+}
+
+.agent-monitor-card-head strong {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.agent-monitor-card-head small,
+.agent-monitor-card-grid span,
+.agent-status-note {
+  color: var(--muted);
+}
+
+.agent-type-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--agent-type-accent, var(--accent));
+  font-size: 11px;
+  border: 1px solid rgba(31, 77, 54, 0.14);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.agent-monitor-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.agent-monitor-card-grid div {
+  display: grid;
+  gap: 4px;
+}
+
+.agent-monitor-card-grid span {
+  font-size: 12px;
+}
+
+.agent-monitor-card-grid strong {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.agent-status-text {
+  font-weight: 700;
+}
+
+.agent-status-text--ready {
+  color: #1d6b2a;
+}
+
+.agent-status-text--working {
+  color: #1f5da8;
+}
+
+.agent-status-text--error {
+  color: var(--danger);
+}
+
+.agent-status-text--offline {
+  color: #161616;
+}
+
+.agent-status-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  min-height: 34px;
+}
+
+.agent-table-panel .data-table {
+  min-width: 520px;
+}
+
 .finding-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr);
@@ -1269,5 +1388,9 @@ select {
       "poc"
       "preview"
       "edit";
+  }
+
+  .agent-card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 }

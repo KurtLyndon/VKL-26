@@ -24,6 +24,10 @@ class Agent(Base, TimestampMixin):
     port: Mapped[int | None] = mapped_column(Integer, nullable=True)
     version: Mapped[str | None] = mapped_column(String(50), nullable=True)
     status: Mapped[str] = mapped_column(String(30), default="offline")
+    duration: Mapped[int] = mapped_column(Integer, default=0)
+    old_time: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    old_status: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    status_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 

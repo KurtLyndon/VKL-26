@@ -140,6 +140,10 @@ class AgentBase(BaseModel):
     port: int | None = None
     version: str | None = None
     status: str = "offline"
+    duration: int = 0
+    old_time: datetime | None = None
+    old_status: str | None = None
+    status_note: str | None = None
     last_seen_at: datetime | None = None
 
 
@@ -148,6 +152,7 @@ class AgentCreate(AgentBase):
 
 
 class AgentUpdate(BaseModel):
+    code: str | None = None
     name: str | None = None
     agent_type: str | None = None
     host: str | None = None
@@ -155,6 +160,10 @@ class AgentUpdate(BaseModel):
     port: int | None = None
     version: str | None = None
     status: str | None = None
+    duration: int | None = None
+    old_time: datetime | None = None
+    old_status: str | None = None
+    status_note: str | None = None
     last_seen_at: datetime | None = None
 
 
@@ -162,6 +171,74 @@ class AgentRead(AgentBase, ORMModel):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+class AgentTypeSummary(BaseModel):
+    agent_type: str
+    count: int
+
+
+class AgentMonitorCardRead(ORMModel):
+    id: int
+    code: str
+    name: str
+    agent_type: str
+    host: str | None = None
+    ip_address: str | None = None
+    port: int | None = None
+    version: str | None = None
+    status: str
+    duration: int
+    duration_label: str
+    old_time: datetime | None = None
+    old_status: str | None = None
+    status_note: str | None = None
+    last_seen_at: datetime | None = None
+    task_execution_count: int = 0
+    operation_execution_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
+
+class AgentMonitorOverviewResponse(BaseModel):
+    total_agents: int
+    type_summaries: list[AgentTypeSummary] = Field(default_factory=list)
+    agents: list[AgentMonitorCardRead] = Field(default_factory=list)
+    last_run_at: datetime | None = None
+    next_run_at: datetime | None = None
+    poll_seconds: int = 60
+
+
+class AgentMonitorRunResponse(BaseModel):
+    checked_agents: int
+    ready_agents: int
+    working_agents: int
+    error_agents: int
+    offline_agents: int
+    run_started_at: datetime
+    next_run_at: datetime | None = None
+
+
+class AgentManageCreate(BaseModel):
+    code: str
+    name: str
+    agent_type: str
+    host: str | None = None
+    ip_address: str | None = None
+    port: int | None = None
+    version: str | None = None
+    status_note: str | None = None
+
+
+class AgentManageUpdate(BaseModel):
+    code: str | None = None
+    name: str | None = None
+    agent_type: str | None = None
+    host: str | None = None
+    ip_address: str | None = None
+    port: int | None = None
+    version: str | None = None
+    status_note: str | None = None
 
 
 class TaskBase(BaseModel):
@@ -788,6 +865,7 @@ class AgentHeartbeatRequest(BaseModel):
     agent_id: int | None = None
     agent_code: str | None = None
     status: str = "online"
+    status_note: str | None = None
     host: str | None = None
     ip_address: str | None = None
     port: int | None = None

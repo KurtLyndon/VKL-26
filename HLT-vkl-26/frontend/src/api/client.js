@@ -39,6 +39,26 @@ export async function getList(resource) {
   return data;
 }
 
+export async function getAgentMonitorOverview() {
+  const { data } = await api.get("/agents/monitor/overview");
+  return data;
+}
+
+export async function runAgentMonitorNow() {
+  const { data } = await api.post("/agents/monitor/run");
+  return data;
+}
+
+export async function createManagedAgent(payload) {
+  const { data } = await api.post("/agents/manage", payload);
+  return data;
+}
+
+export async function updateManagedAgent(agentId, payload) {
+  const { data } = await api.put(`/agents/manage/${agentId}`, payload);
+  return data;
+}
+
 export async function getTaskAgentTypeOptions() {
   const { data } = await api.get("/tasks/agent-types");
   return data;

@@ -6,10 +6,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
-from app.models import OperationExecution, OperationTask, Target, TaskExecution
+from app.models import Operation, OperationExecution, OperationTask, Target, TaskExecution
 from app.schemas.resources import WorkerRunResponse
 from app.services.agents.dispatch import dispatch_task_to_agent
 from app.services.agents.registry import has_parser
+from app.services.agent_monitoring import DEFAULT_READY_NOTE, ERROR_STATUS, READY_STATUS, WORKING_STATUS, mark_agent_status
 from app.services.execution import refresh_operation_execution_summary
 from app.services.pkt_scanner_results import ingest_pkt_scan_output
 from app.services.scan_results import normalize_and_store_scan_result
@@ -100,9 +101,20 @@ def _cancel_blocked_followups(db: Session, failed_task_execution: TaskExecution)
     return len(queued_followups)
 
 
+def _operation_task_note(db: Session, task_execution: TaskExecution) -> str:
+    operation_name = db.scalar(
+        select(Operation.name)
+        .join(OperationExecution, Operation.id == OperationExecution.operation_id)
+        .where(OperationExecution.id == task_execution.operation_execution_id)
+    )
+    return f"{operation_name or 'Operation'} / {task_execution.task.name}"
+
+
 def process_task_execution(db: Session, task_execution: TaskExecution) -> str:
     task_execution.status = "running"
     task_execution.started_at = datetime.utcnow()
+    if task_execution.agent:
+        mark_agent_status(task_execution.agent, WORKING_STATUS, _operation_task_note(db, task_execution), task_execution.started_at)
 
     target, target_value = _resolve_target(db, task_execution)
 
@@ -116,6 +128,13 @@ def process_task_execution(db: Session, task_execution: TaskExecution) -> str:
             )
             task_execution.status = "running"
             task_execution.finished_at = None
+            if task_execution.agent:
+                mark_agent_status(
+                    task_execution.agent,
+                    WORKING_STATUS,
+                    _operation_task_note(db, task_execution),
+                    datetime.utcnow(),
+                )
             return "running"
 
         task_execution.raw_log = f"Executed task via {execution_meta.get('mode')} for {task_execution.task.agent_type}."
@@ -132,6 +151,8 @@ def process_task_execution(db: Session, task_execution: TaskExecution) -> str:
 
         task_execution.status = "completed"
         task_execution.finished_at = datetime.utcnow()
+        if task_execution.agent:
+            mark_agent_status(task_execution.agent, READY_STATUS, DEFAULT_READY_NOTE, task_execution.finished_at)
 
         if target is not None and raw_output is not None and has_parser(task_execution.task.agent_type):
             normalize_and_store_scan_result(
@@ -149,6 +170,8 @@ def process_task_execution(db: Session, task_execution: TaskExecution) -> str:
         task_execution.status = "failed"
         task_execution.raw_log = f"Worker failed: {exc}"
         task_execution.finished_at = datetime.utcnow()
+        if task_execution.agent:
+            mark_agent_status(task_execution.agent, ERROR_STATUS, str(exc), task_execution.finished_at)
         return "failed"
 
 

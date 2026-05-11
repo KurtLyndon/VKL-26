@@ -8,6 +8,10 @@ CREATE TABLE IF NOT EXISTS agent (
     port INT NULL,
     version VARCHAR(50) NULL,
     status VARCHAR(30) NOT NULL DEFAULT 'offline',
+    duration INT NOT NULL DEFAULT 0,
+    old_time DATETIME NULL,
+    old_status VARCHAR(30) NULL,
+    status_note TEXT NULL,
     last_seen_at DATETIME NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
