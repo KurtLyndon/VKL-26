@@ -118,11 +118,11 @@ Mục tiêu của project con này:
 - Có migration SQL versioned trong `backend/migrations/versions`.
 - Có runner migration local trong `backend/scripts/migrate.py`.
 - Có snapshot SQL cũ trong `backend/database` để tham khảo và bootstrap thủ công.
-- Có nhật ký tiến độ trong `docs/WORKLOG.md` để lần sau tiếp tục.
+- Có nhật ký tiến độ trong `docs/developer/WORKLOG.md` để lần sau tiếp tục.
 - Code parser từng agent được tách riêng trong `backend/app/services/agents`.
 - Parser hiện có cho `nmap` (XML + fallback text), `nuclei` (JSONL + fallback text), `acunetix` (JSON + fallback text).
 - Có kho lưu trữ script POC tại `backend/data/poc_repository` để giữ bản sao script xác minh.
-- Tài liệu contract agent thật: [docs/AGENT_RUNTIME_CONTRACT.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/docs/AGENT_RUNTIME_CONTRACT.md)
+- Tài liệu contract agent thật: [docs/developer/AGENT_RUNTIME_CONTRACT.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/docs/developer/AGENT_RUNTIME_CONTRACT.md)
 
 ## Migration Versioned
 
@@ -142,7 +142,7 @@ python -m scripts.migrate status
 python -m scripts.migrate upgrade
 ```
 
-Tài liệu chi tiết: [docs/MIGRATIONS.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/docs/MIGRATIONS.md)
+Tài liệu chi tiết: [docs/developer/MIGRATIONS.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/docs/developer/MIGRATIONS.md)
 
 ## Khởi tạo Database Nhanh
 

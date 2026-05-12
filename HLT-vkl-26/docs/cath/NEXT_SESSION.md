@@ -9,7 +9,7 @@
 ## Cách tiếp tục nhanh
 
 1. Mở project `D:\Projects\VKL-26\HLT\HLT-vkl-26`.
-2. Đọc `docs/WORKLOG.md`.
+2. Nếu cần bối cảnh kỹ thuật, đọc `docs/developer/WORKLOG.md`.
 3. Nếu có MySQL local, vào `backend` rồi chạy `python scripts\migrate.py status` và `python scripts\migrate.py upgrade`.
 4. Nếu muốn app local tự apply migration lúc startup, bật `AUTO_APPLY_MIGRATIONS=true`.
 5. Đăng nhập bằng `admin` / `Admin@123`.

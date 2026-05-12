@@ -26,7 +26,7 @@
 - Bổ sung baseline stamping cho database cũ để tránh xung đột seed mẫu.
 - Bổ sung giao thức runtime cho agent thật: discovery contract, heartbeat, task heartbeat, callback hoàn tất task.
 - Hỗ trợ cả 2 luồng sync và async cho agent runtime.
-- Thêm tài liệu `docs/AGENT_RUNTIME_CONTRACT.md`.
+- Thêm tài liệu `docs/developer/AGENT_RUNTIME_CONTRACT.md`.
 - Thêm agent mẫu tách riêng tại `agents/nmap-agent-demo`.
 - Agent mẫu hỗ trợ `mock` mode và `real` mode, callback heartbeat/status/normalize ngược về backend.
 - Thêm mẫu `systemd` service và hướng dẫn deploy cho agent Nmap demo.
@@ -316,11 +316,11 @@
 
 ### Bổ sung tài liệu contract cho script
 
-- Thêm `docs/POC_SCRIPT_CONTRACT.md`:
+- Thêm `docs/developer/POC_SCRIPT_CONTRACT.md`:
   - mô tả chuẩn đầu vào/đầu ra cho PoC script
   - mã kết quả `200/201/500/501/502`
   - quy ước lưu script PoC, file PoC và file tạm trên agent
-- Thêm `docs/TASK_SCRIPT_CONTRACT.md`:
+- Thêm `docs/developer/TASK_SCRIPT_CONTRACT.md`:
   - mô tả chuẩn cho các task script do agent thực thi
   - payload input, JSON output, artifact scan, `result_code`
   - quy tắc ingest scan result và xử lý CVE stub khi phát hiện mã mới
