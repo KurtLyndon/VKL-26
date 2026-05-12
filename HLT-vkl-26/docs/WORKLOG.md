@@ -310,3 +310,17 @@
   - cùng trạng thái thì ưu tiên `system` trước
   - cùng loại agent dùng cùng một tông màu nền
 - Khi lưu thông tin agent, backend sẽ chủ động kích hoạt monitor nếu chưa sát chu kỳ kế tiếp.
+
+
+## 2026-05-12
+
+### Bổ sung tài liệu contract cho script
+
+- Thêm `docs/POC_SCRIPT_CONTRACT.md`:
+  - mô tả chuẩn đầu vào/đầu ra cho PoC script
+  - mã kết quả `200/201/500/501/502`
+  - quy ước lưu script PoC, file PoC và file tạm trên agent
+- Thêm `docs/TASK_SCRIPT_CONTRACT.md`:
+  - mô tả chuẩn cho các task script do agent thực thi
+  - payload input, JSON output, artifact scan, `result_code`
+  - quy tắc ingest scan result và xử lý CVE stub khi phát hiện mã mới
