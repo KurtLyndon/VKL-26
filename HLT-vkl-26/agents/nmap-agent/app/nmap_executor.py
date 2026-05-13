@@ -5,11 +5,22 @@ import json
 import shlex
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from app.config import Settings
 from app.schemas import ExecuteRequest
 
 PKT_SCANNING_TASK_CODE = "TASK-PKT-SCANNING"
+
+
+def _normalize_nmap_target(value: str) -> str:
+    compact = str(value or "").strip()
+    if not compact:
+        return compact
+    parsed = urlsplit(compact if "://" in compact else f"//{compact}")
+    if parsed.hostname:
+        return parsed.hostname
+    return compact
 
 
 def _build_command(payload: ExecuteRequest, settings: Settings) -> list[str]:
@@ -30,7 +41,7 @@ def _build_command(payload: ExecuteRequest, settings: Settings) -> list[str]:
     elif isinstance(extra_args, str) and extra_args.strip():
         command.extend(shlex.split(extra_args))
 
-    command.append(payload.target.value)
+    command.append(_normalize_nmap_target(payload.target.value))
     return command
 
 
@@ -45,10 +56,10 @@ def _target_entries(payload: ExecuteRequest) -> list[str]:
     input_data = payload.input_data or {}
     scan_entries = input_data.get("scan_entries")
     if isinstance(scan_entries, list):
-        return [str(item).strip() for item in scan_entries if str(item).strip()]
+        return [_normalize_nmap_target(str(item)) for item in scan_entries if str(item).strip()]
     if isinstance(scan_entries, str) and scan_entries.strip():
-        return [item.strip() for item in scan_entries.split(",") if item.strip()]
-    return [payload.target.value]
+        return [_normalize_nmap_target(item) for item in scan_entries.split(",") if item.strip()]
+    return [_normalize_nmap_target(payload.target.value)]
 
 
 def _mock_pkt_payload(payload: ExecuteRequest, settings: Settings) -> str:

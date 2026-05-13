@@ -3,7 +3,7 @@
 ## Mục tiêu ưu tiên
 
 - Test browser thực tế cho login, RBAC và mock demo flow.
-- Deploy `agents/nmap-agent-demo` lên Kali/VM khi máy đủ tài nguyên.
+- Deploy `agents/nmap-agent` lên Kali/VM khi máy đủ tài nguyên.
 - Thêm export PDF.
 
 ## Cách tiếp tục nhanh

@@ -167,7 +167,7 @@ async def execute(payload: ExecuteRequest) -> ExecuteResponse:
         status="accepted",
         accepted=True,
         output_data={"queue_position": 1, "agent_mode": settings.nmap_agent_mode},
-        meta={"mode": "async-demo"},
+        meta={"mode": "async-agent"},
         message="Nmap agent accepted the task and will callback the backend asynchronously.",
         agent_execution_id=agent_execution_id,
     )

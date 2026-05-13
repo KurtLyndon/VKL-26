@@ -12,6 +12,7 @@ import sys
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from urllib.parse import urlsplit
 
 try:
     import requests
@@ -114,8 +115,8 @@ def extract_tokens_from_script(script_id: str | None, output: str | None) -> lis
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="PKT scanner runner")
-    parser.add_argument("--targets", nargs="*", default=[], help="Danh sách IP/dải IP đầu vào")
-    parser.add_argument("--targets-file", help="File JSON array hoặc text chứa danh sách IP/dải IP")
+    parser.add_argument("--targets", nargs="*", default=[], help="Danh sach IP/dai IP/domain/URL dau vao")
+    parser.add_argument("--targets-file", help="File JSON array hoac text chua danh sach IP/dai IP/domain/URL")
     parser.add_argument("--folder-name", required=True, help="Tên thư mục lưu kết quả scan")
     parser.add_argument("--output-root", default=".", help="Thư mục gốc để tạo folder-name")
     return parser.parse_args()
@@ -150,9 +151,14 @@ def load_targets(args: argparse.Namespace) -> list[str]:
 
 
 def normalize_target_entry(value: str) -> str:
-    compact = re.sub(r"\s+", "", value or "")
+    compact = re.sub(r"\s+", "", value or "").strip(",")
     compact = compact.replace("_", "-")
-    return compact.strip(",")
+    if not compact:
+        return ""
+    parsed = urlsplit(compact if "://" in compact else f"//{compact}")
+    if parsed.hostname:
+        return parsed.hostname
+    return compact
 
 
 def ensure_output_dir(folder_name: str, output_root: str) -> Path:
@@ -211,6 +217,12 @@ def parse_nmap_xml(path: Path) -> list[dict]:
                 break
         if not ip:
             continue
+        hostnames = [
+            hostname.get("name")
+            for hostname in host.findall("hostnames/hostname")
+            if hostname.get("name")
+        ]
+        hostname_value = hostnames[0] if hostnames else None
         ports = host.find("ports")
         if ports is None:
             continue
@@ -237,6 +249,8 @@ def parse_nmap_xml(path: Path) -> list[dict]:
                     "protocol": port.get("protocol", "tcp"),
                     "service": service,
                     "version": " ".join(version_tokens).strip() or None,
+                    "hostname": hostname_value,
+                    "hostnames": hostnames,
                     "vuln_codes": vuln_codes,
                 }
             )
@@ -253,6 +267,10 @@ def parse_gnmap(path: Path) -> list[dict]:
         left, ports_str = line.split("Ports:", 1)
         parts = left.split()
         ip = parts[1] if len(parts) >= 2 else ""
+        hostname = ""
+        hostname_match = re.search(r"Host:\s+\S+\s+\(([^)]*)\)", left)
+        if hostname_match and hostname_match.group(1).strip():
+            hostname = hostname_match.group(1).strip()
         for entry in ports_str.split(","):
             fields = entry.strip().split("/")
             if len(fields) < 5 or fields[1].lower() != "open":
@@ -264,6 +282,8 @@ def parse_gnmap(path: Path) -> list[dict]:
                     "protocol": "tcp",
                     "service": fields[4],
                     "version": None,
+                    "hostname": hostname or None,
+                    "hostnames": [hostname] if hostname else [],
                     "vuln_codes": [],
                 }
             )

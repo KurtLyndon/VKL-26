@@ -6,7 +6,7 @@ Project quản lý kiểm thử hệ thống mạng nội bộ
 
 - `backend`: FastAPI + SQLAlchemy, bám schema theo ERD, kết nối MySQL.
 - `frontend`: Vue 3 + Vite, giao diện quản trị các phân hệ chính.
-- `agents/nmap-agent-demo`: agent Nmap demo chạy riêng, để mang sang Kali/VM khác.
+- `agents/nmap-agent`: agent Nmap chạy riêng, để mang sang Kali/VM khác.
 
 ## Backend
 
@@ -87,9 +87,9 @@ Giao diện mặc định: `http://localhost:5173`
 - username: `admin`
 - password: `Admin@123`
 
-## Agent Demo Riêng
+## Agent Nmap Riêng
 
-Đã có một agent Nmap demo tách riêng tại [agents/nmap-agent-demo/README.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/agents/nmap-agent-demo/README.md) để triển khai trên Kali hoặc VM khác.
+Đã có một agent Nmap tách riêng tại [agents/nmap-agent/README.md](D:/Projects/VKL-26/HLT/HLT-vkl-26/agents/nmap-agent/README.md) để triển khai trên Kali hoặc VM khác.
 
 Mục tiêu của project con này:
 
@@ -170,7 +170,7 @@ python -m scripts.import_vulnerabilities_from_xlsx "D:\Projects\VKL-26\STMNC\1-C
 ## Đề xuất bước tiếp theo
 
 1. Test end-to-end mock flow và rà soát nhẹ UI/encoding trong browser.
-2. Deploy và test `agents/nmap-agent-demo` trên máy Kali/VM khi máy đủ tài nguyên.
+2. Deploy và test `agents/nmap-agent` trên máy Kali/VM khi máy đủ tài nguyên.
 3. Thêm export PDF và bộ lọc dashboard nâng cao hơn.
 4. Mở rộng auth cho runtime callback nếu đưa agent thật vào môi trường thật.
 5. Thêm migration `004+` khi schema đổi tiếp.

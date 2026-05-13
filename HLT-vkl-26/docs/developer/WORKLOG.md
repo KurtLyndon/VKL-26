@@ -27,9 +27,9 @@
 - Bổ sung giao thức runtime cho agent thật: discovery contract, heartbeat, task heartbeat, callback hoàn tất task.
 - Hỗ trợ cả 2 luồng sync và async cho agent runtime.
 - Thêm tài liệu `docs/developer/AGENT_RUNTIME_CONTRACT.md`.
-- Thêm agent mẫu tách riêng tại `agents/nmap-agent-demo`.
-- Agent mẫu hỗ trợ `mock` mode và `real` mode, callback heartbeat/status/normalize ngược về backend.
-- Thêm mẫu `systemd` service và hướng dẫn deploy cho agent Nmap demo.
+- Thêm agent Nmap tách riêng tại `agents/nmap-agent`.
+- Agent Nmap hỗ trợ `mock` mode và `real` mode, callback heartbeat/status/normalize ngược về backend.
+- Thêm `systemd` service và hướng dẫn deploy cho agent Nmap.
 - Bổ sung auth RBAC cơ bản theo nhóm tài khoản: login, token, nhóm tài khoản, tài khoản, phân quyền theo nhóm.
 - Frontend có màn đăng nhập, quản lý quyền theo nhóm, menu cấp 1/cấp 2 lọc theo permission.
 - Bổ sung `mock demo flow` để launch operation + worker trong một bước.
@@ -42,7 +42,7 @@
 ### Bước tiếp theo lúc đó
 
 1. Chạy mock demo flow trực tiếp trong browser.
-2. Test `agents/nmap-agent-demo` trên Kali/VM khi máy đủ tài nguyên.
+2. Test `agents/nmap-agent` trên Kali/VM khi máy đủ tài nguyên.
 3. Thêm export PDF.
 
 ## 2026-04-28

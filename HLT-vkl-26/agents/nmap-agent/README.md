@@ -38,7 +38,7 @@ Bien quan trong:
 ## Build Va Export Docker Image
 
 ```bash
-cd agents/nmap-agent-demo
+cd agents/nmap-agent
 docker build -t hlt-nmap-agent:0.2.0 .
 docker save hlt-nmap-agent:0.2.0 -o hlt-nmap-agent-0.2.0.tar
 ```
