@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from datetime import datetime, timezone
 from time import perf_counter
 from uuid import uuid4
@@ -11,6 +12,8 @@ from app.backend_client import BackendClient
 from app.config import get_settings
 from app.nmap_executor import run_nmap
 from app.schemas import ExecuteRequest, ExecuteResponse
+
+PKT_SCANNING_TASK_CODE = "TASK-PKT-SCANNING"
 
 settings = get_settings()
 backend_client = BackendClient(settings)
@@ -42,29 +45,49 @@ async def _run_execution(agent_execution_id: str, payload: ExecuteRequest) -> No
         raw_output, command = await run_nmap(payload, settings)
         command_display = " ".join(command)
 
+        is_pkt_scanning = payload.task.code == PKT_SCANNING_TASK_CODE
         await backend_client.send_task_heartbeat(
             payload.callback_paths.task_heartbeat_path,
-            raw_log=f"Execution finished. Preparing normalization for `{payload.target.value}`.",
+            raw_log=f"Execution finished. Preparing result callback for `{payload.target.value}`.",
             progress_percent=90,
             output_data_json={"agent_execution_id": agent_execution_id, "command": command_display},
         )
 
         duration_seconds = round(perf_counter() - started_perf, 3)
+        output_data = {
+            "agent_execution_id": agent_execution_id,
+            "agent_mode": settings.nmap_agent_mode,
+            "command": command_display,
+            "duration_seconds": duration_seconds,
+            "started_at": started_at.isoformat(),
+            "finished_at": datetime.now(timezone.utc).isoformat(),
+        }
+        completion_status = "completed"
+        raw_log = f"Nmap execution completed for target {payload.target.value}."
+        if is_pkt_scanning:
+            pkt_payload = json.loads(raw_output)
+            result_code = int(pkt_payload.get("result_code") or 500)
+            output_data.update(
+                {
+                    "result_code": result_code,
+                    "folder_name": pkt_payload.get("folder_name"),
+                    "total_records": pkt_payload.get("total_records"),
+                    "warnings": pkt_payload.get("warnings") or [],
+                }
+            )
+            if result_code != 200:
+                completion_status = "failed"
+                raw_log = pkt_payload.get("message") or f"PKT scanner failed with code {result_code}."
+
         await backend_client.send_task_status(
             payload.callback_paths.task_status_path,
-            status="completed",
-            output_data_json={
-                "agent_execution_id": agent_execution_id,
-                "agent_mode": settings.nmap_agent_mode,
-                "command": command_display,
-                "duration_seconds": duration_seconds,
-                "started_at": started_at.isoformat(),
-                "finished_at": datetime.now(timezone.utc).isoformat(),
-            },
-            raw_log=f"Nmap execution completed for target {payload.target.value}.",
+            status=completion_status,
+            output_data_json=output_data,
+            raw_log=raw_log,
+            raw_output=raw_output if is_pkt_scanning else None,
         )
 
-        if payload.target.id is not None:
+        if payload.target.id is not None and not is_pkt_scanning and completion_status == "completed":
             await backend_client.send_normalized_result(
                 payload.callback_paths.normalize_scan_result_path,
                 raw_output=raw_output,
@@ -74,7 +97,7 @@ async def _run_execution(agent_execution_id: str, payload: ExecuteRequest) -> No
             )
 
         RUNS[agent_execution_id] = {
-            "status": "completed",
+            "status": completion_status,
             "task_execution_id": payload.task_execution_id,
             "target": payload.target.value,
             "command": command_display,
@@ -116,6 +139,7 @@ def health() -> dict:
         "agent_code": settings.agent_code,
         "agent_mode": settings.nmap_agent_mode,
         "backend_base_url": settings.normalized_backend_base_url,
+        "supported_tasks": ["TASK-NMAP-TCP", "TASK-PKT-SCANNING"],
     }
 
 

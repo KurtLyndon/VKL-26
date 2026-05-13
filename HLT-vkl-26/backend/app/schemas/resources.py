@@ -891,6 +891,7 @@ class TaskExecutionStatusRequest(BaseModel):
     status: str
     output_data_json: dict | None = None
     raw_log: str | None = None
+    raw_output: str | None = None
 
 
 class TaskExecutionHeartbeatRequest(BaseModel):

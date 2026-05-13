@@ -1,88 +1,96 @@
-# Nmap Agent Demo
+# HLT Nmap Agent
 
-Agent này được tách riêng khỏi backend chính để dễ copy sang máy Kali hoặc VM khác. Mục tiêu là demo luồng agent thật:
+Agent nay duoc dong goi de chay tren Kali/VM va nhan cac task `agent_type=nmap` tu HLT.
 
-- backend gọi `POST /execute`
-- agent nhận task và trả `accepted`
-- agent tự callback heartbeat/status/normalize ngược về backend
+## Task Ho Tro
 
-## Cấu trúc
+- `TASK-NMAP-TCP`: chay `nmap`, tra XML, va goi normalize callback ve backend.
+- `TASK-PKT-SCANNING`: chay `task_scripts/nmap/pkt_scannerv1.py`, gui raw JSON ve task status callback de backend ingest vao `scan_result` va `scan_result_finding`.
 
-- `main.py`: FastAPI service của agent.
-- `app/backend_client.py`: gọi callback về backend.
-- `app/nmap_executor.py`: chạy `nmap` thật hoặc mock mode.
-- `deploy/hlt-nmap-agent-demo.service`: mẫu `systemd` cho Kali/Linux.
+## Cau Truc
 
-## Chế độ chạy
+- `main.py`: FastAPI service, expose `/health`, `/runs`, `/execute`.
+- `app/backend_client.py`: callback heartbeat/status/normalize ve backend HLT.
+- `app/nmap_executor.py`: build command va chay nmap/PKT scanner.
+- `task_scripts/nmap/pkt_scannerv1.py`: script PKT scanner duoc copy vao image.
+- `Dockerfile`: image cai san Python runtime va `nmap`.
 
-- `NMAP_AGENT_MODE=mock`: không cần cài `nmap`, trả XML mẫu để test luồng end-to-end.
-- `NMAP_AGENT_MODE=real`: agent sẽ gọi binary `nmap` thật.
+## Cau Hinh `.env`
 
-## Chuẩn bị trên Kali
+Sua file `.env` trong thu muc agent truoc khi chay:
 
-```bash
-sudo apt update
-sudo apt install -y python3 python3-venv nmap
-mkdir -p /opt/hlt
-cp -r nmap-agent-demo /opt/hlt/
-cd /opt/hlt/nmap-agent-demo
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
+```env
+BACKEND_BASE_URL=http://<ip-may-HLT>:8000
+AGENT_PUBLIC_IP=<ip-may-Kali-hoac-VM-agent>
+AGENT_CODE=AG-NMAP-01
+NMAP_AGENT_MODE=real
 ```
 
-## Cấu hình `.env`
+Bien quan trong:
 
-Giá trị tối thiểu cần sửa:
+- `BACKEND_BASE_URL`: URL backend HLT.
+- `AGENT_CODE`: phai trung voi `agent.code` trong backend, seed mac dinh la `AG-NMAP-01`.
+- `AGENT_PORT`: cong agent listen, mac dinh `8081`.
+- `AGENT_PUBLIC_HOST` / `AGENT_PUBLIC_IP`: dia chi agent de backend cap nhat heartbeat.
+- `NMAP_AGENT_MODE`: `mock` hoac `real`.
+- `PKT_SCANNER_OUTPUT_ROOT`: thu muc luu output PKT trong container.
 
-- `BACKEND_BASE_URL`: URL backend HLT, ví dụ `http://192.168.56.10:8000`
-- `AGENT_CODE`: phải trùng với `agent.code` trong backend, mặc định seed là `AG-NMAP-01`
-- `AGENT_PORT`: cổng agent sẽ listen, mặc định `8081`
-- `AGENT_PUBLIC_HOST` hoặc `AGENT_PUBLIC_IP`: thông tin để backend cập nhật heartbeat
-- `NMAP_AGENT_MODE`: `mock` hoặc `real`
-
-Nếu muốn backend map đúng agent theo seed mẫu, trong backend phần `agent` cần để:
-
-- `host` hoặc `ip_address`: trỏ tới máy Kali
-- `port`: trùng với `AGENT_PORT`
-- `agent_type`: `nmap`
-
-## Chạy Local
+## Build Va Export Docker Image
 
 ```bash
-cd /opt/hlt/nmap-agent-demo
-source .venv/bin/activate
-uvicorn main:app --host 0.0.0.0 --port 8081
+cd agents/nmap-agent-demo
+docker build -t hlt-nmap-agent:0.2.0 .
+docker save hlt-nmap-agent:0.2.0 -o hlt-nmap-agent-0.2.0.tar
 ```
 
-Kiểm tra nhanh:
+Hoac chay script:
+
+```bash
+./build-export.sh
+```
+
+Tren Windows PowerShell:
+
+```powershell
+.\build-export.ps1
+```
+
+Copy file `hlt-nmap-agent-0.2.0.tar` sang Kali, sau do:
+
+```bash
+docker load -i hlt-nmap-agent-0.2.0.tar
+docker run --rm --network host --env-file .env hlt-nmap-agent:0.2.0
+```
+
+Neu khong dung `--network host`:
+
+```bash
+docker run --rm -p 8081:8081 --env-file .env hlt-nmap-agent:0.2.0
+```
+
+Kiem tra:
 
 ```bash
 curl http://127.0.0.1:8081/health
 ```
 
-## Đăng ký systemd
+## Chay Khong Docker
 
 ```bash
-sudo cp deploy/hlt-nmap-agent-demo.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now hlt-nmap-agent-demo
-sudo systemctl status hlt-nmap-agent-demo
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn main:app --host 0.0.0.0 --port 8081
 ```
 
-## Ghi chú runtime
+## Luu Y HLT
 
-- Agent hiện ưu tiên luồng async để demo callback đầy đủ.
-- Nếu `target.id` có giá trị, agent sẽ tự gọi endpoint normalize sau khi hoàn tất.
-- Trong `real` mode, command được build từ `input_data`:
-  - `ports`
-  - `timing`
-  - `extra_args`
+Trong backend, ban ghi agent can co:
 
-## Luồng test nhanh
+- `agent_type`: `nmap`
+- `code`: trung voi `AGENT_CODE`
+- `host` hoac `ip_address`: tro den Kali/VM agent
+- `port`: trung voi `AGENT_PORT`
 
-1. Backend HLT chạy với scheduler/worker hoặc launch operation bằng UI.
-2. Bản ghi `agent` trong backend trỏ đúng tới máy Kali đang chạy service này.
-3. Worker backend dispatch sang agent.
-4. Agent callback về backend và sinh `scan_result`, `scan_result_finding`.
+Backend dispatch qua `POST /execute`; agent se callback heartbeat/status ve cac path trong contract.

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Agent, Operation, OperationExecution, OperationTask, TaskExecution
 from app.schemas.resources import OperationLaunchRequest, OperationRuntimeOverviewItem, TaskExecutionStatusRequest
-from app.services.pkt_scanner_results import build_pkt_scan_entries, build_pkt_scan_folder_name
+from app.services.pkt_scanner_results import build_pkt_scan_entries, build_pkt_scan_folder_name, ingest_pkt_scan_output
 
 
 def _build_execution_code(operation_code: str) -> str:
@@ -112,10 +112,22 @@ def update_task_execution_status(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task execution not found")
 
     task_execution.status = payload.status
+    output_payload = dict(payload.output_data_json or {})
+    raw_log = payload.raw_log
+    if payload.status == "completed" and payload.raw_output and task_execution.task.code == "TASK-PKT-SCANNING":
+        try:
+            pkt_payload = ingest_pkt_scan_output(db, task_execution, payload.raw_output)
+            output_payload.update(pkt_payload)
+            if pkt_payload.get("warnings"):
+                raw_log = "\n".join(pkt_payload["warnings"])
+        except Exception as exc:  # noqa: BLE001
+            task_execution.status = "failed"
+            raw_log = f"PKT scanner result ingest failed: {exc}"
+
     if payload.output_data_json is not None:
-        task_execution.output_data_json = payload.output_data_json
-    if payload.raw_log is not None:
-        task_execution.raw_log = payload.raw_log
+        task_execution.output_data_json = output_payload
+    if raw_log is not None:
+        task_execution.raw_log = raw_log
 
     now = datetime.utcnow()
     if payload.status == "running" and task_execution.started_at is None:

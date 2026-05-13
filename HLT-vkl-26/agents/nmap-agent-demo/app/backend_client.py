@@ -66,11 +66,13 @@ class BackendClient:
         status: str,
         output_data_json: dict | None = None,
         raw_log: str | None = None,
+        raw_output: str | None = None,
     ) -> None:
         payload = TaskStatusPayload(
             status=status,
             output_data_json=output_data_json,
             raw_log=raw_log,
+            raw_output=raw_output,
         )
         await self._post(path, payload.model_dump(mode="json"))
 
