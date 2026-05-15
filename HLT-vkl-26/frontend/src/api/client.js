@@ -287,6 +287,11 @@ export async function getDatabaseExplorerSchema() {
   return data;
 }
 
+export async function getDatabaseExplorerSchemaText() {
+  const { data } = await api.get("/database-explorer/schema-text");
+  return data;
+}
+
 export async function runDatabaseExplorerQuery(payload) {
   const { data } = await api.post("/database-explorer/query", payload);
   return data;

@@ -11,7 +11,12 @@
   <section class="panel database-schema-panel">
     <div class="panel-head">
       <h3>Cấu trúc database</h3>
-      <span class="badge">{{ schema.tables.length }} tables</span>
+      <div class="panel-actions">
+        <button class="ghost-button compact-button" type="button" @click="copySchemaForAi">
+          {{ schemaCopyMessage || "Copy schema cho AI" }}
+        </button>
+        <span class="badge">{{ schema.tables.length }} tables</span>
+      </div>
     </div>
 
     <div class="schema-layout">
@@ -219,7 +224,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
-import { getDatabaseExplorerSchema, runDatabaseExplorerQuery } from "../api/client";
+import { getDatabaseExplorerSchema, getDatabaseExplorerSchemaText, runDatabaseExplorerQuery } from "../api/client";
 import { nextSortState, sortIndicator, sortRows } from "../utils/tableSort";
 
 const NODE_WIDTH = 170;
@@ -237,6 +242,7 @@ const columnOrder = ref([]);
 const sortState = ref({ key: "", direction: "" });
 const draggedColumn = ref("");
 const selectedTableName = ref("");
+const schemaCopyMessage = ref("");
 
 const tableByName = computed(() => new Map(schema.tables.map((table) => [table.name, table])));
 
@@ -355,6 +361,36 @@ function incomingForeignKeys(tableName) {
 
 function foreignKeyForColumn(table, columnName) {
   return table.foreign_keys.find((fk) => fk.column === columnName);
+}
+
+async function copySchemaForAi() {
+  try {
+    const data = await getDatabaseExplorerSchemaText();
+    const text = data.text || "";
+    await navigator.clipboard.writeText(text);
+    schemaCopyMessage.value = "Đã copy";
+  } catch {
+    try {
+      const data = await getDatabaseExplorerSchemaText();
+      const text = data.text || "";
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      schemaCopyMessage.value = "Đã copy";
+    } catch (error) {
+      schemaCopyMessage.value = "Copy lỗi";
+      message.value = error?.response?.data?.detail || error?.message || "Không thể copy schema.";
+    }
+  }
+  window.setTimeout(() => {
+    schemaCopyMessage.value = "";
+  }, 1800);
 }
 
 function formatCell(value) {

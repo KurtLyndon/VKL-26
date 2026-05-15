@@ -54,6 +54,7 @@ from app.schemas.resources import (
     CurrentUserResponse,
     DatabaseExplorerQueryRequest,
     DatabaseExplorerQueryResponse,
+    DatabaseExplorerSchemaTextResponse,
     DashboardSummary,
     DashboardFilterOptions,
     DemoMockFlowRequest,
@@ -162,7 +163,7 @@ from app.services.dashboard_analytics import (
     get_top_vulnerabilities,
     get_vulnerability_trend_by_quarter,
 )
-from app.services.database_explorer import execute_select_query, get_database_schema
+from app.services.database_explorer import execute_select_query, get_database_schema, get_database_schema_text
 from app.services.agent_monitoring import get_agent_monitor_overview, run_agent_monitor_cycle, should_trigger_manual_agent_monitor
 from app.services.auth import (
     authenticate_user,
@@ -1339,6 +1340,14 @@ def database_explorer_schema(
     _current_user=Depends(require_permissions("database_explorer.view")),
 ):
     return get_database_schema(db)
+
+
+@router.get("/database-explorer/schema-text", response_model=DatabaseExplorerSchemaTextResponse)
+def database_explorer_schema_text(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("database_explorer.view")),
+):
+    return get_database_schema_text(db)
 
 
 @router.post("/database-explorer/query", response_model=DatabaseExplorerQueryResponse)

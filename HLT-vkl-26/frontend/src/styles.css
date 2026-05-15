@@ -576,6 +576,14 @@ select {
   margin-bottom: 18px;
 }
 
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .panel h3 {
   margin: 0;
   font-size: 22px;
@@ -828,6 +836,11 @@ select {
 .table-button {
   background: rgba(255, 250, 240, 0.92);
   color: var(--text);
+}
+
+.compact-button {
+  padding: 7px 12px;
+  font-size: 0.85rem;
 }
 
 .table-button.danger {

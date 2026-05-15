@@ -8,6 +8,8 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.services.database_schema_metadata import build_schema_text_for_ai
+
 
 FORBIDDEN_SQL_TOKENS = (
     "alter",
@@ -107,6 +109,14 @@ def get_database_schema(db: Session) -> dict[str, Any]:
         )
 
     return {"schema": schema_name, "tables": list(tables.values())}
+
+
+def get_database_schema_text(db: Session) -> dict[str, str]:
+    schema_document = get_database_schema(db)
+    return {
+        "schema": schema_document["schema"],
+        "text": build_schema_text_for_ai(schema_document),
+    }
 
 
 def validate_select_sql(raw_sql: str) -> str:

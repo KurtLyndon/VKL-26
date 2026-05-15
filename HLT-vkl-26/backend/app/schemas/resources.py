@@ -113,6 +113,11 @@ class DatabaseExplorerQueryResponse(BaseModel):
     max_rows: int
 
 
+class DatabaseExplorerSchemaTextResponse(BaseModel):
+    schema: str
+    text: str
+
+
 class GroupPermissionItem(BaseModel):
     permission_id: int
     permission_code: str
