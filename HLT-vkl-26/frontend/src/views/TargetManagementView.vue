@@ -21,7 +21,9 @@
             <tr>
               <th class="sortable-header" @click="toggleSort('id')">ID{{ sortLabel("id") }}</th>
               <th class="sortable-header" @click="toggleSort('name')">Tên{{ sortLabel("name") }}</th>
+              <th class="sortable-header" @click="toggleSort('target_type')">Loại{{ sortLabel("target_type") }}</th>
               <th class="sortable-header" @click="toggleSort('ip_range')">Dải IP{{ sortLabel("ip_range") }}</th>
+              <th class="sortable-header" @click="toggleSort('domain')">Domain{{ sortLabel("domain") }}</th>
               <th class="sortable-header" @click="toggleSort('ip_entry_type')">Kiểu IP{{ sortLabel("ip_entry_type") }}</th>
               <th class="sortable-header" @click="toggleSort('groups')">Nhóm{{ sortLabel("groups") }}</th>
               <th>Tác vụ</th>
@@ -37,7 +39,9 @@
             >
               <td>{{ target.id }}</td>
               <td>{{ target.name }}</td>
+              <td>{{ target.target_type || "-" }}</td>
               <td>{{ target.ip_range || "-" }}</td>
+              <td>{{ target.domain || "-" }}</td>
               <td>{{ target.ip_entry_type }}</td>
               <td>{{ target.groups.map((group) => group.name).join(", ") || "-" }}</td>
               <td class="action-cell">
@@ -81,6 +85,7 @@
           <select v-model="form.target_type">
             <option value="network">network</option>
             <option value="host">host</option>
+            <option value="web">web</option>
             <option value="domain">domain</option>
             <option value="application">application</option>
           </select>

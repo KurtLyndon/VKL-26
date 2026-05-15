@@ -9,6 +9,7 @@ dist/
 .env
 .DS_Store
 *.log
+*.tar
 ~$*.xlsx
 .vscode/
 HLT-vkl-26/backend/data/verifier_runs/

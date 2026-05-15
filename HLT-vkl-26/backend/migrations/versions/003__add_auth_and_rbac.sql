@@ -63,6 +63,7 @@ VALUES
     ('vulnerabilities.manage', 'Manage Vulnerabilities', 'vulnerabilities', 'Quan ly CVE, PoC va script.'),
     ('scan_results.view', 'View Scan Results', 'scan', 'Xem scan result va finding.'),
     ('reports.manage', 'Manage Reports', 'reports', 'Import export va quan ly bao cao.'),
+    ('database_explorer.view', 'View Database Explorer', 'database', 'Cho phep admin chay cau SELECT va xem cau truc database.'),
     ('auth.manage', 'Manage Auth', 'auth', 'Quan ly nhom tai khoan, tai khoan va phan quyen.')
 ON DUPLICATE KEY UPDATE
     name = VALUES(name),

@@ -22,7 +22,7 @@ def _resolve_target(db: Session, task_execution: TaskExecution) -> tuple[Target 
     if target_id:
         target = db.get(Target, int(target_id))
         if target:
-            return target, target.domain or target.ip_range or target.name
+            return target, target.ip_range or target.domain or target.name
 
     target_ids = input_data.get("target_ids") or []
     if isinstance(target_ids, list):
@@ -32,11 +32,11 @@ def _resolve_target(db: Session, task_execution: TaskExecution) -> tuple[Target 
             except (TypeError, ValueError):
                 target = None
             if target:
-                return target, target.domain or target.ip_range or target.name
+                return target, target.ip_range or target.domain or target.name
 
     target = db.scalar(select(Target).order_by(Target.id.asc()).limit(1))
     if target:
-        return target, target.domain or target.ip_range or target.name
+        return target, target.ip_range or target.domain or target.name
     return None, "127.0.0.1"
 
 

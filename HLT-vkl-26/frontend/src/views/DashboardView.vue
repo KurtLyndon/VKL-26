@@ -295,7 +295,14 @@ const targetPickerOptions = computed(() =>
   [...targetOptions.value].sort((left, right) => left.id - right.id).map((target) => ({
     value: target.id,
     label: target.name,
-    description: `ID ${target.id}${target.ip_range ? ` • ${target.ip_range}` : ""}`,
+    description: [
+      `ID ${target.id}`,
+      target.target_type || "target",
+      target.ip_range || target.domain || "",
+      target.groups?.map((group) => group.name).join(", ") || "",
+    ]
+      .filter(Boolean)
+      .join(" | "),
   }))
 );
 

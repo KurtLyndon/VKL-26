@@ -4,6 +4,7 @@ import { useAuthStore } from "../stores/auth";
 import AccountGroupPermissionsView from "../views/AccountGroupPermissionsView.vue";
 import AgentManagementView from "../views/AgentManagementView.vue";
 import DashboardView from "../views/DashboardView.vue";
+import DatabaseExplorerView from "../views/DatabaseExplorerView.vue";
 import ExecutionMonitorView from "../views/ExecutionMonitorView.vue";
 import FindingExplorerView from "../views/FindingExplorerView.vue";
 import FindingManagementView from "../views/FindingManagementView.vue";
@@ -57,6 +58,11 @@ const routes = [
     path: "/tasks",
     component: TaskManagementView,
     meta: { title: "Tasks", permission: "tasks.manage" },
+  },
+  {
+    path: "/database-explorer",
+    component: DatabaseExplorerView,
+    meta: { title: "Database Explorer", permission: "database_explorer.view" },
   },
   {
     path: "/operations",

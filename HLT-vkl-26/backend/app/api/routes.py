@@ -52,6 +52,8 @@ from app.schemas.resources import (
     AppPermissionRead,
     AppPermissionUpdate,
     CurrentUserResponse,
+    DatabaseExplorerQueryRequest,
+    DatabaseExplorerQueryResponse,
     DashboardSummary,
     DashboardFilterOptions,
     DemoMockFlowRequest,
@@ -160,6 +162,7 @@ from app.services.dashboard_analytics import (
     get_top_vulnerabilities,
     get_vulnerability_trend_by_quarter,
 )
+from app.services.database_explorer import execute_select_query, get_database_schema
 from app.services.agent_monitoring import get_agent_monitor_overview, run_agent_monitor_cycle, should_trigger_manual_agent_monitor
 from app.services.auth import (
     authenticate_user,
@@ -1328,6 +1331,26 @@ def execute_operation(
 @router.get("/agents/runtime/execute-contract", response_model=AgentExecuteContractDocument)
 def get_agent_execute_contract():
     return get_execute_contract_document()
+
+
+@router.get("/database-explorer/schema")
+def database_explorer_schema(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("database_explorer.view")),
+):
+    return get_database_schema(db)
+
+
+@router.post("/database-explorer/query", response_model=DatabaseExplorerQueryResponse)
+def database_explorer_query(
+    payload: DatabaseExplorerQueryRequest,
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("database_explorer.view")),
+):
+    try:
+        return execute_select_query(db, payload.sql, payload.max_rows)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
 
 
 @router.post("/agents/heartbeat", response_model=AgentHeartbeatResponse)

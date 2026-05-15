@@ -40,7 +40,7 @@ SELECT
     'data/agent_task_scripts/nmap/pkt_scannerv1.py',
     NULL,
     JSON_OBJECT(
-        'scan_entries', 'array',
+        'scan_entries', 'array: IP ranges, domains, or URLs',
         'folder_name', 'string',
         'selected_target_ids', 'array'
     ),
@@ -51,7 +51,7 @@ SELECT
         'scan_results', 'array',
         'warnings', 'array'
     ),
-    'Chay PKT scanner, tong hop ket qua Nmap va nap truc tiep vao scan_result/finding.',
+    'Chay PKT scanner voi IP range, domain hoac URL; tong hop ket qua Nmap va nap truc tiep vao scan_result/finding.',
     '1.0.0',
     1,
     TRUE,

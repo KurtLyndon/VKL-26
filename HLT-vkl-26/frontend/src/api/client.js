@@ -282,6 +282,16 @@ export async function updateTaskExecutionStatus(taskExecutionId, payload) {
   return data;
 }
 
+export async function getDatabaseExplorerSchema() {
+  const { data } = await api.get("/database-explorer/schema");
+  return data;
+}
+
+export async function runDatabaseExplorerQuery(payload) {
+  const { data } = await api.post("/database-explorer/query", payload);
+  return data;
+}
+
 export async function runSchedulerNow() {
   const { data } = await api.post("/scheduler/run");
   return data;

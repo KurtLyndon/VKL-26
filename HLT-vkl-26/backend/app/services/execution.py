@@ -75,6 +75,8 @@ def launch_operation(db: Session, operation_id: int, payload: OperationLaunchReq
                     "code": target.code,
                     "name": target.name,
                     "ip_range": target.ip_range,
+                    "domain": target.domain,
+                    "target_type": target.target_type,
                 }
                 for target in selected_targets
             ]

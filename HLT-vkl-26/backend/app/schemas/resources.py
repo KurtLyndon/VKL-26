@@ -100,6 +100,19 @@ class CurrentUserResponse(BaseModel):
     permissions: list[str]
 
 
+class DatabaseExplorerQueryRequest(BaseModel):
+    sql: str
+    max_rows: int = Field(default=500, ge=1, le=2000)
+
+
+class DatabaseExplorerQueryResponse(BaseModel):
+    columns: list[str]
+    rows: list[dict]
+    row_count: int
+    truncated: bool = False
+    max_rows: int
+
+
 class GroupPermissionItem(BaseModel):
     permission_id: int
     permission_code: str

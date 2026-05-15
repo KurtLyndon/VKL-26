@@ -102,7 +102,9 @@
             <tr>
               <th class="sortable-header" @click="toggleMemberSort('id')">ID target{{ memberSortLabel("id") }}</th>
               <th class="sortable-header" @click="toggleMemberSort('name')">Tên target{{ memberSortLabel("name") }}</th>
+              <th class="sortable-header" @click="toggleMemberSort('target_type')">Loại{{ memberSortLabel("target_type") }}</th>
               <th class="sortable-header" @click="toggleMemberSort('ip_range')">Dải IP{{ memberSortLabel("ip_range") }}</th>
+              <th class="sortable-header" @click="toggleMemberSort('domain')">Domain{{ memberSortLabel("domain") }}</th>
               <th>Chọn</th>
             </tr>
           </thead>
@@ -110,7 +112,9 @@
             <tr v-for="target in paginatedTargets" :key="target.id">
               <td>{{ target.id }}</td>
               <td>{{ target.name }}</td>
+              <td>{{ target.target_type || "-" }}</td>
               <td>{{ target.ip_range || "-" }}</td>
+              <td>{{ target.domain || "-" }}</td>
               <td>
                 <input v-model="selectedTargetIds" :value="target.id" type="checkbox" />
               </td>

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 from datetime import datetime
+from urllib.parse import urlsplit
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -31,12 +32,48 @@ def build_pkt_scan_entries(db: Session, target_ids: list[int]) -> tuple[list[str
     seen = set()
     entries: list[str] = []
     for target in selected_targets:
-        for entry in resolve_target_ip_entries(target.ip_range):
+        resolved_entries = resolve_target_ip_entries(target.ip_range)
+        if not resolved_entries and target.domain:
+            resolved_entries = [target.domain]
+        for entry in resolved_entries:
             normalized = normalize_target_ip_range(entry) or entry
             if normalized and normalized not in seen:
                 seen.add(normalized)
                 entries.append(normalized)
     return entries, selected_targets
+
+
+def _domain_host(value: str | None) -> str | None:
+    if not value:
+        return None
+    raw_value = value.strip()
+    if not raw_value:
+        return None
+    parsed = urlsplit(raw_value if "://" in raw_value else f"//{raw_value}")
+    host = parsed.hostname or raw_value.split("/", 1)[0]
+    return host.strip().lower().rstrip(".") or None
+
+
+def _record_host_candidates(record: dict) -> set[str]:
+    candidates: set[str] = set()
+    for key in ("hostname", "host", "target", "input_target"):
+        host = _domain_host(str(record.get(key))) if record.get(key) else None
+        if host:
+            candidates.add(host)
+    for hostname in record.get("hostnames") or []:
+        host = _domain_host(str(hostname))
+        if host:
+            candidates.add(host)
+    return candidates
+
+
+def _target_matches_record(target: Target, record: dict, ip_value: str) -> bool:
+    if target_contains_ip(target.ip_range, ip_value):
+        return True
+    target_domain = _domain_host(target.domain)
+    if not target_domain:
+        return False
+    return target_domain in _record_host_candidates(record)
 
 
 def _build_duplicate_target_notes(selected_targets: list[Target]) -> dict[int, str]:
@@ -79,7 +116,9 @@ def ingest_pkt_scan_output(db: Session, task_execution: TaskExecution, raw_outpu
         if not ip_value:
             continue
 
-        matched_targets = [target for target in selected_targets if target_contains_ip(target.ip_range, ip_value)]
+        matched_targets = [target for target in selected_targets if _target_matches_record(target, record, ip_value)]
+        if not matched_targets and len(selected_targets) == 1:
+            matched_targets = selected_targets
         if matched_targets:
             target = matched_targets[0]
             target_note = duplicate_target_notes.get(target.id)
@@ -104,6 +143,8 @@ def ingest_pkt_scan_output(db: Session, task_execution: TaskExecution, raw_outpu
                 "protocol": record.get("protocol") or "tcp",
                 "service": record.get("service"),
                 "version": record.get("version"),
+                "hostname": record.get("hostname"),
+                "hostnames": record.get("hostnames") or [],
                 "vuln_codes": record.get("vuln_codes") or [],
                 "note": target_note,
                 "folder_name": payload.get("folder_name"),
