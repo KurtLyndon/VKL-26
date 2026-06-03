@@ -789,6 +789,135 @@ class FindingManagementUpdateRequest(BaseModel):
     status: str | None = None
 
 
+class ResultExplorerOperationOption(BaseModel):
+    id: int
+    label: str
+
+
+class ResultExplorerFilterOptionsResponse(BaseModel):
+    operations: list[ResultExplorerOperationOption] = Field(default_factory=list)
+    years: list[int] = Field(default_factory=list)
+    quarters: list[int] = Field(default_factory=list)
+    months: list[int] = Field(default_factory=list)
+    weeks: list[int] = Field(default_factory=list)
+
+
+class ResultExplorerAttributeRead(BaseModel):
+    attribute_code: str
+    attribute_name: str
+    data_type: str
+    value_text: str | None = None
+
+
+class ResultExplorerGroupRead(BaseModel):
+    id: int
+    code: str
+    name: str
+
+
+class ResultExplorerOperationDetail(BaseModel):
+    operation_id: int
+    operation_code: str | None = None
+    operation_name: str | None = None
+    operation_execution_id: int
+    execution_code: str | None = None
+    execution_status: str | None = None
+    year: int | None = None
+    quarter: int | None = None
+    month: int | None = None
+    week: int | None = None
+    batch_code: str | None = None
+    source_file_name: str | None = None
+    source_root_path: str | None = None
+
+
+class ResultExplorerTargetDetail(BaseModel):
+    target_id: int
+    code: str | None = None
+    name: str
+    target_type: str | None = None
+    ip_range: str | None = None
+    domain: str | None = None
+    description: str | None = None
+    attributes: list[ResultExplorerAttributeRead] = Field(default_factory=list)
+    groups: list[ResultExplorerGroupRead] = Field(default_factory=list)
+
+
+class ResultExplorerScanDetail(BaseModel):
+    scan_result_id: int
+    ip_address: str | None = None
+    port: int | None = None
+    protocol: str | None = None
+    service: str | None = None
+    version: str | None = None
+    source_tool: str | None = None
+    detected_at: datetime | None = None
+    parse_status: str | None = None
+    note: str | None = None
+    raw_summary: str | None = None
+    normalized_summary: str | None = None
+    normalized_output_json: dict | None = None
+
+
+class ResultExplorerFindingDetail(BaseModel):
+    finding_id: int
+    finding_code: str
+    severity: str | None = None
+    status: str | None = None
+    port: int | None = None
+    protocol: str | None = None
+    service_name: str | None = None
+    note: str | None = None
+    runtime_output: str | None = None
+    confidence: int | None = None
+    first_seen_at: datetime | None = None
+    last_seen_at: datetime | None = None
+    evidence_file_name: str | None = None
+    evidence_file_path: str | None = None
+    evidence_file_mime_type: str | None = None
+    evidence_file_size: int | None = None
+
+
+class ResultExplorerVulnerabilityDetail(BaseModel):
+    vulnerability_id: int
+    code: str
+    title: str
+    level: int | None = None
+    severity: str | None = None
+    threat: str | None = None
+    proposal: str | None = None
+    description: str | None = None
+    evidence_text: str | None = None
+    poc_file_name: str | None = None
+    active_script_name: str | None = None
+    active_script_type: str | None = None
+
+
+class ResultExplorerItem(BaseModel):
+    row_id: str
+    scan_result_id: int
+    finding_id: int | None = None
+    target_name: str
+    ip_address: str | None = None
+    finding_code: str | None = None
+    severity: str | None = None
+    finding_status: str | None = None
+    port: int | None = None
+    service: str | None = None
+    has_finding: bool = False
+    operation: ResultExplorerOperationDetail
+    target: ResultExplorerTargetDetail
+    scan_result: ResultExplorerScanDetail
+    finding: ResultExplorerFindingDetail | None = None
+    vulnerability: ResultExplorerVulnerabilityDetail | None = None
+
+
+class ResultExplorerResponse(BaseModel):
+    items: list[ResultExplorerItem]
+    total: int
+    mode: str
+
+
 class FindingStatusUpdateRequest(BaseModel):
     status: str
 

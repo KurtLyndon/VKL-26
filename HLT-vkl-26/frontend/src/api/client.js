@@ -297,6 +297,25 @@ export async function runDatabaseExplorerQuery(payload) {
   return data;
 }
 
+export async function getResultExplorerFilterOptions() {
+  const { data } = await api.get("/result-explorer/filter-options");
+  return data;
+}
+
+export async function getResultExplorerItems(filters = {}) {
+  const params = {};
+  if (filters.operation_id) params.operation_id = filters.operation_id;
+  if (filters.operation_execution_id) params.operation_execution_id = filters.operation_execution_id;
+  if (filters.year) params.year = filters.year;
+  if (filters.quarter) params.quarter = filters.quarter;
+  if (filters.month) params.month = filters.month;
+  if (filters.week) params.week = filters.week;
+  if (filters.q) params.q = filters.q;
+  if (filters.mode) params.mode = filters.mode;
+  const { data } = await api.get("/result-explorer", { params });
+  return data;
+}
+
 export async function runSchedulerNow() {
   const { data } = await api.post("/scheduler/run");
   return data;

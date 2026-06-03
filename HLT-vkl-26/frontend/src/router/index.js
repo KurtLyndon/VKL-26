@@ -14,6 +14,7 @@ import OperationControlView from "../views/OperationControlView.vue";
 import OperationDesignerView from "../views/OperationDesignerView.vue";
 import ResourceView from "../views/ResourceView.vue";
 import ResultExchangeView from "../views/ResultExchangeView.vue";
+import ResultExplorerView from "../views/ResultExplorerView.vue";
 import TaskManagementView from "../views/TaskManagementView.vue";
 import TargetAttributesView from "../views/TargetAttributesView.vue";
 import TargetGroupsView from "../views/TargetGroupsView.vue";
@@ -63,6 +64,11 @@ const routes = [
     path: "/database-explorer",
     component: DatabaseExplorerView,
     meta: { title: "Database Explorer", permission: "database_explorer.view" },
+  },
+  {
+    path: "/result-explorer",
+    component: ResultExplorerView,
+    meta: { title: "Result Explorer", permission: "scan_results.view" },
   },
   {
     path: "/operations",

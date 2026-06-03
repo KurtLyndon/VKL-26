@@ -102,6 +102,8 @@ from app.schemas.resources import (
     ReportTemplateCreate,
     ReportTemplateRead,
     ReportTemplateUpdate,
+    ResultExplorerFilterOptionsResponse,
+    ResultExplorerResponse,
     SchedulerRunResponse,
     ScanResultCreate,
     ScanResultFindingCreate,
@@ -188,6 +190,7 @@ from app.services.findings import (
 )
 from app.services.historical_scan_imports import commit_services_vulns_import, preview_services_vulns_import
 from app.services.result_exchange import export_operation_results, import_operation_results
+from app.services.result_explorer import get_result_explorer_filter_options, list_result_explorer_items
 from app.services.scan_results import normalize_and_store_scan_result
 from app.services.scheduler import run_scheduler_cycle
 from app.services.poc_repository import (
@@ -1364,6 +1367,40 @@ def database_explorer_query(
         return execute_select_query(db, payload.sql, payload.max_rows)
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+
+
+@router.get("/result-explorer/filter-options", response_model=ResultExplorerFilterOptionsResponse)
+def result_explorer_filter_options(
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    return get_result_explorer_filter_options(db)
+
+
+@router.get("/result-explorer", response_model=ResultExplorerResponse)
+def result_explorer(
+    operation_id: int | None = None,
+    operation_execution_id: int | None = None,
+    year: int | None = None,
+    quarter: int | None = None,
+    month: int | None = None,
+    week: int | None = None,
+    q: str | None = None,
+    mode: str = "full",
+    db: Session = Depends(get_db),
+    _current_user=Depends(require_permissions("scan_results.view")),
+):
+    return list_result_explorer_items(
+        db,
+        operation_id=operation_id,
+        operation_execution_id=operation_execution_id,
+        year=year,
+        quarter=quarter,
+        month=month,
+        week=week,
+        q=q,
+        mode=mode,
+    )
 
 
 @router.post("/agents/heartbeat", response_model=AgentHeartbeatResponse)
