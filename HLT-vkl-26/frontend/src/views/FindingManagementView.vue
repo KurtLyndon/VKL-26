@@ -4,7 +4,7 @@
       <p class="eyebrow">Kết quả lỗ hổng</p>
       <h2>Quản lý Finding</h2>
       <p class="page-copy">
-        Mô tả và mức độ của finding được đồng bộ từ CVE đã map. Analyst chỉ chỉnh trạng thái, ghi chú, thông tin kỹ thuật bổ sung và tệp Evidence.
+        Mô tả và mức độ của finding được đồng bộ từ Vulnerability đã map. Analyst chỉ chỉnh trạng thái, ghi chú, thông tin kỹ thuật bổ sung và tệp Evidence.
       </p>
     </div>
     <button class="ghost-button" @click="refreshAll">Làm mới</button>
@@ -230,7 +230,7 @@
         </div>
 
         <label class="field-block">
-          <span>Mô tả từ CVE</span>
+          <span>Mô tả từ Vulnerability</span>
           <textarea :value="form.description || ''" rows="4" disabled />
         </label>
 

@@ -118,7 +118,7 @@ const routes = [
   {
     path: "/vulnerabilities",
     component: VulnerabilityManagementView,
-    meta: { title: "CVE", permission: "vulnerabilities.manage" },
+    meta: { title: "Vulnerability", permission: "vulnerabilities.manage" },
   },
   {
     path: "/scan-results",

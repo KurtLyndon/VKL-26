@@ -83,7 +83,7 @@
 
         <article class="panel panel-inner">
           <div class="panel-head">
-            <h3>Top 5 vuln/CVE xuất hiện nhiều nhất</h3>
+            <h3>Top 5 Vulnerability xuất hiện nhiều nhất</h3>
             <span class="badge">theo bộ lọc thời gian</span>
           </div>
 

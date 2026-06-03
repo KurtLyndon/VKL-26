@@ -5,7 +5,7 @@
         <p class="eyebrow">HLT internal security</p>
         <h1>Control Center</h1>
         <p class="sidebar-copy">
-          Nền tảng điều phối agent, quản lý mục tiêu, lưu trữ kết quả scan, quản trị CVE, báo cáo và phân quyền.
+          Nền tảng điều phối agent, quản lý mục tiêu, lưu trữ kết quả scan, quản trị Vulnerability, báo cáo và phân quyền.
         </p>
       </div>
 
@@ -74,7 +74,7 @@ const sections = [
       { to: "/operations", label: "Operations", caption: "Workflow và lịch chạy", permission: "operations.manage" },
       { to: "/operation-executions", label: "Operation Executions", caption: "Tiến trình operation", permission: "runtime.control" },
       { to: "/task-executions", label: "Task Executions", caption: "Tiến trình task", permission: "runtime.control" },
-      { to: "/vulnerabilities", label: "CVE", caption: "Threat, proposal, PoC script", permission: "vulnerabilities.manage" },
+      { to: "/vulnerabilities", label: "Vulnerability", caption: "Threat, proposal, PoC script", permission: "vulnerabilities.manage" },
       { to: "/scan-results", label: "Scan Results", caption: "Dữ liệu chuẩn hóa", permission: "scan_results.view" },
       { to: "/scan-findings", label: "Findings", caption: "Lỗ hổng và bằng chứng", permission: "scan_results.view" },
     ],
