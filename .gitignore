@@ -14,4 +14,5 @@ dist/
 .vscode/
 HLT-vkl-26/backend/data/verifier_runs/
 HLT-vkl-26/backend/data/finding_poc_files/
+HLT-vkl-26/backend/data/finding_evidence_files/
 HLT-vkl-26/data/agent_runs/

@@ -10,7 +10,7 @@ ROOT_DIR = Path(__file__).resolve().parents[3]
 DATA_DIR = ROOT_DIR / "data"
 AGENT_TASK_SCRIPTS_DIR = DATA_DIR / "agent_task_scripts"
 POC_REPOSITORY_DIR = DATA_DIR / "poc_repository"
-FINDING_POC_FILES_DIR = DATA_DIR / "finding_poc_files"
+FINDING_EVIDENCE_FILES_DIR = DATA_DIR / "finding_evidence_files"
 
 
 def ensure_poc_repository() -> Path:
@@ -24,9 +24,9 @@ def ensure_agent_task_script_repository(agent_type: str) -> Path:
     return target_dir
 
 
-def ensure_finding_poc_repository() -> Path:
-    FINDING_POC_FILES_DIR.mkdir(parents=True, exist_ok=True)
-    return FINDING_POC_FILES_DIR
+def ensure_finding_evidence_repository() -> Path:
+    FINDING_EVIDENCE_FILES_DIR.mkdir(parents=True, exist_ok=True)
+    return FINDING_EVIDENCE_FILES_DIR
 
 
 def store_poc_copy(source_file: Path, vulnerability_code: str) -> Path:
@@ -51,8 +51,8 @@ def _remove_existing_files(target_dir: Path) -> None:
             item.unlink()
 
 
-def store_finding_poc_file(finding_id: int, original_name: str, content: bytes) -> dict[str, str | int | None]:
-    repository = ensure_finding_poc_repository()
+def store_finding_evidence_file(finding_id: int, original_name: str, content: bytes) -> dict[str, str | int | None]:
+    repository = ensure_finding_evidence_repository()
     target_dir = repository / f"finding-{finding_id}"
     target_dir.mkdir(parents=True, exist_ok=True)
     _remove_existing_files(target_dir)
@@ -66,27 +66,27 @@ def store_finding_poc_file(finding_id: int, original_name: str, content: bytes) 
 
     mime_type = mimetypes.guess_type(stored_name)[0] or "application/octet-stream"
     return {
-        "poc_file_name": original_name,
-        "poc_file_path": str(stored_path.relative_to(DATA_DIR)).replace("\\", "/"),
-        "poc_file_mime_type": mime_type,
-        "poc_file_size": len(content),
+        "evidence_file_name": original_name,
+        "evidence_file_path": str(stored_path.relative_to(DATA_DIR)).replace("\\", "/"),
+        "evidence_file_mime_type": mime_type,
+        "evidence_file_size": len(content),
     }
 
 
-def resolve_finding_poc_path(relative_path: str | None) -> Path | None:
+def resolve_finding_evidence_path(relative_path: str | None) -> Path | None:
     if not relative_path:
         return None
     candidate = (DATA_DIR / relative_path).resolve()
     data_root = DATA_DIR.resolve()
     if data_root not in candidate.parents and candidate != data_root:
-        raise ValueError("Duong dan POC khong hop le.")
+        raise ValueError("Duong dan evidence khong hop le.")
     if not candidate.exists() or not candidate.is_file():
         return None
     return candidate
 
 
-def delete_finding_poc_file(relative_path: str | None) -> None:
-    file_path = resolve_finding_poc_path(relative_path)
+def delete_finding_evidence_file(relative_path: str | None) -> None:
+    file_path = resolve_finding_evidence_path(relative_path)
     if file_path is None:
         return
     file_path.unlink(missing_ok=True)

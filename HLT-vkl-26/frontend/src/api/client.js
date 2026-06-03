@@ -225,24 +225,24 @@ export async function updateTargetGroupMembers(groupId, targetIds) {
   return data;
 }
 
-export async function uploadFindingPocFile(findingId, file) {
+export async function uploadFindingEvidenceFile(findingId, file) {
   const formData = new FormData();
   formData.append("file", file);
-  const { data } = await api.post(`/scan-findings/${findingId}/poc-file`, formData, {
+  const { data } = await api.post(`/scan-findings/${findingId}/evidence-file`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return data;
 }
 
-export async function downloadFindingPocFile(findingId) {
-  const response = await api.get(`/scan-findings/${findingId}/poc-file`, {
+export async function downloadFindingEvidenceFile(findingId) {
+  const response = await api.get(`/scan-findings/${findingId}/evidence-file`, {
     responseType: "blob",
   });
   return response;
 }
 
-export async function deleteFindingPocFile(findingId) {
-  const { data } = await api.delete(`/scan-findings/${findingId}/poc-file`);
+export async function deleteFindingEvidenceFile(findingId) {
+  const { data } = await api.delete(`/scan-findings/${findingId}/evidence-file`);
   return data;
 }
 

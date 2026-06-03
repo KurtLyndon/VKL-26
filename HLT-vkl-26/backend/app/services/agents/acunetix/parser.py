@@ -31,7 +31,7 @@ class AcunetixParser(AgentParser):
                     "port": self._to_int(vuln.get("port")),
                     "protocol": vuln.get("scheme"),
                     "service_name": "web",
-                    "evidence": vuln.get("affects_url") or vuln.get("request"),
+                    "runtime_output": vuln.get("affects_url") or vuln.get("request"),
                     "confidence": 85,
                     "status": "open",
                 }

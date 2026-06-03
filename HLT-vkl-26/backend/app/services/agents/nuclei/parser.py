@@ -28,7 +28,7 @@ class NucleiParser(AgentParser):
                     "port": self._extract_port(target),
                     "protocol": item.get("scheme") or self._extract_scheme(target),
                     "service_name": item.get("type"),
-                    "evidence": item.get("extracted-results") or item.get("matcher-status") or target,
+                    "runtime_output": item.get("extracted-results") or item.get("matcher-status") or target,
                     "confidence": 90 if classification.get("cvss-score") else 80,
                     "status": "open",
                 }

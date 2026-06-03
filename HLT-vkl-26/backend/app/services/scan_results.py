@@ -13,7 +13,7 @@ def _find_vulnerability_id(db: Session, finding: dict) -> int | None:
         finding.get("finding_code"),
         finding.get("title"),
         finding.get("note"),
-        finding.get("evidence"),
+        finding.get("runtime_output"),
     ]
     vulnerabilities = db.scalars(select(Vulnerability)).all()
     for vulnerability in vulnerabilities:
@@ -56,9 +56,10 @@ def normalize_and_store_scan_result(
     findings: list[ScanResultFinding] = []
     for finding in parser.extract_findings(raw_output):
         finding_payload = dict(finding)
+        if "runtime_output" not in finding_payload and "evidence" in finding_payload:
+            finding_payload["runtime_output"] = finding_payload.pop("evidence")
         finding_payload["title"] = finding_payload.get("finding_code") or finding_payload.get("title") or "Finding"
-        finding_payload["note"] = finding_payload.get("note") or finding_payload.get("evidence")
-        finding_payload["evidence"] = None
+        finding_payload["note"] = finding_payload.get("note") or finding_payload.get("runtime_output")
         vulnerability_id = _find_vulnerability_id(db, finding)
         if vulnerability_id is None:
             fallback_code = (

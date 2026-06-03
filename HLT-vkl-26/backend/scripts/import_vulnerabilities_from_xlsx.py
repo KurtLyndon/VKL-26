@@ -184,14 +184,14 @@ def import_workbook(workbook_path: Path) -> tuple[int, int, int]:
             proposal = sanitize_text(row[columns["proposal"]])
             level = parse_level(row[columns["level"]])
             poc_raw = sanitize_text(row[columns["poc"]]) if "poc" in columns else None
-            poc_file_name, poc_text = classify_poc(poc_raw)
+            poc_file_name, evidence_text = classify_poc(poc_raw)
             poc_source_file = None
             if poc_file_name:
                 candidate = workbook_path.parent / poc_file_name
                 if candidate.exists():
                     poc_source_file = candidate
                 else:
-                    poc_text = poc_raw
+                    evidence_text = poc_raw
                     poc_file_name = None
 
             vulnerability = db.scalar(select(Vulnerability).where(Vulnerability.code == code))
@@ -201,7 +201,7 @@ def import_workbook(workbook_path: Path) -> tuple[int, int, int]:
                 "threat": threat,
                 "proposal": proposal,
                 "poc_file_name": poc_file_name,
-                "poc_text": poc_text,
+                "evidence_text": evidence_text,
                 "description": threat,
             }
 

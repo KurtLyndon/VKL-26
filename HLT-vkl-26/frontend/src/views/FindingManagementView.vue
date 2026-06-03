@@ -4,7 +4,7 @@
       <p class="eyebrow">Kết quả lỗ hổng</p>
       <h2>Quản lý Finding</h2>
       <p class="page-copy">
-        Mô tả và mức độ của finding được đồng bộ từ CVE đã map. Analyst chỉ chỉnh trạng thái, ghi chú, thông tin kỹ thuật bổ sung và tệp PoC.
+        Mô tả và mức độ của finding được đồng bộ từ CVE đã map. Analyst chỉ chỉnh trạng thái, ghi chú, thông tin kỹ thuật bổ sung và tệp Evidence.
       </p>
     </div>
     <button class="ghost-button" @click="refreshAll">Làm mới</button>
@@ -128,61 +128,61 @@
       />
     </article>
 
-    <article class="panel finding-poc-panel">
+    <article class="panel finding-evidence-panel">
       <div class="panel-head">
-        <h3>PoC của Finding</h3>
+        <h3>Evidence của Finding</h3>
         <span class="badge">{{ selectedFileLabel }}</span>
       </div>
 
       <div v-if="selectedFindingId" class="resource-form">
         <label class="field-block">
-          <span>Upload / thay thế PoC</span>
+          <span>Upload / thay thế Evidence</span>
           <input type="file" accept=".txt,.log,.json,.csv,.md,.png,.jpg,.jpeg,.gif,.webp,.bmp,.rar,.zip,.7z" @change="handleFileChange" />
-          <small class="field-help">Khi upload hoặc thay thế PoC, trạng thái finding sẽ tự chuyển sang <code>confirmed</code>.</small>
+          <small class="field-help">Khi upload hoặc thay thế Evidence, trạng thái finding sẽ tự chuyển sang <code>confirmed</code>.</small>
         </label>
 
         <div class="form-actions">
-          <button class="primary-button" type="button" :disabled="!uploadFile" @click="uploadPoc">Upload PoC</button>
-          <button class="ghost-button" type="button" :disabled="!form.poc_file_path" @click="downloadPoc">Tải file</button>
-          <button class="ghost-button" type="button" :disabled="!form.poc_file_path" @click="previewPoc">Preview</button>
-          <button class="table-button danger" type="button" :disabled="!form.poc_file_path" @click="removePoc">Xóa PoC</button>
+          <button class="primary-button" type="button" :disabled="!uploadFile" @click="uploadEvidence">Upload Evidence</button>
+          <button class="ghost-button" type="button" :disabled="!form.evidence_file_path" @click="downloadEvidence">Tải file</button>
+          <button class="ghost-button" type="button" :disabled="!form.evidence_file_path" @click="previewEvidence">Preview</button>
+          <button class="table-button danger" type="button" :disabled="!form.evidence_file_path" @click="removeEvidence">Xóa Evidence</button>
         </div>
 
         <div class="insight-grid">
           <article class="insight-card">
             <span>Tên file</span>
-            <strong>{{ form.poc_file_name || "-" }}</strong>
+            <strong>{{ form.evidence_file_name || "-" }}</strong>
           </article>
           <article class="insight-card">
             <span>MIME</span>
-            <strong>{{ form.poc_file_mime_type || "-" }}</strong>
+            <strong>{{ form.evidence_file_mime_type || "-" }}</strong>
           </article>
           <article class="insight-card">
             <span>Kích thước</span>
-            <strong>{{ formatFileSize(form.poc_file_size) }}</strong>
+            <strong>{{ formatFileSize(form.evidence_file_size) }}</strong>
           </article>
         </div>
 
         <p class="inline-note">
-          Khi xóa PoC, trạng thái finding sẽ tự chuyển lại <code>open</code>. Tệp PoC được lưu ở server để phục vụ báo cáo và xác minh.
+          Khi xóa Evidence, trạng thái finding sẽ tự chuyển lại <code>open</code>. Tệp Evidence được lưu ở server để phục vụ báo cáo và xác minh.
         </p>
       </div>
 
-      <p v-else class="inline-note">Chọn một finding từ danh sách để quản lý PoC.</p>
+      <p v-else class="inline-note">Chọn một finding từ danh sách để quản lý Evidence.</p>
       <p v-if="fileMessage" class="inline-note">{{ fileMessage }}</p>
       <p v-if="fileError" class="inline-note text-danger">{{ fileError }}</p>
     </article>
 
     <article class="panel finding-preview-panel">
       <div class="panel-head">
-        <h3>Preview PoC</h3>
+        <h3>Preview Evidence</h3>
         <span class="badge">{{ previewState.kindLabel }}</span>
       </div>
 
       <div v-if="previewState.loading" class="inline-note">Đang tải preview...</div>
       <pre v-else-if="previewState.type === 'text'" class="preview-text">{{ previewState.text }}</pre>
       <div v-else-if="previewState.type === 'image'" class="preview-image-wrap">
-        <img :src="previewState.imageUrl" alt="POC preview" class="preview-image" />
+        <img :src="previewState.imageUrl" alt="Evidence preview" class="preview-image" />
       </div>
       <p v-else class="inline-note">{{ previewState.message }}</p>
     </article>
@@ -270,9 +270,9 @@
         </label>
 
         <label class="field-block">
-          <span>Evidence</span>
-          <textarea :value="form.evidence || ''" rows="3" disabled />
-          <small class="field-help">Evidence hiện để trống để dành cho output runtime hoặc đường dẫn tệp về sau.</small>
+          <span>Output runtime</span>
+          <textarea :value="form.runtime_output || ''" rows="3" disabled />
+          <small class="field-help">Output runtime do agent/parser ghi nhận; Evidence của finding được quản lý bằng file phía trên.</small>
         </label>
 
         <div class="form-actions">
@@ -290,14 +290,14 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import {
-  deleteFindingPocFile,
-  downloadFindingPocFile,
+  deleteFindingEvidenceFile,
+  downloadFindingEvidenceFile,
   getFindingFilterOptions,
   getManagedFinding,
   getManagedFindings,
   updateManagedFinding,
   updateManagedFindingStatus,
-  uploadFindingPocFile,
+  uploadFindingEvidenceFile,
 } from "../api/client";
 import PaginationBar from "../components/PaginationBar.vue";
 import StatusPill from "../components/StatusPill.vue";
@@ -341,22 +341,22 @@ const form = reactive({
   protocol: "",
   service_name: "",
   note: "",
-  evidence: "",
+  runtime_output: "",
   confidence: null,
   status: "open",
   first_seen_at: null,
   last_seen_at: null,
-  poc_file_name: "",
-  poc_file_path: "",
-  poc_file_mime_type: "",
-  poc_file_size: null,
+  evidence_file_name: "",
+  evidence_file_path: "",
+  evidence_file_mime_type: "",
+  evidence_file_size: null,
 });
 
 const sortedItems = computed(() => sortRows(items.value, sortState.value));
 const { currentPage, pageSize, paginatedItems, totalItems, totalPages, goToPreviousPage, goToNextPage } =
   usePagination(sortedItems);
 
-const selectedFileLabel = computed(() => form.poc_file_name || "chưa có file");
+const selectedFileLabel = computed(() => form.evidence_file_name || "chưa có file");
 const statusOptionMap = computed(() =>
   Object.fromEntries(filterOptions.statuses.map((option) => [option.value, option]))
 );
@@ -392,15 +392,15 @@ function resetForm() {
   form.protocol = "";
   form.service_name = "";
   form.note = "";
-  form.evidence = "";
+  form.runtime_output = "";
   form.confidence = null;
   form.status = "open";
   form.first_seen_at = null;
   form.last_seen_at = null;
-  form.poc_file_name = "";
-  form.poc_file_path = "";
-  form.poc_file_mime_type = "";
-  form.poc_file_size = null;
+  form.evidence_file_name = "";
+  form.evidence_file_path = "";
+  form.evidence_file_mime_type = "";
+  form.evidence_file_size = null;
   uploadFile.value = null;
   selectedFindingId.value = null;
   resetPreview();
@@ -419,15 +419,15 @@ function applyFindingData(item) {
   form.protocol = item.protocol || "";
   form.service_name = item.service_name || "";
   form.note = item.note || "";
-  form.evidence = item.evidence || "";
+  form.runtime_output = item.runtime_output || "";
   form.confidence = item.confidence;
   form.status = item.status || "open";
   form.first_seen_at = item.first_seen_at || null;
   form.last_seen_at = item.last_seen_at || null;
-  form.poc_file_name = item.poc_file_name || "";
-  form.poc_file_path = item.poc_file_path || "";
-  form.poc_file_mime_type = item.poc_file_mime_type || "";
-  form.poc_file_size = item.poc_file_size;
+  form.evidence_file_name = item.evidence_file_name || "";
+  form.evidence_file_path = item.evidence_file_path || "";
+  form.evidence_file_mime_type = item.evidence_file_mime_type || "";
+  form.evidence_file_size = item.evidence_file_size;
   uploadFile.value = null;
   fileMessage.value = "";
   fileError.value = "";
@@ -547,12 +547,12 @@ function handleFileChange(event) {
   uploadFile.value = event.target.files?.[0] || null;
 }
 
-async function uploadPoc() {
+async function uploadEvidence() {
   if (!selectedFindingId.value || !uploadFile.value) return;
   fileError.value = "";
-  const updated = await uploadFindingPocFile(selectedFindingId.value, uploadFile.value);
+  const updated = await uploadFindingEvidenceFile(selectedFindingId.value, uploadFile.value);
   updateLocalItem(updated);
-  fileMessage.value = "Đã upload / thay thế file PoC. Trạng thái finding được chuyển sang confirmed.";
+  fileMessage.value = "Đã upload / thay thế file Evidence. Trạng thái finding được chuyển sang confirmed.";
   uploadFile.value = null;
   await loadItems();
 }
@@ -560,7 +560,7 @@ async function uploadPoc() {
 function parseDownloadFileName(response, fallbackName) {
   const disposition = response.headers["content-disposition"] || "";
   const matched = disposition.match(/filename="?([^"]+)"?/i);
-  return matched?.[1] || fallbackName || "poc-file";
+  return matched?.[1] || fallbackName || "evidence-file";
 }
 
 function detectPreviewType(fileName, mimeType) {
@@ -572,16 +572,16 @@ function detectPreviewType(fileName, mimeType) {
   return "none";
 }
 
-async function previewPoc() {
-  if (!selectedFindingId.value || !form.poc_file_path) return;
+async function previewEvidence() {
+  if (!selectedFindingId.value || !form.evidence_file_path) return;
   fileError.value = "";
   fileMessage.value = "";
   resetPreview();
   previewState.loading = true;
   try {
-    const response = await downloadFindingPocFile(selectedFindingId.value);
+    const response = await downloadFindingEvidenceFile(selectedFindingId.value);
     const blob = response.data;
-    const previewType = detectPreviewType(form.poc_file_name, form.poc_file_mime_type || blob.type);
+    const previewType = detectPreviewType(form.evidence_file_name, form.evidence_file_mime_type || blob.type);
     if (previewType === "image") {
       previewState.type = "image";
       previewState.imageUrl = URL.createObjectURL(blob);
@@ -600,37 +600,37 @@ async function previewPoc() {
   } catch (error) {
     previewState.type = "none";
     previewState.kindLabel = "lỗi";
-    previewState.message = error?.response?.data?.detail || error?.message || "Không thể tải preview file PoC.";
+    previewState.message = error?.response?.data?.detail || error?.message || "Không thể tải preview file Evidence.";
   } finally {
     previewState.loading = false;
   }
 }
 
-async function downloadPoc() {
-  if (!selectedFindingId.value || !form.poc_file_path) return;
+async function downloadEvidence() {
+  if (!selectedFindingId.value || !form.evidence_file_path) return;
   fileError.value = "";
   try {
-    const response = await downloadFindingPocFile(selectedFindingId.value);
+    const response = await downloadFindingEvidenceFile(selectedFindingId.value);
     const blobUrl = URL.createObjectURL(response.data);
     const anchor = document.createElement("a");
     anchor.href = blobUrl;
-    anchor.download = parseDownloadFileName(response, form.poc_file_name);
+    anchor.download = parseDownloadFileName(response, form.evidence_file_name);
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(blobUrl);
-    fileMessage.value = "Đã tải file PoC về máy.";
+    fileMessage.value = "Đã tải file Evidence về máy.";
   } catch (error) {
-    fileError.value = error?.response?.data?.detail || error?.message || "Không thể tải file PoC.";
+    fileError.value = error?.response?.data?.detail || error?.message || "Không thể tải file Evidence.";
   }
 }
 
-async function removePoc() {
-  if (!selectedFindingId.value || !form.poc_file_path) return;
+async function removeEvidence() {
+  if (!selectedFindingId.value || !form.evidence_file_path) return;
   fileError.value = "";
-  const updated = await deleteFindingPocFile(selectedFindingId.value);
+  const updated = await deleteFindingEvidenceFile(selectedFindingId.value);
   updateLocalItem(updated);
-  fileMessage.value = "Đã xóa file PoC. Trạng thái finding được chuyển lại open.";
+  fileMessage.value = "Đã xóa file Evidence. Trạng thái finding được chuyển lại open.";
   resetPreview();
   await loadItems();
 }

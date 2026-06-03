@@ -592,7 +592,7 @@ class VulnerabilityBase(BaseModel):
     threat: str | None = None
     proposal: str | None = None
     poc_file_name: str | None = None
-    poc_text: str | None = None
+    evidence_text: str | None = None
     description: str | None = None
 
 
@@ -606,7 +606,7 @@ class VulnerabilityUpdate(BaseModel):
     threat: str | None = None
     proposal: str | None = None
     poc_file_name: str | None = None
-    poc_text: str | None = None
+    evidence_text: str | None = None
     description: str | None = None
 
 
@@ -684,11 +684,11 @@ class ScanResultFindingBase(BaseModel):
     protocol: str | None = None
     service_name: str | None = None
     note: str | None = None
-    evidence: str | None = None
-    poc_file_name: str | None = None
-    poc_file_path: str | None = None
-    poc_file_mime_type: str | None = None
-    poc_file_size: int | None = None
+    runtime_output: str | None = None
+    evidence_file_name: str | None = None
+    evidence_file_path: str | None = None
+    evidence_file_mime_type: str | None = None
+    evidence_file_size: int | None = None
     confidence: int | None = None
     first_seen_at: datetime | None = None
     last_seen_at: datetime | None = None
@@ -708,11 +708,11 @@ class ScanResultFindingUpdate(BaseModel):
     protocol: str | None = None
     service_name: str | None = None
     note: str | None = None
-    evidence: str | None = None
-    poc_file_name: str | None = None
-    poc_file_path: str | None = None
-    poc_file_mime_type: str | None = None
-    poc_file_size: int | None = None
+    runtime_output: str | None = None
+    evidence_file_name: str | None = None
+    evidence_file_path: str | None = None
+    evidence_file_mime_type: str | None = None
+    evidence_file_size: int | None = None
     confidence: int | None = None
     first_seen_at: datetime | None = None
     last_seen_at: datetime | None = None
@@ -763,17 +763,17 @@ class FindingManagementRead(ORMModel):
     protocol: str | None = None
     service_name: str | None = None
     note: str | None = None
-    evidence: str | None = None
+    runtime_output: str | None = None
     confidence: int | None = None
     status: str
     status_help_text: str
     allowed_next_statuses: list[str] = Field(default_factory=list)
     operation_label: str | None = None
     target_label: str | None = None
-    poc_file_name: str | None = None
-    poc_file_path: str | None = None
-    poc_file_mime_type: str | None = None
-    poc_file_size: int | None = None
+    evidence_file_name: str | None = None
+    evidence_file_path: str | None = None
+    evidence_file_mime_type: str | None = None
+    evidence_file_size: int | None = None
     first_seen_at: datetime | None = None
     last_seen_at: datetime | None = None
     created_at: datetime

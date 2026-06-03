@@ -174,7 +174,7 @@ def ingest_pkt_scan_output(db: Session, task_execution: TaskExecution, raw_outpu
                 protocol=record.get("protocol") or "tcp",
                 service_name=record.get("service") or None,
                 note=record.get("version"),
-                evidence=None,
+                runtime_output=None,
                 confidence=100,
                 first_seen_at=datetime.utcnow(),
                 last_seen_at=datetime.utcnow(),

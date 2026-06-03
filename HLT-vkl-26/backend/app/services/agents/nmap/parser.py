@@ -33,7 +33,7 @@ class NmapParser(AgentParser):
                         "port": port_entry["port"],
                         "protocol": port_entry.get("protocol"),
                         "service_name": port_entry.get("service"),
-                        "evidence": f"Host {host_address} exposed port {port_entry['port']}/{port_entry.get('protocol')}",
+                        "runtime_output": f"Host {host_address} exposed port {port_entry['port']}/{port_entry.get('protocol')}",
                         "confidence": 95,
                         "status": "open",
                     }

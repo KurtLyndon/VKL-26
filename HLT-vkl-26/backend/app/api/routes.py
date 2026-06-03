@@ -190,7 +190,11 @@ from app.services.historical_scan_imports import commit_services_vulns_import, p
 from app.services.result_exchange import export_operation_results, import_operation_results
 from app.services.scan_results import normalize_and_store_scan_result
 from app.services.scheduler import run_scheduler_cycle
-from app.services.poc_repository import delete_finding_poc_file, resolve_finding_poc_path, store_finding_poc_file
+from app.services.poc_repository import (
+    delete_finding_evidence_file,
+    resolve_finding_evidence_path,
+    store_finding_evidence_file,
+)
 from app.services.targets import (
     create_target,
     delete_target,
@@ -752,14 +756,14 @@ def delete_scan_finding(
     if not finding:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
 
-    delete_finding_poc_file(finding.poc_file_path)
+    delete_finding_evidence_file(finding.evidence_file_path)
     db.delete(finding)
     db.commit()
     return {"success": True}
 
 
-@router.post("/scan-findings/{finding_id}/poc-file", response_model=FindingManagementRead)
-async def upload_scan_finding_poc_file(
+@router.post("/scan-findings/{finding_id}/evidence-file", response_model=FindingManagementRead)
+async def upload_scan_finding_evidence_file(
     finding_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -769,14 +773,14 @@ async def upload_scan_finding_poc_file(
     if not finding:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
     if not file.filename:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thiếu tên file POC.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Thiếu tên file evidence.")
 
     content = await file.read()
     if not content:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File POC đang trống.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File evidence đang trống.")
 
-    delete_finding_poc_file(finding.poc_file_path)
-    stored_info = store_finding_poc_file(finding.id, file.filename, content)
+    delete_finding_evidence_file(finding.evidence_file_path)
+    stored_info = store_finding_evidence_file(finding.id, file.filename, content)
     for field, value in stored_info.items():
         setattr(finding, field, value)
     finding.status = ensure_status_transition(finding.status, "confirmed", force=True)
@@ -784,8 +788,8 @@ async def upload_scan_finding_poc_file(
     return get_finding_record(db, finding.id)
 
 
-@router.get("/scan-findings/{finding_id}/poc-file")
-def download_scan_finding_poc_file(
+@router.get("/scan-findings/{finding_id}/evidence-file")
+def download_scan_finding_evidence_file(
     finding_id: int,
     db: Session = Depends(get_db),
     _current_user=Depends(require_permissions("scan_results.view")),
@@ -793,19 +797,19 @@ def download_scan_finding_poc_file(
     finding = db.get(ScanResultFinding, finding_id)
     if not finding:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
-    file_path = resolve_finding_poc_path(finding.poc_file_path)
+    file_path = resolve_finding_evidence_path(finding.evidence_file_path)
     if file_path is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding chưa có file POC.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding chưa có file evidence.")
 
     return FileResponse(
         file_path,
-        media_type=finding.poc_file_mime_type or "application/octet-stream",
-        filename=finding.poc_file_name or file_path.name,
+        media_type=finding.evidence_file_mime_type or "application/octet-stream",
+        filename=finding.evidence_file_name or file_path.name,
     )
 
 
-@router.delete("/scan-findings/{finding_id}/poc-file", response_model=FindingManagementRead)
-def delete_scan_finding_poc_file(
+@router.delete("/scan-findings/{finding_id}/evidence-file", response_model=FindingManagementRead)
+def delete_scan_finding_evidence_file(
     finding_id: int,
     db: Session = Depends(get_db),
     _current_user=Depends(require_permissions("scan_results.view")),
@@ -814,11 +818,11 @@ def delete_scan_finding_poc_file(
     if not finding:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Finding not found")
 
-    delete_finding_poc_file(finding.poc_file_path)
-    finding.poc_file_name = None
-    finding.poc_file_path = None
-    finding.poc_file_mime_type = None
-    finding.poc_file_size = None
+    delete_finding_evidence_file(finding.evidence_file_path)
+    finding.evidence_file_name = None
+    finding.evidence_file_path = None
+    finding.evidence_file_mime_type = None
+    finding.evidence_file_size = None
     finding.status = ensure_status_transition(finding.status, "open", force=True)
     db.commit()
     return get_finding_record(db, finding.id)

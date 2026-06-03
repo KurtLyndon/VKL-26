@@ -86,7 +86,7 @@ def ensure_vulnerability_stub(db: Session, code: str) -> Vulnerability:
         threat=None,
         proposal=None,
         poc_file_name=None,
-        poc_text=None,
+        evidence_text=None,
         description=None,
     )
     db.add(vulnerability)
@@ -167,7 +167,7 @@ def apply_vulnerability_defaults(
     else:
         finding.title = finding.finding_code or finding.title or "Finding"
 
-    finding.evidence = None
+    finding.runtime_output = None
     return vulnerability
 
 
@@ -232,17 +232,17 @@ def serialize_finding_row(row: FindingJoinedRow) -> FindingManagementRead:
         protocol=finding.protocol,
         service_name=finding.service_name,
         note=finding.note,
-        evidence=finding.evidence,
+        runtime_output=finding.runtime_output,
         confidence=finding.confidence,
         status=normalized_status,
         status_help_text=get_finding_status_help_text(normalized_status),
         allowed_next_statuses=sorted(FINDING_STATUS_TRANSITIONS.get(normalized_status, set())),
         operation_label=_operation_label(row.execution, row.operation),
         target_label=row.target.name,
-        poc_file_name=finding.poc_file_name,
-        poc_file_path=finding.poc_file_path,
-        poc_file_mime_type=finding.poc_file_mime_type,
-        poc_file_size=finding.poc_file_size,
+        evidence_file_name=finding.evidence_file_name,
+        evidence_file_path=finding.evidence_file_path,
+        evidence_file_mime_type=finding.evidence_file_mime_type,
+        evidence_file_size=finding.evidence_file_size,
         first_seen_at=finding.first_seen_at,
         last_seen_at=finding.last_seen_at,
         created_at=finding.created_at,

@@ -174,7 +174,7 @@ def ensure_core_seed_data() -> None:
                 "agent_type": "vulnerability_verifier",
                 "script_name": "verify_findings.py",
                 "script_path": "/opt/hlt/tasks/verify_findings.py",
-                "description": "Xac minh finding bang script PoC hoac text PoC cua CVE.",
+                "description": "Xac minh finding bang script PoC hoac ghi chu kiem chung cua CVE.",
                 "version": "1.0.0",
                 "is_active": True,
                 "input_schema_json": {"operation_execution_id": "integer"},

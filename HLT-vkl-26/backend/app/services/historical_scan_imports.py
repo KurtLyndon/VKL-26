@@ -520,7 +520,7 @@ def commit_services_vulns_import(
                 protocol="tcp",
                 service_name=row.service or None,
                 note=row.version,
-                evidence=None,
+                runtime_output=None,
                 confidence=100,
                 first_seen_at=started_at or execution.started_at,
                 last_seen_at=finished_at or execution.finished_at,
